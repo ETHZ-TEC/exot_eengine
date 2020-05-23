@@ -1,0 +1,258 @@
+# Configuration name
+name = "thermal-cc_performance"
+# Save path
+save_path = "./data"
+# Optional: Local backup path
+backup_path = "./data/_backup"
+# Optional: Action to perform if experiment directory exists
+experiment_exists_action = "update" # overwrite, move, halt, update
+
+# Optional: Backup configuration
+# [BACKUP]
+# user = ""
+# host = ""
+# ssh_key = ""
+# port = ""
+# path = ""
+
+# Experiment settings
+[EXPERIMENT]
+type = "PerformanceExperiment"
+channel = "ThermalCC"
+
+[EXPERIMENT.PHASES]
+train = {bit_count = 1500, symbol_rates = "[1, 2, 3, 4]+list(range(5, 501, 5))+list(range(6,101,5))+list(range(7,101,5))+list(range(8,101,5))+list(range(9,101,5))", repetitions = 3}
+eval  = {bit_count = 5000, symbol_rates = "[1, 2, 3, 4]+list(range(5, 501, 5))+list(range(6,101,5))+list(range(7,101,5))+list(range(8,101,5))+list(range(9,101,5))", repetitions = 3}
+trainTest = {bit_count = 10,   symbol_rates = "[1,10]",  repetitions = 2}
+evalTest  = {bit_count = 10,   symbol_rates = "[1,10]",  repetitions = 2}
+
+# Experiment layers
+[EXPERIMENT.LAYERS]
+src = {name = "SourcePassthrough", params = {}}
+lne = {name = "ManchesterLineCoding", params = {}}
+rdp = {name = "CoreActivation", params = {}}
+io  = {name = "TimeValue", params = {timebase='ns'}}
+
+# Experiment general settings
+[EXPERIMENT.GENERAL]
+latency               = 10
+fan                   = true
+governors             = "userspace"
+frequencies           = "max"
+sampling_period       = 1e-3
+delay_after_spawn     = 120.0
+delay_after_auxiliary = 1.0
+active_wait           = false
+
+[EXPERIMENT.GENERAL.ARMv8]
+delay_after_spawn = 120.0
+sampling_period = 5e-3
+
+[EXPERIMENT.GENERAL.ARMv7]
+delay_after_spawn = 120.0
+sampling_period = 5e-3
+
+# --------------------------------------------------------------------------------------------------
+# ENVIRONMENT: Haswell
+# Apps and zones
+[ENVIRONMENTS.Haswell.APPS]
+snk = {executable = "meter_thermal_msr", zone = "host"}
+src = {executable = "generator_utilisation_mt", zone = "host"}
+
+# Platform settings -> source
+[ENVIRONMENTS.Haswell.src]
+
+# generator
+generator.host_pinning = 0
+generator.should_pin_host = true
+generator.cores = [5]
+generator.host_policy  = "round_robin"
+generator.host_priority = 99
+generator.worker_priority = 98
+generator.worker_policy  = "round_robin"
+generator.should_pin_workers = true
+generator.start_check_period = 25
+
+# logging
+logging.debug_log_filename = "" # set during execution
+logging.app_log_filename = "" # set during execution
+logging.log_level = "info"
+
+# schedule reader
+schedule_reader.input_file = "" # set during execution
+schedule_reader.reading_from_file = true
+
+# Platform settings -> sink
+[ENVIRONMENTS.Haswell.snk]
+
+# logging
+logging.debug_log_filename = "" # set during execution
+logging.app_log_filename = "" # set during execution
+logging.log_level = "info"
+
+thermal_msr.cores = [0, 2, 4, 6]
+thermal_msr.package = false
+
+# host
+meter.period = 1e-3
+meter.host_policy = "round_robin"
+meter.host_pinning = 0
+meter.should_pin_host = true
+meter.host_priority = 90
+meter.log_header = true
+meter.start_immediately = false
+meter.start_check_period = 25
+
+# --------------------------------------------------------------------------------------------------
+# ENVIRONMENT: Sandy
+# Apps and zones
+[ENVIRONMENTS.Sandy.APPS]
+snk = {executable = "meter_thermal_msr", zone = "host"}
+src = {executable = "generator_utilisation_mt", zone = "host"}
+
+# Platform settings -> source
+[ENVIRONMENTS.Sandy.src]
+
+# generator
+generator.host_pinning = 0
+generator.should_pin_host = true
+generator.cores = [2]
+generator.host_policy  = "round_robin"
+generator.host_priority = 99
+generator.worker_priority = 98
+generator.worker_policy  = "round_robin"
+generator.should_pin_workers = true
+generator.start_check_period = 25
+
+# logging
+logging.debug_log_filename = "" # set during execution
+logging.app_log_filename = "" # set during execution
+logging.log_level = "info"
+
+# schedule reader
+schedule_reader.input_file = "" # set during execution
+schedule_reader.reading_from_file = true
+
+# Platform settings -> sink
+[ENVIRONMENTS.Sandy.snk]
+
+# logging
+logging.debug_log_filename = "" # set during execution
+logging.app_log_filename = "" # set during execution
+logging.log_level = "info"
+
+thermal_msr.cores = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+thermal_msr.package = false
+
+# host
+meter.period = 1e-3
+meter.host_policy = "round_robin"
+meter.host_pinning = 0
+meter.should_pin_host = true
+meter.host_priority = 90
+meter.log_header = true
+meter.start_immediately = false
+meter.start_check_period = 25
+
+# --------------------------------------------------------------------------------------------------
+# ENVIRONMENT: ARMv7
+# Apps and zones
+[ENVIRONMENTS.ARMv7.APPS]
+snk = {executable = "meter_thermal_sysfs", zone = "bigLITTLE"}
+src = {executable = "generator_utilisation_mt", zone = "bigLITTLE"}
+
+# Platform settings -> source
+[ENVIRONMENTS.ARMv7.src]
+
+# generator
+generator.host_pinning = 0
+generator.should_pin_host = true
+generator.cores = [6]
+generator.host_policy  = "round_robin"
+generator.host_priority = 99
+generator.worker_priority = 98
+generator.worker_policy  = "round_robin"
+generator.should_pin_workers = true
+generator.start_check_period = 25
+
+# logging
+logging.debug_log_filename = "" # set during execution
+logging.app_log_filename = "" # set during execution
+logging.log_level = "info"
+
+# schedule reader
+schedule_reader.input_file = "" # set during execution
+schedule_reader.reading_from_file = true
+
+# Platform settings -> sink
+[ENVIRONMENTS.ARMv7.snk]
+
+# logging
+logging.debug_log_filename = "" # set during execution
+logging.app_log_filename = "" # set during execution
+logging.log_level = "info"
+
+thermal_sysfs.zones = [0, 1, 2, 3, 4]
+
+# host
+meter.period = 1e-3
+meter.host_policy = "round_robin"
+meter.host_pinning = 1
+meter.should_pin_host = true
+#meter.host_pinning = 0
+meter.host_priority = 90
+meter.log_header = true
+meter.start_immediately = false
+meter.start_check_period = 25
+
+# --------------------------------------------------------------------------------------------------
+# ENVIRONMENT: ARMv8
+# Apps and zones
+[ENVIRONMENTS.ARMv8.APPS]
+snk = {executable = "meter_thermal_sysfs", zone = "combined"}
+src = {executable = "generator_utilisation_mt", zone = "combined"}
+
+# Platform settings -> source
+[ENVIRONMENTS.ARMv8.src]
+
+# generator
+generator.host_pinning = 1
+generator.should_pin_host = true
+generator.cores = [4]
+generator.host_policy  = "round_robin"
+generator.host_priority = 99
+generator.worker_priority = 98
+generator.worker_policy  = "round_robin"
+generator.should_pin_workers = true
+generator.start_check_period = 25
+
+# logging
+logging.debug_log_filename = "" # set during execution
+logging.app_log_filename = "" # set during execution
+logging.log_level = "info"
+
+# schedule reader
+schedule_reader.input_file = "" # set during execution
+schedule_reader.reading_from_file = true
+
+# Platform settings -> sink
+[ENVIRONMENTS.ARMv8.snk]
+
+# logging
+logging.debug_log_filename = "" # set during execution
+logging.app_log_filename = "" # set during execution
+logging.log_level = "info"
+
+thermal_sysfs.zones = [0, 1, 2, 3, 4, 5]
+#thermal_sysfs.zones = [0]
+
+# host
+meter.period = 1e-3
+meter.host_policy = "round_robin"
+meter.host_pinning = 2
+meter.should_pin_host = true
+meter.host_priority = 90
+meter.log_header = true
+meter.start_immediately = false
+meter.start_check_period = 25
+

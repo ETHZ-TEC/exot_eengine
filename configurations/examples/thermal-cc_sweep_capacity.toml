@@ -1,0 +1,84 @@
+# Configuration name
+name = "Example_Sweep_Thermal"
+# Save path
+save_path = "./data"
+# Optional: Local backup path
+backup_path = "./data/_backup"
+# Optional: Action to perform if experiment directory exists
+experiment_exists_action = "overwrite" # overwrite, move, halt
+
+# Optional: Backup configuration
+# [BACKUP]
+# user = ""
+# host = ""
+# ssh_key = ""
+# port = ""
+# path = ""
+
+# Experiment settings
+[EXPERIMENT]
+type = "FrequencySweepExperiment"
+channel = "Thermal"
+
+[EXPERIMENT.PHASES]
+sweep = {length_seconds = 10, frequencies = [0, 1, 2], repetitions = 2}
+
+# Experiment layers
+[EXPERIMENT.LAYERS]
+rdp = {name = "CoreActivation", params = {saturating = true, saturate_mapping = {1 = -1}}}
+io = {name = "TimeValue", params = {}} #params = {output_timing_multiplier = 1e9, input_timing_multiplier = 1e9}}
+
+# Experiment general settings
+[EXPERIMENT.GENERAL]
+latency = 10
+fan = true
+governors = "userspace"
+frequencies = "max"
+sampling_period = 1e-3
+delay_between_executions = 5.0
+delay_after_bootstrap = 30.0
+active_wait = false
+
+
+# Apps and zones
+[ENVIRONMENTS.Radagast.APPS]
+snk = {executable = "meter_thermal_msr", zone = "host"}
+src = {executable = "generator_utilisation_mt", zone = "host"}
+
+# Platform settings -> source
+[ENVIRONMENTS.Radagast.src]
+
+# generator
+generator.cores = [5]
+generator.policy = "round_robin"
+generator.priority = 99
+generator.worker_priority = 98
+
+# logging
+logging.debug_log_filename = "" # set during execution
+logging.app_log_filename = "" # set during execution
+logging.log_level = "info"
+
+# schedule reader
+schedule_reader.input_file = "" # set during execution
+schedule_reader.reading_from_file = true
+
+# Platform settings -> sink
+[ENVIRONMENTS.Radagast.snk]
+
+# logging
+logging.debug_log_filename = "" # set during execution
+logging.app_log_filename = "" # set during execution
+logging.log_level = "info"
+
+thermal_msr.cores = [0, 2, 4, 6]
+thermal_msr.package = false
+
+# host
+meter.period = 1e-3
+meter.host_policy = "round_robin"
+meter.host_pinning = 0
+meter.host_priority = 90
+meter.log_header = true
+meter.start_immediately = false
+

@@ -1,0 +1,176 @@
+# Configuration name
+name = "power-cc_interference_nose"
+# Save path
+save_path = "./data"
+# Optional: Local backup path
+backup_path = "./data/_backup"
+# Optional: Action to perform if experiment directory exists
+experiment_exists_action = "update" # overwrite, move, halt, update
+
+# Optional: Backup configuration
+# [BACKUP]
+# user = ""
+# host = ""
+# ssh_key = ""
+# port = ""
+# path = ""
+
+# Experiment settings
+[EXPERIMENT]
+type = "PerformanceExperiment"
+channel = "PowerCC"
+
+[EXPERIMENT.PHASES]
+train = {bit_count = 1500, symbol_rates = "[1] + list(range(10, 1001, 10))",   repetitions = 3}
+eval  = {bit_count = 5000, symbol_rates = "[1] + list(range(10, 1001, 10))",   repetitions = 3}
+trainTest = {bit_count = 10,   symbol_rates = "[1,10]",  repetitions = 2}
+evalTest  = {bit_count = 10,   symbol_rates = "[1,10]",  repetitions = 2}
+
+# Experiment layers
+[EXPERIMENT.LAYERS]
+src = {name = "SourcePassthrough", params = {}}
+lne = {name = "MedianLineCoding", params = {N=2}}
+rdp = {name = "QuantCoreActivation", params = {interpolation='nearest'}}
+io  = {name = "TimeValue", params = {timebase='ns'}}
+
+# Experiment general settings
+[EXPERIMENT.GENERAL]
+latency               = 10
+fan                   = true
+governors             = "userspace"
+frequencies           = "max"
+sampling_period       = 1e-3
+delay_after_spawn     = 30.0
+delay_after_auxiliary = 1.0
+active_wait           = false
+
+# --------------------------------------------------------------------------------------------------
+# ENVIRONMENT: Haswell
+# Apps and zones
+[ENVIRONMENTS.Haswell.APPS]
+snk = {executable = "meter_power_msr", zone = "host"}
+src = {executable = "generator_utilisation_mt", zone = "host"}
+
+# Platform settings -> source
+[ENVIRONMENTS.Haswell.src]
+
+# generator
+generator.host_pinning = 0
+generator.should_pin_host = true
+generator.cores = [1,3,5,7]
+generator.host_policy  = "round_robin"
+generator.host_priority = 99
+generator.worker_priority = 98
+generator.worker_policy  = "round_robin"
+generator.should_pin_workers = true
+generator.start_check_period = 25
+
+# logging
+logging.debug_log_filename = "" # set during execution
+logging.app_log_filename = "" # set during execution
+logging.log_level = "info"
+
+# schedule reader
+schedule_reader.input_file = "" # set during execution
+schedule_reader.reading_from_file = true
+
+# Platform settings -> sink
+[ENVIRONMENTS.Haswell.snk]
+
+# logging
+logging.debug_log_filename = "" # set during execution
+logging.app_log_filename = "" # set during execution
+logging.log_level = "info"
+
+power_msr.rapl_domain = ["pp0", "pp1", "pkg", "sys"]
+
+# host
+meter.period = 1e-3
+meter.host_policy = "round_robin"
+meter.host_pinning = 0
+meter.should_pin_host = true
+meter.host_priority = 90
+meter.log_header = true
+meter.start_immediately = false
+meter.start_check_period = 25
+
+[ENVIRONMENTS.Haswell.APPS."ffmpeg"]
+executable = "ffmpeg"
+type = "standalone"
+start_individually = true
+zone = "host"
+args = [
+"-y",
+"-loglevel", "error",
+"-stream_loop", "-1",
+"-i", "media/video.mp4",
+"-c:v", "libx264",
+"-b:v", "1000k",
+"-f", "null", "/dev/null"
+]
+
+# --------------------------------------------------------------------------------------------------
+# ENVIRONMENT: Sandy
+# Apps and zones
+[ENVIRONMENTS.Sandy.APPS]
+snk = {executable = "meter_power_msr", zone = "host"}
+src = {executable = "generator_utilisation_mt", zone = "host"}
+
+# Platform settings -> source
+[ENVIRONMENTS.Sandy.src]
+
+# generator
+generator.host_pinning = 15
+generator.should_pin_host = true
+generator.cores = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]
+generator.host_policy  = "round_robin"
+generator.host_priority = 99
+generator.worker_priority = 98
+generator.worker_policy  = "round_robin"
+generator.should_pin_workers = true
+generator.start_check_period = 25
+
+# logging
+logging.debug_log_filename = "" # set during execution
+logging.app_log_filename = "" # set during execution
+logging.log_level = "info"
+
+# schedule reader
+schedule_reader.input_file = "" # set during execution
+schedule_reader.reading_from_file = true
+
+# Platform settings -> sink
+[ENVIRONMENTS.Sandy.snk]
+
+# logging
+logging.debug_log_filename = "" # set during execution
+logging.app_log_filename = "" # set during execution
+logging.log_level = "info"
+
+power_msr.rapl_domain = ["pp0", "pp1", "pkg", "sys"]
+
+# host
+meter.period = 1e-3
+meter.host_policy = "round_robin"
+meter.host_pinning = 17
+meter.should_pin_host = true
+meter.host_priority = 90
+meter.log_header = true
+meter.start_immediately = false
+meter.start_check_period = 25
+
+[ENVIRONMENTS.Sandy.APPS."ffmpeg"]
+executable = "ffmpeg"
+type = "standalone"
+start_individually = true
+zone = "host"
+args = [
+"-y",
+"-loglevel", "error",
+"-stream_loop", "-1",
+"-i", "media/video.mp4",
+"-c:v", "libx264",
+"-b:v", "1000k",
+"-f", "null", "/dev/null"
+]
+

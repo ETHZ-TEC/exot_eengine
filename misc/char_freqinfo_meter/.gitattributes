@@ -1,0 +1,5 @@
+miedl_meter_installers.tar.xz filter=lfs diff=lfs merge=lfs -text
+miedl_meter_binaries.tar.xz filter=lfs diff=lfs merge=lfs -text
+freqinfo_meter.tar.xz filter=lfs diff=lfs merge=lfs -text
+frequinfo-meter_installers.tar.xz filter=lfs diff=lfs merge=lfs -text
+freqinfo-meter_installers.tar.xz filter=lfs diff=lfs merge=lfs -text

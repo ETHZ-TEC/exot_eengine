@@ -1,0 +1,261 @@
+# Configuration name
+name = "Thermal-SC_augmentation_parameters"
+# Save path
+save_path = "./data"
+# Optional: Local backup path
+backup_path = "./data/_backup"
+# Optional: Action to perform if experiment directory exists
+experiment_exists_action = "update" # Optional: Action to perform if experiment directory exists: overwrite, move, halt, update
+
+# Optional: Backup configuration
+# [BACKUP]
+# user = ""
+# host = ""
+# ssh_key = ""
+# port = ""
+# path = ""
+
+# Experiment settings
+[EXPERIMENT]
+type = "AppExecExperiment"
+channel = "ThermalSC"
+
+[EXPERIMENT.PHASES]
+
+[EXPERIMENT.PHASES.tidle]
+repetitions=1
+
+[EXPERIMENT.PHASES.tidle."22-495"] # t_init + t_run + t_cool
+schedules=['../RepetiTouchFiles/Z5/315s_pause.rpt',
+           '../RepetiTouchFiles/S5/315s_pause.rpt']
+durations=[315.0,315.0] # t_run + t_cool
+environments=['Z5', 'S5']
+
+
+[EXPERIMENT.PHASES.tcoeff]
+repetitions=1
+#Deserialised ../RepetiTouchFiles/S5/Benchmark/CPU_Throttling_Test/1_minutes.rpt with duration of 74.937s
+#Deserialised ../RepetiTouchFiles/S5/Benchmark/CPU_Throttling_Test/2_minutes.rpt with duration of 134.937s
+#
+#Deserialised ../RepetiTouchFiles/Z5/Benchmark/CPU_Throttling_Test/1_minutes.rpt with duration of 71.652s
+#Deserialised ../RepetiTouchFiles/Z5/Benchmark/CPU_Throttling_Test/2_minutes.rpt with duration of 131.652s
+
+[EXPERIMENT.PHASES.tcoeff."05-435"] # t_init + t_run + t_cool
+schedules=['../RepetiTouchFiles/Z5/Benchmark/CPU_Throttling_Test/1_minutes.rpt',
+           '../RepetiTouchFiles/S5/Benchmark/CPU_Throttling_Test/1_minutes.rpt']
+durations=[255.0,255.0]  # t_run + t_cool
+environments=['Z5', 'S5']
+
+[EXPERIMENT.PHASES.tcoeff."05-495"] # t_init + t_run + t_cool
+schedules=['../RepetiTouchFiles/Z5/Benchmark/CPU_Throttling_Test/2_minutes.rpt',
+           '../RepetiTouchFiles/S5/Benchmark/CPU_Throttling_Test/2_minutes.rpt']
+durations=[315.0,315.0] # t_run + t_cool
+environments=['Z5', 'S5']
+
+[EXPERIMENT.PHASES.tcoeff."10-435"] # t_init + t_run + t_cool
+schedules=['../RepetiTouchFiles/Z5/Benchmark/CPU_Throttling_Test/1_minutes.rpt',
+           '../RepetiTouchFiles/S5/Benchmark/CPU_Throttling_Test/1_minutes.rpt']
+durations=[255.0,255.0]  # t_run + t_cool
+environments=['Z5', 'S5']
+
+[EXPERIMENT.PHASES.tcoeff."10-495"] # t_init + t_run + t_cool
+schedules=['../RepetiTouchFiles/Z5/Benchmark/CPU_Throttling_Test/2_minutes.rpt',
+           '../RepetiTouchFiles/S5/Benchmark/CPU_Throttling_Test/2_minutes.rpt']
+durations=[315.0,315.0] # t_run + t_cool
+environments=['Z5', 'S5']
+
+[EXPERIMENT.PHASES.tcoeff."15-435"] # t_init + t_run + t_cool
+schedules=['../RepetiTouchFiles/Z5/Benchmark/CPU_Throttling_Test/1_minutes.rpt',
+           '../RepetiTouchFiles/S5/Benchmark/CPU_Throttling_Test/1_minutes.rpt']
+durations=[255.0,255.0]  # t_run + t_cool
+environments=['Z5', 'S5']
+
+[EXPERIMENT.PHASES.tcoeff."15-495"] # t_init + t_run + t_cool
+schedules=['../RepetiTouchFiles/Z5/Benchmark/CPU_Throttling_Test/2_minutes.rpt',
+           '../RepetiTouchFiles/S5/Benchmark/CPU_Throttling_Test/2_minutes.rpt']
+durations=[315.0,315.0] # t_run + t_cool
+environments=['Z5', 'S5']
+
+[EXPERIMENT.PHASES.tcoeff."20-435"] # t_init + t_run + t_cool
+schedules=['../RepetiTouchFiles/Z5/Benchmark/CPU_Throttling_Test/1_minutes.rpt',
+           '../RepetiTouchFiles/S5/Benchmark/CPU_Throttling_Test/1_minutes.rpt']
+durations=[255.0,255.0]  # t_run + t_cool
+environments=['Z5', 'S5']
+
+[EXPERIMENT.PHASES.tcoeff."20-495"] # t_init + t_run + t_cool
+schedules=['../RepetiTouchFiles/Z5/Benchmark/CPU_Throttling_Test/2_minutes.rpt',
+           '../RepetiTouchFiles/S5/Benchmark/CPU_Throttling_Test/2_minutes.rpt']
+durations=[315.0,315.0] # t_run + t_cool
+environments=['Z5', 'S5']
+
+[EXPERIMENT.PHASES.tcoeff."25-435"] # t_init + t_run + t_cool
+schedules=['../RepetiTouchFiles/Z5/Benchmark/CPU_Throttling_Test/1_minutes.rpt',
+           '../RepetiTouchFiles/S5/Benchmark/CPU_Throttling_Test/1_minutes.rpt']
+durations=[255.0,255.0]  # t_run + t_cool
+environments=['Z5', 'S5']
+
+[EXPERIMENT.PHASES.tcoeff."25-495"] # t_init + t_run + t_cool
+schedules=['../RepetiTouchFiles/Z5/Benchmark/CPU_Throttling_Test/2_minutes.rpt',
+           '../RepetiTouchFiles/S5/Benchmark/CPU_Throttling_Test/2_minutes.rpt']
+durations=[315.0,315.0] # t_run + t_cool
+environments=['Z5', 'S5']
+
+[EXPERIMENT.PHASES.tcoeff."30-435"] # t_init + t_run + t_cool
+schedules=['../RepetiTouchFiles/Z5/Benchmark/CPU_Throttling_Test/1_minutes.rpt',
+           '../RepetiTouchFiles/S5/Benchmark/CPU_Throttling_Test/1_minutes.rpt']
+durations=[255.0,255.0]  # t_run + t_cool
+environments=['Z5', 'S5']
+
+[EXPERIMENT.PHASES.tcoeff."30-495"] # t_init + t_run + t_cool
+schedules=['../RepetiTouchFiles/Z5/Benchmark/CPU_Throttling_Test/2_minutes.rpt',
+           '../RepetiTouchFiles/S5/Benchmark/CPU_Throttling_Test/2_minutes.rpt']
+durations=[315.0,315.0] # t_run + t_cool
+environments=['Z5', 'S5']
+
+[EXPERIMENT.PHASES.tcoeff."35-435"] # t_init + t_run + t_cool
+schedules=['../RepetiTouchFiles/Z5/Benchmark/CPU_Throttling_Test/1_minutes.rpt',
+           '../RepetiTouchFiles/S5/Benchmark/CPU_Throttling_Test/1_minutes.rpt']
+durations=[255.0,255.0]  # t_run + t_cool
+environments=['Z5', 'S5']
+
+[EXPERIMENT.PHASES.tcoeff."35-495"] # t_init + t_run + t_cool
+schedules=['../RepetiTouchFiles/Z5/Benchmark/CPU_Throttling_Test/2_minutes.rpt',
+           '../RepetiTouchFiles/S5/Benchmark/CPU_Throttling_Test/2_minutes.rpt']
+durations=[315.0,315.0] # t_run + t_cool
+environments=['Z5', 'S5']
+
+[EXPERIMENT.PHASES.tcoeff."40-435"] # t_init + t_run + t_cool
+schedules=['../RepetiTouchFiles/Z5/Benchmark/CPU_Throttling_Test/1_minutes.rpt',
+           '../RepetiTouchFiles/S5/Benchmark/CPU_Throttling_Test/1_minutes.rpt']
+durations=[255.0,255.0]  # t_run + t_cool
+environments=['Z5', 'S5']
+
+[EXPERIMENT.PHASES.tcoeff."40-495"] # t_init + t_run + t_cool
+schedules=['../RepetiTouchFiles/Z5/Benchmark/CPU_Throttling_Test/2_minutes.rpt',
+           '../RepetiTouchFiles/S5/Benchmark/CPU_Throttling_Test/2_minutes.rpt']
+durations=[315.0,315.0] # t_run + t_cool
+environments=['Z5', 'S5']
+
+[EXPERIMENT.PHASES.tcoeff."45-435"] # t_init + t_run + t_cool
+schedules=['../RepetiTouchFiles/Z5/Benchmark/CPU_Throttling_Test/1_minutes.rpt',
+           '../RepetiTouchFiles/S5/Benchmark/CPU_Throttling_Test/1_minutes.rpt']
+durations=[255.0,255.0]  # t_run + t_cool
+environments=['Z5', 'S5']
+
+[EXPERIMENT.PHASES.tcoeff."45-495"] # t_init + t_run + t_cool
+schedules=['../RepetiTouchFiles/Z5/Benchmark/CPU_Throttling_Test/2_minutes.rpt',
+           '../RepetiTouchFiles/S5/Benchmark/CPU_Throttling_Test/2_minutes.rpt']
+durations=[315.0,315.0] # t_run + t_cool
+environments=['Z5', 'S5']
+
+[EXPERIMENT.PHASES.tcoeff."50-435"] # t_init + t_run + t_cool
+schedules=['../RepetiTouchFiles/Z5/Benchmark/CPU_Throttling_Test/1_minutes.rpt',
+           '../RepetiTouchFiles/S5/Benchmark/CPU_Throttling_Test/1_minutes.rpt']
+durations=[255.0,255.0]  # t_run + t_cool
+environments=['Z5', 'S5']
+
+[EXPERIMENT.PHASES.tcoeff."50-495"] # t_init + t_run + t_cool
+schedules=['../RepetiTouchFiles/Z5/Benchmark/CPU_Throttling_Test/2_minutes.rpt',
+           '../RepetiTouchFiles/S5/Benchmark/CPU_Throttling_Test/2_minutes.rpt']
+durations=[315.0,315.0] # t_run + t_cool
+environments=['Z5', 'S5']
+
+# Experiment layers
+[EXPERIMENT.LAYERS]
+io = {name = "TimeValue", params = {timebase='ns'}, synchronise = false} 
+
+# Experiment general settings
+[EXPERIMENT.GENERAL]
+sampling_period = 1e-3
+delay_after_spawn = 180.0     # settling period
+delay_after_auxiliary = 180.0 # t_init
+active_wait = true
+
+# --------------------------------------------------------------------------
+# Apps and zones
+[ENVIRONMENTS.Z5.APPS]
+src = {executable = "com.cygery.repetitouch.pro/com.cygery.repetitouch.pro.FireReceiver", zone = "bigLITTLE", type="standalone"}
+snk = {executable = "ch.ethz.exot.thermalsc/.MeterService", zone = "bigLITTLE"}
+
+[ENVIRONMENTS.Z5.APPS."ttb"]
+executable = "/home/rocketlogger/exot/bin/ttb_phase_temp_time.sh"
+type = "standalone"
+start_individually = true
+zone = "ttb"
+
+# Platform settings -> source
+[ENVIRONMENTS.Z5.src]
+COMPONENT_NAME="ch.ethz.exot.intentproxy/.IntentProxyService"
+ACTION="ch.ethz.exot.intents.IntentProxy.action.BUNDLE_EXTRAS"
+
+[ENVIRONMENTS.Z5.src.ei]
+"intent.flags"= 20
+"looptimes"= 1
+"replayspeed"= 1
+
+[ENVIRONMENTS.Z5.src.es]
+"intent.component"= "com.cygery.repetitouch.pro/com.cygery.repetitouch.pro.FireReceiver"
+"intent.action"= "com.twofortyfouram.locale.intent.action.FIRE_SETTING"
+"intent.extra.key"= "com.twofortyfouram.locale.intent.extra.BUNDLE"
+"condition"= "None"
+"action"= "Start Replay"
+
+[ENVIRONMENTS.Z5.src.ez]
+"appendingrecord"= false
+"hidepanel"= true
+"closeafteraction"= false
+"silent"= false        
+
+# Platform settings -> sink
+[ENVIRONMENTS.Z5.snk]
+# logging
+logging.log_level = "info"
+
+# host
+host.log_header = true
+host.start_immediately = false
+
+# --------------------------------------------------------------------------
+# Apps and zones
+[ENVIRONMENTS.S5.APPS]
+src = {executable = "com.cygery.repetitouch.pro/com.cygery.repetitouch.pro.FireReceiver", zone = "bigLITTLE", type="standalone"}
+snk = {executable = "ch.ethz.exot.thermalsc/.MeterService", zone = "bigLITTLE"}
+
+[ENVIRONMENTS.S5.APPS."ttb"]
+executable = "/home/rocketlogger/exot/bin/ttb_phase_temp_time.sh"
+type = "standalone"
+start_individually = true
+zone = "ttb"
+
+# Platform settings -> source
+[ENVIRONMENTS.S5.src]
+COMPONENT_NAME="ch.ethz.exot.intentproxy/.IntentProxyService"
+ACTION="ch.ethz.exot.intents.IntentProxy.action.BUNDLE_EXTRAS"
+
+[ENVIRONMENTS.S5.src.ei]
+"intent.flags"= 20
+"looptimes"= 1
+"replayspeed"= 1
+
+[ENVIRONMENTS.S5.src.es]
+"intent.component"= "com.cygery.repetitouch.pro/com.cygery.repetitouch.pro.FireReceiver"
+"intent.action"= "com.twofortyfouram.locale.intent.action.FIRE_SETTING"
+"intent.extra.key"= "com.twofortyfouram.locale.intent.extra.BUNDLE"
+"condition"= "None"
+"action"= "Start Replay"
+
+[ENVIRONMENTS.S5.src.ez]
+"appendingrecord"= false
+"hidepanel"= true
+"closeafteraction"= false
+"silent"= false        
+
+# Platform settings -> sink
+[ENVIRONMENTS.S5.snk]
+# logging
+logging.log_level = "info"
+
+# host
+host.log_header = true
+host.start_immediately = false
+

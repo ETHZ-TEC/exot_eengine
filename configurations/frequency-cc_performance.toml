@@ -1,0 +1,312 @@
+# Configuration name
+name = "frequency-cc_performance"
+# Save path
+save_path = "./data"
+# Optional: Local backup path
+backup_path = "./data/_backup"
+# Optional: Action to perform if experiment directory exists
+experiment_exists_action = "update" # overwrite, move, halt, update
+
+# Optional: Backup configuration
+# [BACKUP]
+# user = ""
+# host = ""
+# ssh_key = ""
+# port = ""
+# path = ""
+
+# Experiment settings
+[EXPERIMENT]
+type = "PerformanceExperiment"
+channel = "ConservativeGovernorCC"
+
+[EXPERIMENT.PHASES]
+perf008bit = {bit_count =   8, symbol_rates = "[1 for _ in range(200)]", repetitions = 5}
+perf016bit = {bit_count =  16, symbol_rates = "[1 for _ in range(200)]", repetitions = 5}
+perf032bit = {bit_count =  32, symbol_rates = "[1 for _ in range(200)]", repetitions = 5}
+perf064bit = {bit_count =  64, symbol_rates = "[1 for _ in range(200)]", repetitions = 5}
+train = {bit_count = [8,32], symbol_rates = "[1 for _ in range(1596)]", repetitions = 1}
+eval  = {bit_count = [8,32], symbol_rates = "[1 for _ in range(1585)]", repetitions = 1}
+
+# Experiment layers
+[EXPERIMENT.LAYERS]
+src = {name = "SourcePassthrough", params = {}}
+lne = {name = "ConservativeGovLineCoding", params = {center=9, step=2}}
+rdp = {name = "FrequencyLevelQuantistion", params = {timeout_s=10}}
+io  = {name = "TimeValue", params = {timebase='ns'}}
+
+# Experiment general settings
+[EXPERIMENT.GENERAL]
+latency               = 0
+fan                   = true
+governors             = "conservative"
+frequencies           = "max"
+sampling_period       = 20e-3
+delay_after_spawn     = 120.0
+delay_after_auxiliary = 1.0
+active_wait           = false
+
+# --------------------------------------------------------------------------------------------------
+# ENVIRONMENT: Haswell
+# Apps and zones
+[ENVIRONMENTS.Haswell.APPS]
+snk = {executable = "generator_utilisation_bc", zone = "host"}
+src = {executable = "meter_frequency_rel", zone = "host"}
+
+# Platform settings -> source
+[ENVIRONMENTS.Haswell.src]
+
+# generator
+generator.host_pinning = 0
+generator.should_pin_host = true
+generator.cores = [4]
+generator.threshold = 100
+generator.num_hits = 20
+generator.num_probes = 5
+generator.host_timeout_s = 60
+generator.host_policy  = "round_robin"
+generator.host_priority = 99
+generator.worker_priority = 98
+generator.worker_policy  = "round_robin"
+generator.should_pin_workers = true
+generator.start_check_period = 25
+
+# logging
+logging.debug_log_filename = "" # set during execution
+logging.app_log_filename = "" # set during execution
+logging.log_level = "info"
+
+# schedule reader
+schedule_reader.input_file = "" # set during execution
+schedule_reader.reading_from_file = true
+
+# Platform settings -> sink
+[ENVIRONMENTS.Haswell.snk]
+
+# logging
+logging.debug_log_filename = "" # set during execution
+logging.app_log_filename = "" # set during execution
+logging.log_level = "info"
+
+frequency_rel.cores = [0]
+
+# host
+meter.period = 1e-3
+meter.host_policy = "round_robin"
+meter.host_pinning = 1
+meter.should_pin_host = true
+meter.host_priority = 90
+meter.log_header = true
+meter.start_immediately = false
+meter.start_check_period = 25
+
+# --------------------------------------------------------------------------------------------------
+# ENVIRONMENT: ARMv7
+# Apps and zones
+[ENVIRONMENTS.ARMv7.APPS]
+snk = {executable = "generator_utilisation_bc", zone = "bigLITTLE"}
+src = {executable = "meter_frequency_rel", zone = "bigLITTLE"}
+
+# Platform settings -> source
+[ENVIRONMENTS.ARMv7.src]
+
+# generator
+generator.host_pinning = 0
+generator.should_pin_host = true
+generator.cores = [6]
+generator.threshold = 100
+generator.num_hits = 20
+generator.num_probes = 5
+generator.host_timeout_s = 60
+generator.host_policy  = "round_robin"
+generator.host_priority = 99
+generator.worker_priority = 98
+generator.worker_policy  = "round_robin"
+generator.should_pin_workers = true
+generator.start_check_period = 25
+
+# logging
+logging.debug_log_filename = "" # set during execution
+logging.app_log_filename = "" # set during execution
+logging.log_level = "info"
+
+# schedule reader
+schedule_reader.input_file = "" # set during execution
+schedule_reader.reading_from_file = true
+
+# Platform settings -> sink
+[ENVIRONMENTS.ARMv7.snk]
+
+# logging
+logging.debug_log_filename = "" # set during execution
+logging.app_log_filename = "" # set during execution
+logging.log_level = "info"
+
+frequency_rel.zones = [7]
+
+# host
+meter.period = 1e-3
+meter.host_policy = "round_robin"
+meter.host_pinning = 8
+meter.should_pin_host = true
+#meter.host_pinning = 0
+meter.host_priority = 90
+meter.log_header = true
+meter.start_immediately = false
+meter.start_check_period = 25
+
+[ANALYSES]
+[ANALYSES.decoder_train_Haswell]
+type = "RNNdecoderTrain"
+
+[ANALYSES.decoder_train_Haswell.DATASET]
+env = 'Haswell'
+phase = 'train'
+batch_size     =   40
+max_len_samples = 10000
+
+[ANALYSES.decoder_train_Haswell.TRAIN]
+n_epochs_0         =  200
+n_epochs_1         =  1000
+
+[ANALYSES.decoder_train_Haswell.MODEL]
+max_grad_norm = 70.0
+learning_rate_0 = 0.001
+learning_rate_1 = 0.0001
+momentum      = 0.9
+decay         = 0.0
+clipnorm      = 70.0
+max_timesteps = 5000
+
+[ANALYSES.decoder_eval_eval_Haswell]
+type = "RNNdecoderEval"
+
+[ANALYSES.decoder_eval_eval_Haswell.DATASET]
+env = "Haswell"
+phase = "eval"
+batch_size = 40
+
+[ANALYSES.decoder_eval_eval_Haswell.MODEL]
+model_files   = '' # TODO set
+
+[ANALYSES.decoder_eval_008b_Haswell]
+type = "RNNdecoderEval"
+
+[ANALYSES.decoder_eval_008b_Haswell.DATASET]
+env = "Haswell"
+phase = "perf008bit"
+batch_size = 40
+
+[ANALYSES.decoder_eval_008b_Haswell.MODEL]
+model_files   = '' # TODO set
+
+[ANALYSES.decoder_eval_016b_Haswell]
+type = "RNNdecoderEval"
+
+[ANALYSES.decoder_eval_016b_Haswell.DATASET]
+env = "Haswell"
+phase = "perf016bit"
+batch_size = 40
+
+[ANALYSES.decoder_eval_016b_Haswell.MODEL]
+model_files   = '' # TODO set
+
+[ANALYSES.decoder_eval_032b_Haswell]
+type = "RNNdecoderEval"
+
+[ANALYSES.decoder_eval_032b_Haswell.DATASET]
+env = "Haswell"
+phase = "perf032bit"
+batch_size = 40
+
+[ANALYSES.decoder_eval_032b_Haswell.MODEL]
+model_files   = '' # TODO set
+
+[ANALYSES.decoder_eval_064b_Haswell]
+type = "RNNdecoderEval"
+
+[ANALYSES.decoder_eval_064b_Haswell.DATASET]
+env = "Haswell"
+phase = "perf064bit"
+batch_size = 40
+
+[ANALYSES.decoder_eval_064b_Haswell.MODEL]
+model_files   = '' # TODO set
+
+[ANALYSES.decoder_train_ARMv7]
+type = "RNNdecoderTrain"
+
+[ANALYSES.decoder_train_ARMv7.DATASET]
+env = 'ARMv7'
+phase = 'train'
+batch_size     =   40
+max_len_samples = 10000
+
+[ANALYSES.decoder_train_ARMv7.TRAIN]
+n_epochs_0         =  200
+n_epochs_1         =  1000
+
+[ANALYSES.decoder_train_ARMv7.MODEL]
+max_grad_norm = 70.0
+learning_rate_0 = 0.001
+learning_rate_1 = 0.0001
+momentum      = 0.9
+decay         = 0.0
+clipnorm      = 70.0
+max_timesteps = 5000
+
+[ANALYSES.decoder_eval_eval_ARMv7]
+type = "RNNdecoderEval"
+
+[ANALYSES.decoder_eval_eval_ARMv7.DATASET]
+env = "ARMv7"
+phase = "eval"
+batch_size = 40
+
+[ANALYSES.decoder_eval_eval_ARMv7.MODEL]
+model_files   = '' # TODO set
+
+[ANALYSES.decoder_eval_008b_ARMv7]
+type = "RNNdecoderEval"
+
+[ANALYSES.decoder_eval_008b_ARMv7.DATASET]
+env = "ARMv7"
+phase = "perf008bit"
+batch_size = 40
+
+[ANALYSES.decoder_eval_008b_ARMv7.MODEL]
+model_files   = '' # TODO set
+
+[ANALYSES.decoder_eval_016b_ARMv7]
+type = "RNNdecoderEval"
+
+[ANALYSES.decoder_eval_016b_ARMv7.DATASET]
+env = "ARMv7"
+phase = "perf016bit"
+batch_size = 40
+
+[ANALYSES.decoder_eval_016b_ARMv7.MODEL]
+model_files   = '' # TODO set
+
+[ANALYSES.decoder_eval_032b_ARMv7]
+type = "RNNdecoderEval"
+
+[ANALYSES.decoder_eval_032b_ARMv7.DATASET]
+env = "ARMv7"
+phase = "perf032bit"
+batch_size = 40
+
+[ANALYSES.decoder_eval_032b_ARMv7.MODEL]
+model_files   = '' # TODO set
+
+[ANALYSES.decoder_eval_064b_ARMv7]
+type = "RNNdecoderEval"
+
+[ANALYSES.decoder_eval_064b_ARMv7.DATASET]
+env = "ARMv7"
+phase = "perf064bit"
+batch_size = 40
+
+[ANALYSES.decoder_eval_064b_ARMv7.MODEL]
+model_files   = '' # TODO set
+

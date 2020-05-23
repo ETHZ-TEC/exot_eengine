@@ -1,0 +1,110 @@
+# Configuration name
+name = "thermal-cc_jitter_pin_nort"
+# Save path
+save_path = "./data"
+# Optional: Local backup path
+backup_path = "./data/_backup"
+# Optional: Action to perform if experiment directory exists
+experiment_exists_action = "update" # overwrite, move, halt, update
+
+# Optional: Backup configuration
+# [BACKUP]
+# user = ""
+# host = ""
+# ssh_key = ""
+# port = ""
+# path = ""
+
+# Experiment settings
+[EXPERIMENT]
+type = "PerformanceExperiment"
+channel = "ThermalCC"
+
+[EXPERIMENT.PHASES]
+util00= {bit_count = 100, symbol_rates = "[1]",   repetitions = 1}
+util50= {bit_count = 100, symbol_rates = "[1]",   repetitions = 1}
+util80= {bit_count = 100, symbol_rates = "[1]",   repetitions = 1}
+
+# Experiment layers
+[EXPERIMENT.LAYERS]
+src = {name = "SourcePassthrough", params = {}}
+lne = {name = "ManchesterLineCoding", params = {}}
+rdp = {name = "CoreActivation", params = {}}
+io  = {name = "TimeValue", params = {timebase='ns'}}
+
+# Experiment general settings
+[EXPERIMENT.GENERAL]
+latency               = 10
+fan                   = true
+governors             = "userspace"
+frequencies           = "max"
+sampling_period       = 1e-3
+delay_after_spawn     = 120.0
+delay_after_auxiliary = 1.0
+active_wait           = false
+
+[EXPERIMENT.GENERAL.ARMv8]
+delay_after_spawn = 120.0
+sampling_period = 5e-3
+
+[EXPERIMENT.GENERAL.ARMv7]
+delay_after_spawn = 120.0
+sampling_period = 5e-3
+
+# --------------------------------------------------------------------------------------------------
+# ENVIRONMENT: Haswell
+# Apps and zones
+[ENVIRONMENTS.Haswell.APPS]
+snk = {executable = "meter_thermal_msr", zone = "host"}
+src = {executable = "generator_utilisation_mt", zone = "host"}
+
+# Platform settings -> source
+[ENVIRONMENTS.Haswell.src]
+
+# generator
+generator.host_pinning = 0
+generator.should_pin_host = true
+generator.cores = [5]
+#generator.host_policy  = "round_robin"
+#generator.host_priority = 99
+#generator.worker_priority = 98
+generator.should_pin_workers = true
+generator.start_check_period = 25
+
+# logging
+logging.debug_log_filename = "" # set during execution
+logging.app_log_filename = "" # set during execution
+logging.log_level = "info"
+
+# schedule reader
+schedule_reader.input_file = "" # set during execution
+schedule_reader.reading_from_file = true
+
+# Platform settings -> sink
+[ENVIRONMENTS.Haswell.snk]
+
+# logging
+logging.debug_log_filename = "" # set during execution
+logging.app_log_filename = "" # set during execution
+logging.log_level = "info"
+
+thermal_msr.cores = [0, 2, 4, 6]
+thermal_msr.package = false
+
+# host
+meter.period = 1e-3
+meter.host_policy = "round_robin"
+meter.host_pinning = 0
+meter.should_pin_host = true
+meter.host_priority = 90
+meter.log_header = true
+meter.start_immediately = false
+meter.start_check_period = 25
+
+[ENVIRONMENTS.Haswell.APPS."interference"]
+executable = "media/stress.sh"
+type = "standalone"
+start_individually = true
+zone = "host"
+args = []
+

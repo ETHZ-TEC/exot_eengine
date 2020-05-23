@@ -1,0 +1,257 @@
+# zone mapping big Cluster
+[big]
+# zone/platform details
+model        = "Sony Xperia Z5"
+cores        = [4,5,6,7]
+frequencies  = [384000, 480000, 633600, 768000, 864000, 960000, 1248000, 1344000, 1440000, 1536000, 1632000, 1728000, 1824000, 1958400]
+schedule_tag = "Z5"
+
+# experiment details
+path_apps    = ""
+path_data    = "/sdcard/exot/data"
+
+# connection details
+driver_type  = "ADBAndroidDriver"
+
+[big.driver_params]
+ip           = "172.31.43.130"
+port         = 51808
+user         = "exot"
+group        = "exot"
+key          = "$EXOT_ACCESS_DIR/exot.adb_key"
+# gateway      = "exot-gateway"
+
+# zone mapping LITTLE cluster
+[LITTLE]
+# zone/platform details
+model        = "Sony Xperia Z5"
+cores        = [0,1,2,3]
+frequencies  = [384000, 460800, 600000, 672000, 768000, 864000, 960000, 1248000, 1344000, 1478400, 1555200]
+schedule_tag = "Z5"
+
+# experiment details
+path_apps    = "bin/rel"
+path_data    = "/sdcard/exot/data"
+
+# connection details
+driver_type  = "ADBAndroidDriver"
+
+[LITTLE.driver_params]
+ip           = "172.31.43.130"
+port         = 51808
+user         = "exot"
+group        = "exot"
+key          = "$EXOT_ACCESS_DIR/exot.adb_key"
+# gateway      = "exot-gateway"
+
+# zone mapping both cluster
+[bigLITTLE]
+# zone/platform details
+model        = "Sony Xperia Z5"
+cores        = [0,1,2,3,4,5,6,7]
+frequencies  = []
+schedule_tag = "Z5"
+
+# experiment details
+path_apps    = "bin/rel"
+path_data    = "/sdcard/exot/data"
+
+# connection details
+driver_type  = "ADBAndroidDriver"
+
+[bigLITTLE.driver_params]
+ip           = "172.31.43.130"
+port         = 51808
+user         = "exot"
+group        = "exot"
+key          = "$EXOT_ACCESS_DIR/exot.adb_key"
+# gateway      = "exot-gateway"
+
+[bigLITTLE.beta_z]
+"thermal_sysfs:zone:0:°C"  = NaN
+"thermal_sysfs:zone:1:°C"  = NaN
+"thermal_sysfs:zone:2:°C"  = 0.029979284766741575
+"thermal_sysfs:zone:3:°C"  = 0.029909051782631747
+"thermal_sysfs:zone:4:°C"  = 0.03564144163341567
+"thermal_sysfs:zone:5:°C"  = 0.04116066199388276
+"thermal_sysfs:zone:6:°C"  = 0.04096061021205784
+"thermal_sysfs:zone:7:°C"  = 0.0234586578806934
+"thermal_sysfs:zone:8:°C"  = 0.025008143635632855
+"thermal_sysfs:zone:9:°C"  = 0.03440229262022037
+"thermal_sysfs:zone:10:°C" = 0.03143838893433265
+"thermal_sysfs:zone:11:°C" = 0.031342391375922256
+"thermal_sysfs:zone:12:°C" = 0.008908099350766115
+"thermal_sysfs:zone:13:°C" = 0.022782038642229
+"thermal_sysfs:zone:14:°C" = 0.018407731895269498
+"thermal_sysfs:zone:15:°C" = 0.019702216028632046
+"thermal_sysfs:zone:16:°C" = 0.014944333988331358
+"thermal_sysfs:zone:17:°C" = 0.01516608994866801
+"thermal_sysfs:zone:18:°C" = 112.4244781367719
+"thermal_sysfs:zone:19:°C" = 0.017689913668159113
+"thermal_sysfs:zone:20:°C" = 0.008909560460977132
+"thermal_sysfs:zone:21:°C" = NaN
+"thermal_sysfs:zone:22:°C" = NaN
+"thermal_sysfs:zone:23:°C" = 0.021720926775148985
+"thermal_sysfs:zone:24:°C" = NaN
+"thermal_sysfs:zone:25:°C" = NaN
+"thermal_sysfs:zone:26:°C" = NaN
+"thermal_sysfs:zone:27:°C" = NaN
+"thermal_sysfs:zone:28:°C" = NaN
+"thermal_sysfs:zone:29:°C" = NaN
+"thermal_sysfs:zone:30:°C" = NaN
+"thermal_sysfs:zone:31:°C" = 0.030634929105313513
+"thermal_sysfs:zone:32:°C" = 0.02520446637122941
+"thermal_sysfs:zone:33:°C" = 0.02598080725834888
+"thermal_sysfs:zone:34:°C" = 0.02506680787595708
+"thermal_sysfs:zone:35:°C" = 0.023799339646134374
+"thermal_sysfs:zone:36:°C" = 0.023911517105676756
+
+[bigLITTLE.T_idle]
+"thermal_sysfs:zone:0:°C"  = 38.9506575
+"thermal_sysfs:zone:1:°C"  = 38.9506575
+"thermal_sysfs:zone:2:°C"  = 29.0
+"thermal_sysfs:zone:3:°C"  = 32.0
+"thermal_sysfs:zone:4:°C"  = 32.0
+"thermal_sysfs:zone:5:°C"  = 31.0
+"thermal_sysfs:zone:6:°C"  = 31.0
+"thermal_sysfs:zone:7:°C"  = 28.0
+"thermal_sysfs:zone:8:°C"  = 27.0
+"thermal_sysfs:zone:9:°C"  = 29.0
+"thermal_sysfs:zone:10:°C" = 29.0
+"thermal_sysfs:zone:11:°C" = 29.0
+"thermal_sysfs:zone:12:°C" = 25.0
+"thermal_sysfs:zone:13:°C" = 26.695
+"thermal_sysfs:zone:14:°C" = 27.5
+"thermal_sysfs:zone:15:°C" = 27.5
+"thermal_sysfs:zone:16:°C" = 26.0
+"thermal_sysfs:zone:17:°C" = 26.0
+"thermal_sysfs:zone:18:°C" = 24.4
+"thermal_sysfs:zone:19:°C" = 28.0
+"thermal_sysfs:zone:20:°C" = 25.0
+"thermal_sysfs:zone:21:°C" = 0.0
+"thermal_sysfs:zone:22:°C" = 0.0
+"thermal_sysfs:zone:23:°C" = 28.7
+"thermal_sysfs:zone:24:°C" = 0.0
+"thermal_sysfs:zone:25:°C" = 0.0
+"thermal_sysfs:zone:26:°C" = 0.0
+"thermal_sysfs:zone:27:°C" = 0.0
+"thermal_sysfs:zone:28:°C" = 0.0
+"thermal_sysfs:zone:29:°C" = 0.0
+"thermal_sysfs:zone:30:°C" = 0.0
+"thermal_sysfs:zone:31:°C" = 29.0
+"thermal_sysfs:zone:32:°C" = 29.0
+"thermal_sysfs:zone:33:°C" = 29.0
+"thermal_sysfs:zone:34:°C" = 28.0
+"thermal_sysfs:zone:35:°C" = 28.0
+"thermal_sysfs:zone:36:°C" = 28.0
+
+[bigLITTLE.T_norm]
+"thermal_sysfs:zone:0:°C"  = 100000
+"thermal_sysfs:zone:1:°C"  = 100000
+"thermal_sysfs:zone:14:°C" = 10
+"thermal_sysfs:zone:15:°C" = 10
+"thermal_sysfs:zone:18:°C" = 10
+"thermal_sysfs:zone:23:°C" = 10
+ 
+[bigLITTLE.beta_z_heat]
+"thermal_sysfs:zone:0:°C"  = 1.0000000000000000000
+"thermal_sysfs:zone:1:°C"  = 1.0000000000000000000
+"thermal_sysfs:zone:2:°C"  = 0.0008290660160684118
+"thermal_sysfs:zone:3:°C"  = 0.0006078324535179333
+"thermal_sysfs:zone:4:°C"  = 0.0005401252618615571
+"thermal_sysfs:zone:5:°C"  = 0.0004764210903471746
+"thermal_sysfs:zone:6:°C"  = 0.0004787279785873615
+"thermal_sysfs:zone:7:°C"  = 0.0010176827764466004
+"thermal_sysfs:zone:8:°C"  = 0.0009687858669558743
+"thermal_sysfs:zone:9:°C"  = 0.0008354792409543808
+"thermal_sysfs:zone:10:°C" = 0.0007077846954227807
+"thermal_sysfs:zone:11:°C" = 0.0006888262436774456
+"thermal_sysfs:zone:12:°C" = 0.0010050790075088060
+"thermal_sysfs:zone:13:°C" = 0.0010284532133711317
+"thermal_sysfs:zone:14:°C" = 0.0010885927864857235
+"thermal_sysfs:zone:15:°C" = 0.0010620513146266473
+"thermal_sysfs:zone:16:°C" = 0.0011072659796813778
+"thermal_sysfs:zone:17:°C" = 0.0011368259208817586
+"thermal_sysfs:zone:18:°C" = 0.0011036596323681690
+"thermal_sysfs:zone:19:°C" = 0.0009961591450345394
+"thermal_sysfs:zone:20:°C" = 0.0010050915937051140
+"thermal_sysfs:zone:21:°C" = 1.0000000000000000000
+"thermal_sysfs:zone:22:°C" = 1.0000000000000000000
+"thermal_sysfs:zone:23:°C" = 0.0010940195385505870
+"thermal_sysfs:zone:24:°C" = 1.0000000000000000000
+"thermal_sysfs:zone:25:°C" = 1.0000000000000000000
+"thermal_sysfs:zone:26:°C" = 1.0000000000000000000
+"thermal_sysfs:zone:27:°C" = 1.0000000000000000000
+"thermal_sysfs:zone:28:°C" = 1.0000000000000000000
+"thermal_sysfs:zone:29:°C" = 1.0000000000000000000
+"thermal_sysfs:zone:30:°C" = 1.0000000000000000000
+"thermal_sysfs:zone:31:°C" = 0.0007523881690334946
+"thermal_sysfs:zone:32:°C" = 0.0009245866141292928
+"thermal_sysfs:zone:33:°C" = 0.0009112671155048833
+"thermal_sysfs:zone:34:°C" = 0.0009719469687505077
+"thermal_sysfs:zone:35:°C" = 0.0009518756522298793
+"thermal_sysfs:zone:36:°C" = 0.0009742182290228032
+
+[bigLITTLE.beta_z_cool]
+"thermal_sysfs:zone:0:°C"  = 1.0000000000000000000
+"thermal_sysfs:zone:1:°C"  = 1.0000000000000000000
+"thermal_sysfs:zone:2:°C"  = 0.0037750166259161687
+"thermal_sysfs:zone:3:°C"  = 0.0022177097683302918
+"thermal_sysfs:zone:4:°C"  = 0.0024620462616935200
+"thermal_sysfs:zone:5:°C"  = 0.0026173358543438480
+"thermal_sysfs:zone:6:°C"  = 0.0024112141851215900
+"thermal_sysfs:zone:7:°C"  = 0.0026375562273309290
+"thermal_sysfs:zone:8:°C"  = 0.0024885046033568184
+"thermal_sysfs:zone:9:°C"  = 0.0039097321807206820
+"thermal_sysfs:zone:10:°C" = 0.0026341153699516564
+"thermal_sysfs:zone:11:°C" = 0.0029141992583465387
+"thermal_sysfs:zone:12:°C" = 0.0027324691851599316
+"thermal_sysfs:zone:13:°C" = 0.0024865674324494380
+"thermal_sysfs:zone:14:°C" = 0.0026684762927588926
+"thermal_sysfs:zone:15:°C" = 0.0026255354659196982
+"thermal_sysfs:zone:16:°C" = 0.0027280727929217484
+"thermal_sysfs:zone:17:°C" = 0.0026410997263040040
+"thermal_sysfs:zone:18:°C" = 0.0023140026066367820
+"thermal_sysfs:zone:19:°C" = 0.0028366552945637328
+"thermal_sysfs:zone:20:°C" = 0.0027325299116821730
+"thermal_sysfs:zone:21:°C" = 1.0000000000000000000
+"thermal_sysfs:zone:22:°C" = 1.0000000000000000000
+"thermal_sysfs:zone:23:°C" = 0.0025987084308255320
+"thermal_sysfs:zone:24:°C" = 1.0000000000000000000
+"thermal_sysfs:zone:25:°C" = 1.0000000000000000000
+"thermal_sysfs:zone:26:°C" = 1.0000000000000000000
+"thermal_sysfs:zone:27:°C" = 1.0000000000000000000
+"thermal_sysfs:zone:28:°C" = 1.0000000000000000000
+"thermal_sysfs:zone:29:°C" = 1.0000000000000000000
+"thermal_sysfs:zone:30:°C" = 1.0000000000000000000
+"thermal_sysfs:zone:31:°C" = 0.0026822127638044717
+"thermal_sysfs:zone:32:°C" = 0.0024147519439484356
+"thermal_sysfs:zone:33:°C" = 0.0024519512510924420
+"thermal_sysfs:zone:34:°C" = 0.0024824291495016454
+"thermal_sysfs:zone:35:°C" = 0.0025165760394085797
+"thermal_sysfs:zone:36:°C" = 0.0027522487569729580
+ 
+[ttb]
+# zone/platform details
+model        = "SolarThermalTestbed"
+cores        = []
+frequencies  = []
+schedule_tag = "ttb"
+
+# experiment details
+path_apps    = "bin"
+path_data    = "data"
+
+# connection details
+driver_type  = "SSHUnixDriver"
+
+[ttb.driver_params]
+ip           = "82.130.102.133"
+port         = 2322
+user         = "rocketlogger"
+group        = "rocketlogger"
+key          = "$EXOT_ACCESS_DIR/solar.thermal.testbed_rsa"
+# gateway      = "exot-gateway"
+# HostName bb-1.ethz.ch
+
+

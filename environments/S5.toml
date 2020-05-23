@@ -1,0 +1,95 @@
+# zone mapping big Cluster
+[big]
+# zone/platform details
+model        = "Samsung Galaxy S5"
+cores        = [4,5,6,7]
+frequencies  = [1900000, 1800000, 1700000, 1600000, 1500000, 1400000, 1300000, 1200000, 1100000, 1000000, 900000, 800000]
+schedule_tag = "S5"
+# experiment details
+path_apps    = ""
+path_data    = "/sdcard/exot/data"
+# connection details
+driver_type  = "ADBAndroidDriver"
+[big.driver_params]
+ip           = "172.31.43.131"
+port         = 51808
+user         = "exot"
+group        = "exot"
+key          = "$EXOT_ACCESS_DIR/exot.adb_key"
+# gateway      = "exot-gateway"
+# zone mapping LITTLE cluster
+[LITTLE]
+# zone/platform details
+model        = "Samsung Galaxy S5"
+cores        = [0,1,2,3]
+frequencies  = [1300000, 1200000, 1100000, 1000000, 900000, 800000, 700000, 600000, 500000]
+schedule_tag = "S5"
+# experiment details
+path_apps    = "bin/rel"
+path_data    = "/sdcard/exot/data"
+# connection details
+driver_type  = "ADBAndroidDriver"
+[LITTLE.driver_params]
+ip           = "172.31.43.131"
+port         = 51808
+user         = "exot"
+group        = "exot"
+key          = "$EXOT_ACCESS_DIR/exot.adb_key"
+# gateway      = "exot-gateway"
+# zone mapping both cluster
+[bigLITTLE]
+# zone/platform details
+model        = "Samsung Galaxy S5"
+cores        = [0,1,2,3,4,5,6,7]
+frequencies  = []
+schedule_tag = "S5"
+# experiment details
+path_apps    = "bin/rel"
+path_data    = "/sdcard/exot/data"
+# connection details
+driver_type  = "ADBAndroidDriver"
+[bigLITTLE.driver_params]
+ip           = "172.31.43.131"
+port         = 51808
+user         = "exot"
+group        = "exot"
+key          = "$EXOT_ACCESS_DIR/exot.adb_key"
+# gateway      = "exot-gateway"
+[bigLITTLE.beta_z]
+"thermal_sysfs:zone:0:°C" = 0.06864370195354438
+"thermal_sysfs:zone:1:°C" = 0.006104564896214277
+"thermal_sysfs:zone:2:°C" = 164.40748295928944
+[bigLITTLE.T_idle]
+"thermal_sysfs:zone:0:°C" = 28.0
+"thermal_sysfs:zone:1:°C" = 23.7310375
+"thermal_sysfs:zone:2:°C" = 22.6
+ 
+[bigLITTLE.T_norm]
+"thermal_sysfs:zone:1:°C" = 100000
+[bigLITTLE.bigLITTLE.beta_z_heat]
+"thermal_sysfs:zone:0:°C" = 0.0003351929288878848
+"thermal_sysfs:zone:1:°C" = 0.0003477719848797613
+"thermal_sysfs:zone:2:°C" = 0.0014595147920768855
+[bigLITTLE.bigLITTLE.beta_z_cool]
+"thermal_sysfs:zone:0:°C" = 0.003551619171887651
+"thermal_sysfs:zone:1:°C" = 0.0009598197462570406
+"thermal_sysfs:zone:2:°C" = 0.00197270035849134
+[ttb]
+# zone/platform details
+model        = "SolarThermalTestbed"
+cores        = []
+frequencies  = []
+schedule_tag = "ttb"
+# experiment details
+path_apps    = "bin"
+path_data    = "data"
+# connection details
+driver_type  = "SSHUnixDriver"
+[ttb.driver_params]
+ip           = "82.130.102.133"
+port         = 2322
+user         = "rocketlogger"
+group        = "rocketlogger"
+key          = "$EXOT_ACCESS_DIR/solar.thermal.testbed_rsa"
+# gateway      = "exot-gateway"
+# HostName bb-1.ethz.ch

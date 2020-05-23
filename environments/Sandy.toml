@@ -1,0 +1,27 @@
+[host]
+
+# zone/platform details
+model        = "Intel(R) Xeon(R) CPU E5-2690"
+cores        = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+frequencies  = [1.200000, 1.300000, 1.400000, 1.500000, 1.700000, 1.800000, 1.900000, 2.000000, 2.100000, 2.200000, 2.300000, 2.400000, 2.600000, 2.700000, 2.800000, 2.900000]
+schedule_tag = "xeon"
+
+# experiment details
+path_apps    = "bin"
+path_data    = "data"
+
+# connection details
+driver_type  = "SSHUnixDriver"
+
+[host.driver_params]
+ip           = "172.31.43.141"
+port         = 51808
+user         = "exot"
+group        = "exot"
+key          = "$EXOT_ACCESS_DIR/id_ed25519"
+# gateway      = "exot-gateway"
+
+[host.power_levels]
+pp0 = [0.0, 35.0, 40.0, 43.0, 47.0, 51.0, 55.0, 58.0, 62.0]
+
+

@@ -1,0 +1,28 @@
+[host]
+
+# zone/platform details
+model        = "Lenovo T440p"
+cores        = [0, 1, 2, 3, 4, 5, 6, 7]
+frequencies  = [800000,  900000, 1000000, 1100000, 1300000, 1400000, 1500000, 1600000, 1700000, 1800000, 1900000, 2100000, 2200000, 2300000, 2400000]
+schedule_tag = "t440p"
+
+# experiment details
+path_apps    = "bin"
+path_data    = "data"
+
+# connection details
+driver_type  = "SSHUnixDriver"
+
+[host.driver_params]
+ip           = "172.31.43.138"
+port         = 51808
+user         = "exot"
+group        = "exot"
+key          = "$EXOT_ACCESS_DIR/id_ed25519"
+# gateway      = "exot-gateway"
+
+[host.power_thresholds]
+pp0 = [0.0, 10.0, 18.0, 22.0, 27.0]
+
+host.frequency_thresholds = [-100.00,6.50,20.00,33.00,52.50,72.00,85.00,98.00,111.50,124.00,136.50,156.50,176.50,189.00,202.00,3000.00]
+

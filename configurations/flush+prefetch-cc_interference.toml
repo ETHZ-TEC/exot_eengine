@@ -1,0 +1,213 @@
+# Configuration name
+name = "flush+prefetch-cc_interference"
+# Save path
+save_path = "./data"
+# Optional: Local backup path
+backup_path = "./data/_backup"
+# Optional: Action to perform if experiment directory exists
+experiment_exists_action = "move" # overwrite, move, halt, update
+
+# Optional: Backup configuration
+# [BACKUP]
+# user = ""
+# host = ""
+# ssh_key = ""
+# port = ""
+# path = ""
+
+# Experiment settings
+[EXPERIMENT]
+type = "PerformanceExperiment"
+channel = "FlushPrefetchCC"
+
+[EXPERIMENT.PHASES]
+# 64bps up to 384Kbps using 64 lines (1 symbol = 64 bit) | 1.0/225e-6 = 4444.44
+trainShortARMv8 = {bit_count = 1500, symbol_rates = "[100] + (list(range(500, 6001, 500)))", repetitions = 2}
+evalShortARMv8  = {bit_count = 5000, symbol_rates = "[100] + (list(range(500, 6001, 500)))", repetitions = 2}
+trainARMv8      = {bit_count = 1500, symbol_rates = "[100] + (list(range(250, 6001, 250)))", repetitions = 5}
+evalARMv8       = {bit_count = 5000, symbol_rates = "[100] + (list(range(250, 6001, 250)))", repetitions = 5}
+
+# 64bps up to 5Mbps using 64 lines (1 symbol = 64 bit) | 1.0/20e-6 = 50000.0
+trainShortHaswell = {bit_count = 1500, symbol_rates = "[100] + (list(range(10000, 78001, 10000)) + [78125])", repetitions = 2}
+evalShortHaswell  = {bit_count = 5000, symbol_rates = "[100] + (list(range(10000, 78001, 10000)) + [78125])", repetitions = 2}
+trainHaswell      = {bit_count = 1500, symbol_rates = "[100] + (list(range(1000, 78001, 1000))  + [78125])", repetitions = 5}
+evalHaswell       = {bit_count = 5000, symbol_rates = "[100] + (list(range(1000, 78001, 1000))  + [78125])", repetitions = 5}
+
+# Experiment layers
+[EXPERIMENT.LAYERS]
+src = {name = "BitsetCoding", params = {bitset_length = 64}}
+lne = {name = "MultiN", params = {N = 64}}
+rdp = {name = "DirectActivation", params = {}}
+io  = {name = "TimeValue", params = {timebase = "ns"}}
+
+# Experiment general settings
+[EXPERIMENT.GENERAL]
+latency = 10
+fan = true
+governors = "userspace"
+frequencies = "max"
+sampling_period = 20e-6
+delay_after_spawn = 5.0
+delay_after_auxiliary = 1.0
+active_wait = false
+
+[EXPERIMENT.GENERAL.ARMv8]
+fan = "255"
+sampling_period = 225e-6
+
+# --------------------------------------------------------------------------------------------------
+# ENVIRONMENT: Haswell
+# Apps and zones
+[ENVIRONMENTS.Haswell.APPS]
+snk = {executable = "meter_cache_fp", zone = "host"}
+src = {executable = "generator_cache_read_st", zone = "host"}
+
+[ENVIRONMENTS.Haswell.src]
+
+# generator
+generator.host_pinning = 3
+generator.should_pin_host = true
+generator.cores = [0]
+generator.should_pin_workers = true
+generator.worker_policy = "round_robin"
+generator.host_policy = "round_robin"
+generator.worker_priority = 98
+generator.host_priority = 97
+generator.use_busy_sleep = true
+generator.busy_sleep_yield = false
+generator.use_huge_pages = true
+generator.shm_file = "/dev/hugepages/8"
+generator.set_count = 64
+generator.set_increment = 64
+
+# logging
+logging.append_governor_to_files = false
+logging.async = true
+logging.async_size = 4096
+logging.log_level = "debug"
+logging.provide_platform_identification = false
+
+# schedule reader
+schedule_reader.reading_from_file = true
+
+# Platform settings -> sink
+[ENVIRONMENTS.Haswell.snk]
+
+# logging
+logging.append_governor_to_files = false
+logging.async = true
+logging.async_size = 4096
+logging.log_level = "debug"
+logging.provide_platform_identification = true
+logging.rotating_logs = false
+logging.rotating_logs_count = 10
+logging.rotating_logs_size = 104857600
+logging.timestamp_files = false
+
+meter.host_policy = "round_robin"
+meter.host_pinning = 7
+meter.should_pin_host = true
+meter.host_priority = 95
+meter.log_header = true
+meter.start_immediately = false
+meter.use_busy_sleep = true
+meter.busy_sleep_yield = false
+
+cache.use_huge_pages = true
+cache.shm_file = "/dev/hugepages/8"
+cache.set_count = 64
+cache.set_increment = 64
+
+[ENVIRONMENTS.Haswell.APPS."ffmpeg"]
+executable = "ffmpeg"
+type = "standalone"
+start_individually = true
+zone = "host"
+args = [
+"-y",
+"-loglevel", "error",
+"-stream_loop", "-1",
+"-i", "media/video.mp4",
+"-c:v", "libx264",
+"-b:v", "1000k",
+"-f", "null", "/dev/null"
+]
+
+# --------------------------------------------------------------------------------------------------
+# ENVIRONMENT: ARMv8
+# Apps and zones
+[ENVIRONMENTS.ARMv8.APPS]
+snk = {executable = "meter_cache_fp", zone = "combined"}
+src = {executable = "generator_cache_read_st", zone = "combined"}
+
+[ENVIRONMENTS.ARMv8.src]
+
+# generator
+generator.host_pinning = 2
+generator.should_pin_host = true
+generator.cores = [0]
+generator.should_pin_workers = true
+generator.worker_policy = "round_robin"
+generator.host_policy = "round_robin"
+generator.worker_priority = 98
+generator.host_priority = 97
+generator.use_busy_sleep = true
+generator.busy_sleep_yield = false
+generator.use_huge_pages = true
+generator.shm_file = "/dev/hugepages/8"
+generator.set_count = 64
+generator.set_increment = 16
+
+# logging
+logging.append_governor_to_files = false
+logging.async = true
+logging.async_size = 4096
+logging.log_level = "debug"
+logging.provide_platform_identification = false
+
+# schedule reader
+schedule_reader.reading_from_file = true
+
+# Platform settings -> sink
+[ENVIRONMENTS.ARMv8.snk]
+
+# logging
+logging.append_governor_to_files = false
+logging.async = true
+logging.async_size = 4096
+logging.log_level = "debug"
+logging.provide_platform_identification = true
+logging.rotating_logs = false
+logging.rotating_logs_count = 10
+logging.rotating_logs_size = 104857600
+logging.timestamp_files = false
+
+meter.host_policy = "round_robin"
+meter.host_pinning = 3
+meter.should_pin_host = true
+meter.host_priority = 95
+meter.log_header = true
+meter.start_immediately = false
+meter.use_busy_sleep = true
+meter.busy_sleep_yield = false
+
+cache.use_huge_pages = true
+cache.shm_file = "/dev/hugepages/8"
+cache.set_count = 64
+cache.set_increment = 16
+
+[ENVIRONMENTS.ARMv8.APPS."ffmpeg"]
+executable = "ffmpeg"
+type = "standalone"
+start_individually = true
+zone = "combined" # "host"
+args = [
+"-y",
+"-loglevel", "error",
+"-stream_loop", "-1",
+"-i", "media/video.mp4",
+"-c:v", "libx264",
+"-b:v", "1000k",
+"-f", "null", "/dev/null"
+]
+
