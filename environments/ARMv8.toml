@@ -1,0 +1,71 @@
+# zone for the quad-core Cortex-A57 package (physical package 1)
+[arm]
+
+# zone/platform details
+model        = "Nvidia Jetson Tegra TX2"
+cores        = [0, 3, 4, 5]
+frequencies  = [345600, 499200, 652800, 806400, 960000, 1113600, 1267200, 1420800, 1574400, 1728000, 1881600, 2035200]
+schedule_tag = "tegraTX2"
+
+# experiment details
+path_apps    = "bin"
+path_data    = "data"
+
+# connection details
+driver_type  = "SSHUnixDriver"
+
+[arm.driver_params]
+ip           = "172.31.43.134"
+port         = 51808
+user         = "exot"
+group        = "exot"
+key          = "$EXOT_ACCESS_DIR/id_ed25519"
+# gateway      = "exot-gateway"
+
+# zone for the dual-core Denver 2 package (physical package 0)
+[denver2]
+
+# zone/platform details
+model        = "Nvidia Jetson Tegra TX2"
+cores        = [1, 2]
+frequencies  = [345600, 499200, 652800, 806400, 960000, 1113600, 1267200, 1420800, 1574400, 1728000, 1881600, 2035200]
+schedule_tag = "tegraTX2"
+
+# experiment details
+path_apps    = "bin"
+path_data    = "data"
+
+# connection details
+driver_type  = "SSHUnixDriver"
+
+[denver2.driver_params]
+ip           = "172.31.43.134"
+port         = 51808
+user         = "exot"
+group        = "exot"
+key          = "$EXOT_ACCESS_DIR/id_ed25519"
+# gateway      = "exot-gateway"
+
+# zone for the combined packages
+[combined]
+
+# zone/platform details
+model        = "Nvidia Jetson Tegra TX2"
+cores        = [0, 1, 2, 3, 4, 5]
+frequencies  = [345600, 499200, 652800, 806400, 960000, 1113600, 1267200, 1420800, 1574400, 1728000, 1881600, 2035200]
+schedule_tag = "tegraTX2"
+
+# experiment details
+path_apps    = "bin"
+path_data    = "data"
+
+# connection details
+driver_type  = "SSHUnixDriver"
+
+[combined.driver_params]
+ip           = "172.31.43.134"
+port         = 51808
+user         = "exot"
+group        = "exot"
+key          = "$EXOT_ACCESS_DIR/id_ed25519"
+# gateway      = "exot-gateway"

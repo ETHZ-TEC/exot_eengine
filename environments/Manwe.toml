@@ -1,0 +1,23 @@
+[ttb]
+
+# zone/platform details
+model        = "SolarThermalTestbed"
+cores        = []
+frequencies  = []
+schedule_tag = "ttb"
+
+# experiment details
+path_apps    = "bin"
+path_data    = "data"
+
+# connection details
+driver_type  = "SSHUnixDriver"
+
+[ttb.driver_params]
+ip           = "82.130.102.133"
+port         = 2322
+user         = "rocketlogger"
+group        = "rocketlogger"
+key          = "$EXOT_ACCESS_DIR/solar.thermal.testbed_rsa"
+# gateway      = "exot-gateway"
+# HostName bb-1.ethz.ch
