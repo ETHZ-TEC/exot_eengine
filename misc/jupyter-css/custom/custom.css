@@ -1,0 +1,75 @@
+/*This file contains any manual css for this page that needs to override the global styles.
+This is only required when different pages style the same element differently. This is just
+a hack to deal with our current css styles and no new styling should be added in this file.*/
+
+@import url(https://code.cdn.mozilla.net/fonts/fira.css);
+@import url(https://cdn.jsdelivr.net/gh/tonsky/FiraCode@1.206/distr/fira_code.css);
+
+#ipython-main-app {
+    position: relative;
+}
+#jupyter-main-app {
+    position: relative;
+}
+
+body {
+    font-family: "Fira Sans" !important;
+    font-variant-ligatures: common-ligatures !important;
+    text-rendering: optimizeLegibility !important;
+}
+
+@media (min-width: 1200px) {
+    .container {
+        width: 95vw;
+    }
+}
+
+body,
+body.notebook_app.command_mode {
+}
+
+.CodeMirror pre,
+.CodeMirror-dialog,
+.CodeMirror-dialog .CodeMirror-search-field,
+.terminal-app .terminal {
+    font-family: "Fira Code", Monaco, monospace !important;
+    font-size: 9pt;
+}
+
+.terminal-app .terminal {
+    line-height: 1.3em;
+}
+
+div.output pre,
+div.output code,
+.rendered_html pre,
+.rendered_html code,
+div.completions select,
+div.container pre {
+    font-family: "Fira Code", Monaco, monospace !important;
+}
+
+div.output pre,
+div.output code,
+.rendered_html pre,
+.rendered_html p code,
+div.completions select,
+div.container pre {
+    font-size: 9pt;
+    line-height: 1.3em;
+}
+
+div.prompt,
+div.tooltiptext pre {
+    font-family: "Fira Code", Monaco, monospace !important;
+    font-size: 8pt;
+    line-height: 1.3em;
+}
+
+div.output_stderr pre {
+    font-size: 7pt;
+}
+
+div.output_text pre {
+    font-size: 8pt;
+}

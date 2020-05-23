@@ -1,0 +1,11 @@
+[Unit]
+Description=SHM setup for experimental purposes
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+StandardOutput=journal
+ExecStart=/setup/setup-shm-arm.sh
+
+[Install]
+WantedBy=multi-user.target

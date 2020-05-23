@@ -1,0 +1,43 @@
+[zone_name]                          # zone mapping
+
+# zone/platform details
+model        = "model"               # e.g. Lenovo T440p
+cores        = [0, 1, 2, 3]          # CPU core indexes
+frequencies  = [800000, 900000]      # Available operating frequencies, KHz
+schedule_tag = "all"                 # Schedule tag
+
+# experiment details
+path_apps    = "exe/x86_64/release"  # path where executables are kept
+path_data    = "data"                # path where experiment files are kept
+
+# connection details
+driver_type  = "SSHUnixDriver"    # Driver type
+
+[zone_name.driver_params]
+ip           = "127.0.0.1"           # IP address
+port         = 51808                 # SSH port
+user         = "user"                # Username for experiments
+group        = "group"               # User group for experiments
+key          = "/path/to/key/file"   # SSH key for public-key access
+
+[another_zone_name]                  # zone mapping
+
+# zone/platform details
+model        = "model"               # e.g. Lenovo T440p
+cores        = [0, 1, 2, 3]          # Number of CPU cores
+frequencies  = [800000, 900000]      # Available operating frequencies, KHz
+schedule_tag = "all"                 # Schedule tag
+
+# experiment details
+path_apps    = "exe/x86_64/release"  # path where executables are kept
+path_data    = "data"                # path where experiment files are kept
+
+# connection details
+driver_type  = "SSHUnixDriver"    # Driver type
+
+[another_zone_name.driver_params]
+ip           = "127.0.0.1"           # IP address
+port         = 51808                 # SSH port
+user         = "user"                # Username for experiments
+group        = "group"               # User group for experiments
+key          = "/path/to/key/file"   # SSH key for public-key access

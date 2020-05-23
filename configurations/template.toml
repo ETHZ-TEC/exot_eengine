@@ -1,0 +1,146 @@
+# Configuration name
+name = "Template"
+# Save path
+save_path = "./data"
+# Optional: Local backup path
+backup_path = "./data/_backup"
+# Optional: Action to perform if experiment directory exists
+experiment_exists_action = "update" # overwrite, move, halt, update
+
+# Optional: Backup configuration
+# [BACKUP]
+# user = ""
+# host = ""
+# key = ""
+# port = ""
+# path = ""
+
+# Experiment settings
+[EXPERIMENT]
+type = "PerformanceExperiment"
+channel = "Thermal"
+
+[EXPERIMENT.PHASES]
+train = {bit_count = 16, symbol_rates = "arange(1, 5)", repetitions = 2}
+eval = {bit_count = 16, symbol_rates = "arange(1, 5)", repetitions = 2}
+# run = {bit_count = 16, symbol_rates = "arange(1, 5)", repetitions = 2}
+
+# Experiment layers
+[EXPERIMENT.LAYERS]
+src = {name = "SourcePassthrough", params = {}}
+lne = {name = "GenericLineCoding", params = {}}
+rdp = {name = "CoreActivation", params = {saturating = true}}
+io = {name = "TimeValue", params = {timebase = "ns"}}
+
+# Experiment general settings, valid for PerformanceExperiment
+[EXPERIMENT.GENERAL]
+latency = 20             # int, a value in microseconds, see 'cpuidle'
+fan = true               # bool, set to max if true; str or list of str
+governors = "userspace"  # "", a str, or a list of str
+frequencies = "max"      # "", "min", "max", a value in KHz, or a list thereof
+sampling_period = 1e-3   # in seconds; overrides host settings
+
+# Apps and zones for a specific environment
+[ENVIRONMENTS."environment_name".APPS]
+snk = {executable = "example-snk", type = "local", zone = "secure"}
+src = {executable = "example-src", type = "local", zone = "insecure"}
+
+# NOTE: do not use underscore in app names, e.g. use standalone-int instead of standalone_int
+[ENVIRONMENTS."environment_name".APPS."standalone-int"]
+executable = "stress-ng" # must exist on the target system in PATH or as a file
+type = "standalone" # apps are assumed to be "local" by default
+zone = "host"
+args = ["--cpu", "2", "--cpu-load", "50"] # args must be supplied as a list
+start_individually = true # true removes the app from driver start command,
+                          # some apps do not handle sone signals (e.g. USR1) well.
+
+# a local interference app needs to have its section in ENVIRONMENTS
+[ENVIRONMENTS."environment_name".APPS."local-int"]
+executable = "generator_utilisation_mt"
+type = "local"
+zone = "host"
+sched = "./misc/custom.sched" # a custom schedule will be used whenever provided
+
+# Platform settings -> source
+[ENVIRONMENTS."environment_name".src]
+
+# generator
+generator.cores = [0, 2, 4, 6]
+generator.policy = "round_robin"
+generator.priority = 98
+generator.worker_priority = 90
+
+# logging
+logging.append_governor_to_files = false
+logging.async = true
+logging.async_size = 4096
+logging.debug_log_filename = "" # set during execution
+logging.app_log_filename = ""   # set during execution
+logging.log_level = "debug"
+logging.provide_platform_identification = true
+logging.rotating_logs = false
+logging.rotating_logs_count = 10
+logging.rotating_logs_size = 104857600
+logging.timestamp_files = false
+
+# schedule reader
+schedule_reader.input_file = "" # set during execution
+schedule_reader.reading_from_file = true # also set during execution
+
+# Platform settings -> sink
+[ENVIRONMENTS."environment_name".snk]
+
+# logging
+logging.append_governor_to_files = false
+logging.async = true
+logging.async_size = 4096
+logging.debug_log_filename = "" # set during execution
+logging.app_log_filename = ""   # set during execution
+logging.log_level = "debug"
+logging.provide_platform_identification = true
+logging.rotating_logs = false
+logging.rotating_logs_count = 10
+logging.rotating_logs_size = 104857600
+logging.timestamp_files = false
+
+# host
+host.period = 0.1
+host.policy = "round_robin"
+host.pinning = 0
+host.priority = 90
+host.log_header = true
+host.start_immediately = false
+
+# modules
+frequency_rel.cores = [1, 3, 5, 7]
+frequency_sysfs.cores = [0, 1, 2, 3, 4, 5, 6, 7]
+frequency_sysfs.strict = true
+frequency_sysfs.source = "scaling_cur_freq"
+power_msr.rapl_domains = ["pkg", "pp0", "pp1", "sys"]
+thermal_msr.cores = [1, 3, 5, 7]
+thermal_msr.package = true
+thermal_sysfs.zones = [0, 1, 2]
+utilisation_procfs.cores = [0, 1, 2, 3, 4, 5, 6, 7]
+utilisation_procfs.raw = false
+utilisation_procfs.states = ["user", "idle"]
+
+# Platform settings -> local interference app
+[ENVIRONMENTS."environment_name"."local-int"]
+generator.cores = [1, 3, 5, 7]
+generator.policy = "other"
+generator.priority = 15
+generator.worker_priority = 10
+
+logging.append_governor_to_files = false
+logging.async = true
+logging.async_size = 4096
+logging.debug_log_filename = "" # set during execution
+logging.app_log_filename = ""   # set during execution
+logging.log_level = "debug"
+logging.provide_platform_identification = false
+logging.rotating_logs = false
+logging.rotating_logs_count = 10
+logging.rotating_logs_size = 104857600
+logging.timestamp_files = false
+
+schedule_reader.input_file = "" # set during execution
