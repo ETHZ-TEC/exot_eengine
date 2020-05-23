@@ -35,13 +35,13 @@ by sink and source apps.
 from .cacheactivation import CacheActivation
 from .coreactivation import CoreActivation
 from .directactivation import DirectActivation
-from .quantisation import Quantisation
+from .quantisation import QuantCoreActivation
 from .resampling import Normalise
 
 __all__ = (
     "CacheActivation",
     "CoreActivation",
     "DirectActivation",
-    "Quantisation",
+    "QuantCoreActivation",
     "Normalise",
 )

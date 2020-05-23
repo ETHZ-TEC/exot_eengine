@@ -42,15 +42,19 @@ capacity_from_connection_matrix :: (A, T_min)     -> Capacity float
 
 
 def classic_waterfilling(p0, Sqq, Shh):
-    """Returns the capacity bound of a given channel determined using classic waterfiling see Thermal-CC paper TODD{REF}.
-       Parameters:
-           p0: Power cap for the waterfilling algorithm as float
-           Sqq: Noise power spectrum as np.darray shape(N,2) where N is the number of frequency bins, column 0 holds
-                the frequencies and column 1 the power spectral density.
-           Shh: Channel power spectrum as np.darray shape(N,2) where N is the number of frequency bins, column 0 holds
-                the frequencies and column 1 the power spectral density.
-       Returns:
-           Channel Capaicty: in bits per seconds
+    """Returns the capacity bound of a given channel determined using classic waterfiling
+
+    See Thermal-CC paper TODO{REF}.
+
+    Args:
+        p0: Power cap for the waterfilling algorithm as float
+        Sqq: Noise power spectrum as np.darray shape(N,2) where N is the number of frequency
+            bins, column 0 holds the frequencies and column 1 the power spectral density.
+        Shh: Channel power spectrum as np.darray shape(N,2) where N is the number of frequency
+            bins, column 0 holds the frequencies and column 1 the power spectral density.
+
+    Returns:
+        Channel Capaicty: in bits per seconds
     """
     _lambda = 1  # Waterfilling parameter
     _alpha = 1  # Lagrangian parameter
@@ -74,15 +78,18 @@ def classic_waterfilling(p0, Sqq, Shh):
 
 
 def constrained_waterfilling(p0, Sqq, Shh):
-    """Returns the capacity bound of a given channel determined using constrained waterfiling see Thermal-CC paper TODO{REF}
-       Parameters:
-           p0: Power cap for the waterfilling algorithm as float
-           Sqq: Noise power spectrum as np.darray shape(N,2) where N is the number of frequency bins, column 0 holds
-                the frequencies and column 1 the power spectral density.
-           Shh: Channel power spectrum as np.darray shape(N,2) where N is the number of frequency bins, column 0 holds
-                the frequencies and column 1 the power spectral density.
-       Returns:
-           Channel Capacity: in bits per seconds
+    """Returns the capacity bound of a given channel determined using constrained waterfiling
+
+    See Thermal-CC paper TODO{REF}.
+
+    Parameters:
+        p0: Power cap for the waterfilling algorithm as float
+        Sqq: Noise power spectrum as np.darray shape(N,2) where N is the number of frequency
+            bins, column 0 holds the frequencies and column 1 the power spectral density.
+        Shh: Channel power spectrum as np.darray shape(N,2) where N is the number of frequency
+            bins, column 0 holds the frequencies and column 1 the power spectral density.
+    Returns:
+        Channel Capacity: in bits per seconds
     """
     max_error = 10 ** (-4)  # 9)
     max_alpha = 10 ** (10)
@@ -119,13 +126,16 @@ def constrained_waterfilling(p0, Sqq, Shh):
 
 
 def capacity_from_connection_matrix(A, T_min):
-    """Returns the capacity bound of a given channel determined for noise free channel based on the connection matrix, see Power-CC paper TODO{REF}
-       Parameters:
-           A: Transition matrix of the channel model
-           T_min: Minimal channel access time in seconds
-       Returns:
-           Channel Capaicty: in bits per seconds
+    """Returns the capacity bound of a given channel determined for noise free channel based on
+    the connection matrix, see Power-CC paper TODO{REF}.
+
+    Parameters:
+        A: Transition matrix of the channel model
+        T_min: Minimal channel access time in seconds
+    Returns:
+        Channel Capacity in bits per seconds
+        Channel Capacity in bits per channel use
     """
     w = np.linalg.eigvals(A)
     _lambda = w.max()
-    return np.log2(_lambda) / T_min
+    return np.log2(_lambda) / T_min, np.log2(_lambda)

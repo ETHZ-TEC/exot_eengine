@@ -73,6 +73,20 @@ __all__ = (
 
 
 def get_nearest(array: t.Union[t.List, np.ndarray, pandas.Series], value: t.Any) -> tuple:
+    """Gets the index and value of an element in the array that is closest to the given value
+
+    Args:
+        array (t.Union[t.List, np.ndarray, pandas.Series]): The array
+        value (t.Any): The value
+
+    Returns:
+        tuple: A 2-tuple with the index and the value
+
+    Raises:
+        TypeError: Wrong array type provided
+        ValueError: Array with wrong dimensions provided
+        TypeError: Provided value is not a scalar numeric value
+    """
     valid_types = (t.List, np.ndarray, pandas.Series)
 
     if not isinstance(array, valid_types):
@@ -94,43 +108,126 @@ def get_nearest(array: t.Union[t.List, np.ndarray, pandas.Series], value: t.Any)
 
 
 def get_nearest_value(array: t.Union[t.List, np.ndarray, pandas.Series], value: t.Any) -> t.Any:
+    """Gets the value of an element in the array that is closest to the given value
+
+    Args:
+        array (t.Union[t.List, np.ndarray, pandas.Series]): The array
+        value (t.Any): The value
+
+    Returns:
+        t.Any: The nearest value
+    """
     return get_nearest(array, value)[1]
 
 
 def get_nearest_index(array: t.Union[t.List, np.ndarray, pandas.Series], value: t.Any) -> int:
+    """Gets the index of an element in the array that is closest to the given value
+
+    Args:
+        array (t.Union[t.List, np.ndarray, pandas.Series]): [description]
+        value (t.Any): [description]
+
+    Returns:
+        int: [description]
+    """
     return get_nearest(array, value)[0]
 
 
-def awgn_like(like: np.ndarray, sigma: float = 1.0, mu: float = 0.0):
-    """Produce a gaussian-distributed random array of same shape as a given array"""
+def awgn_like(like: np.ndarray, sigma: float = 1.0, mu: float = 0.0) -> np.ndarray:
+    """Produces a gaussian-distributed random array of same shape as a given array
+
+    Args:
+        like (np.ndarray): The array (only shape considered)
+
+    Keyword Args:
+        sigma (float): The standard deviation of the normal distribution (default: {1.0})
+        mu (float): The mean of the distribution (default: {0.0})
+
+    Returns:
+        np.ndarray: The AWGN array
+    """
     return np.random.normal(loc=mu, scale=sigma, size=like.shape)
 
 
-def uniform_like(like: np.ndarray, low: float = 0.0, high: float = 1.0):
-    """Produce a uniform-distributed random array of same shape as a given array"""
+def uniform_like(like: np.ndarray, low: float = 0.0, high: float = 1.0) -> np.ndarray:
+    """Produce a uniform-distributed random array of same shape as a given array
+
+    Args:
+        like (np.ndarray): The array (only shape considered)
+
+    Keyword Args:
+        low (float): The lower limit of the uniform distribution (default: {0.0})
+        high (float): The upper limit of the uniform distribution (default: {1.0})
+
+    Returns:
+        np.ndarray: The uniform-distributed random array
+    """
     return np.random.uniform(low=low, high=high, size=like.shape)
 
 
-def add_awgn_noise(to: np.ndarray, sigma: float = 1.0, mu: float = 0.0):
-    """Add gaussian noise to an array"""
+def add_awgn_noise(to: np.ndarray, sigma: float = 1.0, mu: float = 0.0) -> np.ndarray:
+    """Adds gaussian noise to an array
+
+    Args:
+        to (np.ndarray): The array to which the noise will be added
+
+    Keyword Args:
+        sigma (float): The standard deviation of the normal distribution (default: {1.0})
+        mu (float): The mean of the distribution (default: {0.0})
+
+    Returns:
+        np.ndarray: The given array with added noise
+    """
     return to + awgn_like(to, sigma=sigma, mu=mu)
 
 
 def add_uniform_noise(to: np.ndarray, low: float = 0.0, high: float = 1.0):
-    """Add uniform noise to an array"""
+    """Adds uniform noise to an array
+        Args:
+        to (np.ndarray): The array to which the noise will be added
+
+    Keyword Args:
+        low (float): The lower limit of the uniform distribution (default: {0.0})
+        high (float): The upper limit of the uniform distribution (default: {1.0})
+
+    Returns:
+        np.ndarray: The given array with added noise
+    """
     return to + uniform_like(to, low=low, high=high)
 
 
-def count_errors(left: np.ndarray, right: np.ndarray):
-    """Count differences between two arrays of same shape"""
+def count_errors(left: np.ndarray, right: np.ndarray) -> int:
+    """Counts differences between two arrays of same shape
+
+    Args:
+        left (np.ndarray): The left array
+        right (np.ndarray): The right array
+
+    Returns:
+        int: The number of errors/differences
+
+    Raises:
+        ValueError: The arrays are of different shape
+    """
     assert (
         left.shape == right.shape
     ), f"arrays must be of same shape, got: {left.shape} and {right.shape}"
     return np.count_nonzero((left != right).astype(int))
 
 
-def count_errors_robust(left: np.ndarray, right: np.ndarray):
-    """Count differences between two row or column vectors"""
+def count_errors_robust(left: np.ndarray, right: np.ndarray) -> int:
+    """Count differences between two row or column vectors
+
+    Args:
+        left (np.ndarray): The left array
+        right (np.ndarray): The right array
+
+    Returns:
+        int: The number of element differences and/or length differences
+
+    Raises:
+        ValueError: Wrong array dimensions provided
+    """
     assert (
         left.ndim == right.ndim
     ), f"arrays must be of same dimensions, got: {left.ndim} and {right.ndim}"
@@ -217,6 +314,15 @@ def interleave(array: np.ndarray, n: int) -> np.ndarray:
 
 
 def interleave_split(array: np.ndarray, n: int) -> np.ndarray:
+    """Interleaves rows of an array and splits into multiple arrays
+
+    Args:
+        array (np.ndarray): The array to interleave and split
+        n (int): The number of consecutive rows to interleave
+
+    Returns:
+        np.ndarray: The interleaved and split array
+    """
     return np.split(interleave(array, n), n)
 
 
@@ -412,7 +518,7 @@ def find_ramp_edges(
     kernel: object = None,
     method: str = "local",
     _debug: bool = False,
-):
+) -> t.Tuple[np.ndarray, np.ndarray]:
     """Gets indexes of falling and rising ramps in a sample trace using convolution with
        an edge detection kernel
 
@@ -424,6 +530,9 @@ def find_ramp_edges(
         kernel (object, optional): The ramp-detection kernel
         method (str, optional): Method, either "local" or "gradient"
         _debug (bool, optional): Output additional data for debugging purposes?
+
+    Returns:
+        t.Tuple[np.ndarray, np.ndarray]: The falling and rising ramp edges
     """
     assert isinstance(trace, (np.ndarray, pandas.Series))
     assert (trace.ndim == 1) or (trace.ndim == 2 and trace.shape[1] == 1)
@@ -496,7 +605,16 @@ def find_ramp_edges(
             )
 
 
-def split_into_contiguous_ranges(trace, *, step_threshold=1):
+def split_into_contiguous_ranges(trace: np.ndarray, *, step_threshold: int = 1) -> [np.array]:
+    """Splits an array into ranges of similar values
+
+    Args:
+        trace (np.ndarray): The array to split
+        step_threshold (int, optional): The splitting threshold. Defaults to 1.
+
+    Returns:
+        [np.array]: The array of split ranges
+    """
     return np.split(trace, np.where(np.diff(trace) > step_threshold)[0] + 1)
 
 

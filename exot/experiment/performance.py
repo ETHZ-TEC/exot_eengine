@@ -33,6 +33,7 @@ import typing as t
 from functools import partial
 from pathlib import Path
 
+import editdistance
 import numpy as np
 import pandas as pd
 
@@ -154,6 +155,7 @@ class PerformanceExperiment(
         ingest_args: dict,
         *,
         standalone: bool = True,
+        use_levensthein: bool = False,
         **kwargs,
     ) -> t.Tuple[pd.DataFrame, Run, t.Optional[Run]]:
         if not isinstance(train_phase, str):
@@ -164,10 +166,10 @@ class PerformanceExperiment(
             )
 
         matcher = kwargs.pop("matcher", ingest_args.get("io", {}).get("matcher", None))
-        if not isinstance(matcher, Matcher):
-            raise TypeError(f"'matcher' should be of type {Matcher}, got: {type(matcher)}")
+        if not isinstance(matcher[0][0], Matcher):
+            raise TypeError(f"'matcher' should be of type {Matcher}, got: {type(matcher[0][0])[0][0]}")
 
-        description = "{}_{}".format(matcher._quantity, matcher._method)
+        description = "{}_{}".format(matcher[0][0]._quantity, matcher[0][0]._method)
         ingest_args["io"] = ingest_args.get("io", {})
         ingest_args["io"].update(matcher=matcher)
 
@@ -185,7 +187,10 @@ class PerformanceExperiment(
                 if not isinstance(real_sequence, np.ndarray)
                 else real_sequence
             )
-            return float(count_errors_robust(gt, rs)) / gt.size
+            if use_levensthein:
+                return float(editdistance.eval(gt, rs)) / gt.size
+            else:
+                return float(count_errors_robust(gt, rs)) / gt.size
 
         def get_run_analysis(run, train_phase=None):
             assert run.ingested, "run must be ingested"
@@ -194,7 +199,7 @@ class PerformanceExperiment(
                 "phase": run.config.phase,
                 "trained_with": train_phase if train_phase else "",
                 "variable": description,
-                "matcher": repr(matcher),
+                "matcher": repr(matcher[0][0]),
                 "environment": self.layers.io.config.env,
                 "repetition": self.layers.io.config.rep,
                 "bit_rate": self.layers.src.symrate_to_bitrate(run.config.symbol_rate),
@@ -308,10 +313,10 @@ class PerformanceExperiment(
             )
 
         matcher = kwargs.pop("matcher", kwargs.get("io", {}).get("matcher", None))
-        if not isinstance(matcher, Matcher):
-            raise TypeError(f"'matcher' should be of type {Matcher}, got: {type(matcher)}")
+        if not isinstance(matcher[0][0], Matcher):
+            raise TypeError(f"'matcher' should be of type {Matcher}, got: {type(matcher[0][0])}")
 
-        description = "{}_{}".format(matcher._quantity, matcher._method)
+        description = "{}_{}".format(matcher[0][0]._quantity, matcher[0][0]._method)
         ingest_args = kwargs.copy()
         ingest_args["io"] = ingest_args.get("io", {})
         ingest_args["io"].update(matcher=matcher)
@@ -319,7 +324,7 @@ class PerformanceExperiment(
         analysis_data_holder = []
 
         for train_phase, eval_phase in phase_mapping.items():
-            self.logger.info(f"analysing performance for phases: {train_phase} -> {eval_phase}")
+            self.logger.info(f"analysing performance for phases: {train_phase} -> {eval_phase}, environments {envs}")
 
             for idx in self.phases[train_phase]:
                 train_run = self.phases[train_phase][idx]
@@ -346,7 +351,7 @@ class PerformanceExperiment(
                     raise RuntimeError("no envs specified or detected")
 
                 for env in envs:
-                    self.logger.info(f"\\_ analysing performance for env: {env}")
+                    self.logger.debug(f"\\_ analysing performance for env: {env}")
 
                     ingest_args["io"] = ingest_args.get("io", {})
                     ingest_args["io"]["env"] = env
@@ -478,7 +483,7 @@ class PerformanceRun(
     @classmethod
     def read(cls, path: Path, parent: t.Optional[object] = None) -> object:
         instance = super().read(path, parent)
-        instance.load_data()
+        instance.load_data_bundled()
         return instance
 
     def write(self) -> None:
@@ -488,7 +493,7 @@ class PerformanceRun(
         archive with output streams and writes the schedules to *.sched files.
         """
         super().write()
-        self.save_data()
+        self.save_data_bundled()
         self.write_schedules()
 
     @property
@@ -538,8 +543,13 @@ class PerformanceRun(
         if not layers:
             return
 
-        config = {layer: {} for layer in layers}
+        config = {layer: {'env':''} for layer in layers}
         for layer in config:
+            # TODO Put env in the root of the ingest_configuration
+            if 'io' in kwargs:
+                if 'env' in kwargs['io']:
+                    config[layer]['env'] = kwargs['io']['env']
+
             config[layer].update(self.config)
             config[layer].update(
                 bit_rate=self.parent.layers.src.symrate_to_bitrate(self.config.symbol_rate),
@@ -550,8 +560,8 @@ class PerformanceRun(
                 path=self.path,
             )
 
-            if which == "decode" and self.digested:
-                config[layer].update(**self.o_streams)
+            #if which == "decode" and self.digested:
+            config[layer].update(**self.o_streams)
 
             if layer in kwargs:
                 config[layer].update(**kwargs.pop(layer))

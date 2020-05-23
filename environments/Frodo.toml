@@ -108,12 +108,12 @@ key          = "$EXOT_ACCESS_DIR/exot.adb_key"
 [bigLITTLE.T_norm]
 "thermal_sysfs:zone:1:°C" = 100000
 
-[bigLITTLE.bigLITTLE.beta_zenv_inc]
+[bigLITTLE.bigLITTLE.beta_z_heat]
 "thermal_sysfs:zone:0:°C" = 0.0003351929288878848
 "thermal_sysfs:zone:1:°C" = 0.0003477719848797613
 "thermal_sysfs:zone:2:°C" = 0.0014595147920768855
 
-[bigLITTLE.bigLITTLE.beta_zenv_dec]
+[bigLITTLE.bigLITTLE.beta_z_cool]
 "thermal_sysfs:zone:0:°C" = 0.003551619171887651
 "thermal_sysfs:zone:1:°C" = 0.0009598197462570406
 "thermal_sysfs:zone:2:°C" = 0.00197270035849134

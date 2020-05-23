@@ -49,6 +49,19 @@ __all__ = ("_save_path_helper", "remove_spine", "add_spine", "rugplot")
 
 
 def _save_path_helper(path: t.Union[pathlib.Path, str]) -> pathlib.Path:
+    """A helper function for save paths
+
+    Args:
+        path (t.Union[pathlib.Path, str]): The save path
+
+    Raises:
+        TypeError: Wrong type supplied
+        ValueError: Provided a file instead of a directory
+        RuntimeError: Directory was not created
+
+    Returns:
+        pathlib.Path: The save path
+    """
     # Check and normalise variable type
     if not isinstance(path, (str, pathlib.Path)):
         raise TypeError(f"wrong type supplied for save directory path", type(path))
@@ -68,7 +81,14 @@ def _save_path_helper(path: t.Union[pathlib.Path, str]) -> pathlib.Path:
     return path
 
 
-def remove_spine(axis, which, ticks_only=False):
+def remove_spine(axis, which: str, ticks_only: bool = False) -> None:
+    """Removes the spine from an axis
+
+    Args:
+        axis: The matplotlib axis
+        which (str): Which spine to remove? (top, bottom)
+        ticks_only (bool, optional): Remove only the ticks?. Defaults to False.
+    """
     if not ticks_only:
         axis.spines[which].set_color("none")
     if which in ["top", "bottom"]:
@@ -77,7 +97,14 @@ def remove_spine(axis, which, ticks_only=False):
         axis.tick_params(axis="y", color=(0, 0, 0, 0))
 
 
-def add_spine(axis, which, ticks_only=False):
+def add_spine(axis, which: str, ticks_only: bool = False):
+    """Adds a spine to an axis
+
+    Args:
+        axis: The matplotlib axis
+        which (str): Which spine to add? (top, bottom)
+        ticks_only (bool, optional): Add only the ticks?. Defaults to False.
+    """
     if not ticks_only:
         axis.spines[which].set_color((0, 0, 0, 1))
     params = {which: True}

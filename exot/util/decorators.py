@@ -45,10 +45,11 @@ __all__ = (
 def only_once(f: t.Callable[..., t.T]) -> t.Callable[..., t.T]:
     """Decorator for running a function only once
 
-    :param f: a function to be decorated
-    :type f: t.Callable[..., t.T]
-    :returns: a decorated function
-    :rtype: {t.Callable[..., t.T]}
+    Args:
+        f (t.Callable[..., t.T]): The function to be decorated
+
+    Returns:
+        t.Callable[..., t.T]: A decorated function
     """
 
     @wraps(f)
@@ -64,10 +65,11 @@ def only_once(f: t.Callable[..., t.T]) -> t.Callable[..., t.T]:
 def dummy(f: t.Callable) -> t.Callable:
     """Dummy forwarding decorator
 
-    :param f: a function
-    :type f: t.Callable
-    :returns: a decorated function
-    :rtype: {t.Callable}
+    Args:
+        f (t.Callable): The function to be decorated
+
+    Returns:
+        t.Callable: a decorated function
     """
 
     @wraps(f)
@@ -80,10 +82,11 @@ def dummy(f: t.Callable) -> t.Callable:
 def verbose(f: t.Callable) -> t.Callable:
     """Decorator for printing function arguments before a call
 
-    :param f: a function to be decorated
-    :type f: t.Callable
-    :returns: a decorated function
-    :rtype: {t.Callable}
+    Args:
+        f (t.Callable): The function to be decorated
+
+    Returns:
+        t.Callable: A decorated function
     """
     from sys import stderr
 
@@ -100,7 +103,14 @@ def verbose(f: t.Callable) -> t.Callable:
 
 
 def noexcept(f: t.Callable) -> t.Callable:
-    """Decorator for ignoring exceptions"""
+    """Decorator for ignoring exceptions
+
+    Args:
+        f (t.Callable): The function to be decorated
+
+    Returns:
+        t.Callable: A decorated function
+    """
     from sys import stderr
 
     @wraps(f)
@@ -120,13 +130,16 @@ def decorate_methods(
 ) -> t.Callable:
     """Class/object decorator that decorates its methods
 
-    :param decorator: a decorator function, defaults to dummy
-    :type decorator: t.Callable[..., t.Callable[..., t.Callable]], optional
-    :param methods: a list of methods to decorate, defaults to None
-    :type methods: t.Optional[t.List[str]], optional
-    :returns: a decorator
-    :rtype: {t.Callable}
-    :raises: TypeError
+    Args:
+        decorator (t.Callable[..., t.Callable[..., t.Callable]]): The decorator function.
+            Optional. Defaults to 'dummy'.
+        methods (t.Optional[t.List[str]]): The list of methods to decorate. Defaults to None.
+
+    Returns:
+        t.Callable: A decorator
+
+    Raises:
+        TypeError: Wrong type provided to 'decorator'
 
     The function can also be used to produce partially-evaluated versions of itself,
     e.g. to create a `make_methods_verbose` decorator.

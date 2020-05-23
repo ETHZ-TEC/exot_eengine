@@ -33,6 +33,7 @@ into symbols.
 """
 
 from .generic import GenericLineCoding
+from .median import MedianLineCoding
 from .manchester import ManchesterLineCoding
 from .multi import MultiN
 from .passthrough import PassthroughLineCoding
@@ -41,6 +42,7 @@ from .label_refactoring import ThermalLabelRefactoring
 
 __all__ = (
     "GenericLineCoding",
+    "MedianLineCoding",
     "ManchesterLineCoding",
     "MultiN",
     "PassthroughLineCoding",

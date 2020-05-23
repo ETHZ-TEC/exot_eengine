@@ -134,6 +134,7 @@ class CoreActivation(Layer, layer=Layer.Type.PrePost):
         sampling_period: float,
         environments_apps_zones: t.Mapping,
         saturating: bool = True,
+        interpolation: str = "linear",
         **kwargs,
     ):
         """Initialise the CoreActivation RDP layer
@@ -143,6 +144,7 @@ class CoreActivation(Layer, layer=Layer.Type.PrePost):
             environments_apps_zones (t.Mapping): the env->app->zone mapping
             saturating (bool, optional): is configured as saturating?
         """
+        self.interpolation = interpolation
         self.sampling_period = sampling_period
         self.environments_apps_zones = environments_apps_zones
         self.saturating = saturating
@@ -364,37 +366,33 @@ class CoreActivation(Layer, layer=Layer.Type.PrePost):
         actual_start = timestamps.iloc[0]
         actual_end = timestamps.iloc[len(timestamps) - 1]
 
-        samples_per_symbol: float
+        orig_samples_per_symbol: float
         sampling_period_inferred = (
             0.15 * timestamps.diff().mean() + 0.85 * timestamps.diff().median()
         )
 
-        # samples_per_symbol = 1 / (sampling_period_inferred * self.config.symbol_rate)
-        samples_per_symbol = 1 / (self.sampling_period * self.config.symbol_rate)
+        if abs(sampling_period_inferred - self.sampling_period)  / self.sampling_period > 0.1:
+            pass
+            # TODO here we need a logger output to tell the user somethings off with the timestamps
 
-        subsymbol_count = self.config.subsymbol_rate / self.config.symbol_rate
-        min_subsymbol_count = 2 * subsymbol_count
+        orig_samples_per_symbol      = 1 / (self.sampling_period * self.config.symbol_rate)
+        subsymbol_count              = self.config.subsymbol_rate / self.config.symbol_rate
+        self._new_samples_per_symbol = max([subsymbol_count * 100, orig_samples_per_symbol])
+        #self._new_samples_per_symbol = orig_samples_per_symbol
 
-        if samples_per_symbol < min_subsymbol_count:
-            self._samples_per_symbol = min_subsymbol_count
-        elif samples_per_symbol > 4 * min_subsymbol_count:
-            self._samples_per_symbol = 4 * min_subsymbol_count
-        else:
-            self._samples_per_symbol = samples_per_symbol
-
-        # make sure that the _samples_per_symbol is a multiple of min_subsymbol_count
-        if self._samples_per_symbol % subsymbol_count != 0:
-            self._samples_per_symbol = subsymbol_count * np.ceil(
-                self._samples_per_symbol / subsymbol_count
+        # make sure that the _samples_per_symbol is a multiple of subsymbol_count
+        if self._new_samples_per_symbol % subsymbol_count != 0:
+            self._new_samples_per_symbol = subsymbol_count * np.ceil(
+                self._new_samples_per_symbol / subsymbol_count
             )
 
         # make sure that _samples_per_symbol is an integer
-        if not self._samples_per_symbol.is_integer():
-            self._samples_per_symbol = np.ceil(self._samples_per_symbol)
+        if not self._new_samples_per_symbol.is_integer():
+            self._new_samples_per_symbol = np.ceil(self._new_samples_per_symbol)
         else:
-            self._samples_per_symbol = int(self._samples_per_symbol)
+            self._new_samples_per_symbol = int(self._new_samples_per_symbol)
 
-        self._resampling_factor = self._samples_per_symbol / samples_per_symbol
+        self._resampling_factor = self._new_samples_per_symbol / orig_samples_per_symbol
 
         # set-up resampling
         original_size = len(timestamps)
@@ -407,7 +405,7 @@ class CoreActivation(Layer, layer=Layer.Type.PrePost):
             original_indexer,
             values,
             axis=0,
-            kind="linear",
+            kind=self.interpolation,
             bounds_error=False,
             fill_value="extrapolate",
         )
@@ -417,8 +415,8 @@ class CoreActivation(Layer, layer=Layer.Type.PrePost):
         resampled_values = self.values_interpolator(resampled_indexer)
 
         # reshape
-        reshaped_length = resampled_values.shape[0] // self._samples_per_symbol
-        length_limit = reshaped_length * self._samples_per_symbol
+        reshaped_length = resampled_values.shape[0] // self._new_samples_per_symbol
+        length_limit = reshaped_length * self._new_samples_per_symbol
 
         self._decode_params_ = {
             "actual_start": actual_start,
@@ -427,25 +425,26 @@ class CoreActivation(Layer, layer=Layer.Type.PrePost):
             "sampling_period_inferred": sampling_period_inferred,
             "self.sampling_period": self.sampling_period,
             "self.symbol_rate": self.config.symbol_rate,
-            "samples_per_symbol": samples_per_symbol,
+            "orig_samples_per_symbol": orig_samples_per_symbol,
             "subsymbol_count": subsymbol_count,
-            "min_subsymbol_count": min_subsymbol_count,
             "original_size": original_size,
             "reshaped_length": reshaped_length,
             "resampled_values": resampled_values.shape,
             "resampled_indexer": resampled_indexer.shape,
             "length_limit": length_limit,
             "self._resampling_factor": self._resampling_factor,
-            "self._samples_per_symbol": self._samples_per_symbol,
+            "self._new_samples_per_symbol": self._new_samples_per_symbol,
+            "self.interpolation":self.interpolation,
+#            "time_offset":time_offset,
         }
 
         self._decode_timestamps = resampled_timestamps[:length_limit].reshape(
-            reshaped_length, self._samples_per_symbol
+            reshaped_length, self._new_samples_per_symbol
         )
 
         self.add_intermediate("slicing", self._decode_timestamps[:, 0])
         self.add_intermediate("timestamps", self._decode_timestamps)
 
         return resampled_values[:length_limit].reshape(
-            reshaped_length, self._samples_per_symbol
+            reshaped_length, self._new_samples_per_symbol
         )

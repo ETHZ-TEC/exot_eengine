@@ -94,29 +94,70 @@ class GenericFactory:
 
     @property
     def klass(self) -> type:
+        """Gets the base class "produced" by the factory
+
+        Returns:
+            type: The factory's base class
+        """
         return self._klass if hasattr(self, "_klass") else NotImplemented
 
     @property
     def available(self) -> t.Set[type]:
+        """Gets the available classes that can be created
+
+        Returns:
+            t.Set[type]: The set of available classes
+        """
         return self._available
 
     @property
     def default(self) -> type:
+        """Gets the default production class
+
+        Returns:
+            type: The default production class
+        """
         return self.available[0] if self.available else None
 
     @property
     def unavailable(self) -> t.Set[type]:
+        """Gets the unavailable classes that cannot be created (e.g. abstract classes)
+
+        Returns:
+            t.Set[type]: The set of unavaialble classes
+        """
         return self._unavailable
 
     @property
     def available_types(self) -> t.Optional[t.List]:
+        """Gets the available specialised "types"
+
+        Returns:
+            t.Optional[t.List]: The available specialised "types"
+        """
         return self._types if hasattr(self, "_types") else None
 
     def update_registry(self):
+        """Updates the factory's registry (available and unavailable production classes)
+        """
         self._available = get_concrete_subclasses(self.klass)
         self._unavailable = [k for k in get_subclasses(self.klass) if k not in self._available]
 
     def match(self, name: str, variant: str = "concrete") -> t.List[t.Dict]:
+        """Matches the name to an available production class
+
+        Args:
+            name (str): The name to search
+            variant (str, optional): The variant (concrete or abstract). Defaults to "concrete".
+
+        Raises:
+            TypeError: Wrong type supplied for 'variant'
+            ValueError: Wrong value supplied for 'variant'
+            AmbiguousMatchError: Ambiguous match among available production classes
+
+        Returns:
+            t.List[t.Dict]: A list of dicts with keys: class, name, similarity
+        """
         if not isinstance(variant, str):
             raise TypeError("expected a str for 'variant'", variant)
 
@@ -148,6 +189,19 @@ class GenericFactory:
         return sims
 
     def produce_type(self, name: str, **kwargs) -> type:
+        """Produces a type that matches the given name
+
+        Args:
+            name (str): The name
+
+        Raises:
+            NothingMatchedError: Nothing has matched
+            AbstractMatchError: The matched type is abstract
+            ValueError: Matched with insufficient similarity due to 'name'
+
+        Returns:
+            type: The type that matches the name.
+        """
         if "variant" in kwargs:
             variant = kwargs["variant"]
         else:
@@ -178,7 +232,11 @@ class GenericFactory:
         return top_match["class"]
 
     def verify_type(self, klass: type, **kwargs) -> None:
-        """Verify if a type matches the desired type"""
+        """Verify if a type matches the desired type
+
+        Args:
+            klass (type): Type to check
+        """
         if "_type" in kwargs and hasattr(self, "_type"):
             _type = kwargs.pop("_type")
             _klass_type = getattr(klass, "__type__", None)
@@ -189,11 +247,30 @@ class GenericFactory:
                 )
 
     def __call__(self, name: str, *args, **kwargs) -> object:
+        """Produces an object, main factory method
+
+        Args:
+            name (str): The name of the class to create
+            *args: Positional arguments passed to the constructor of the class
+            **kwargs: Keyword arguments passed to the constructor of the class
+
+        Returns:
+            object: The class instance
+        """
         klass = self.produce_type(name)
         self.verify_type(klass, **kwargs)
         kwargs.pop("_type", None)
         return klass(*args, **kwargs)
 
     def make_default(self, *args, **kwargs) -> object:
+        """Produces an instance of the default class
+
+        Args:
+            *args: Positional arguments passed to the constructor of the default class
+            **kwargs: Keyword arguments passed to the constructor of the default class
+
+        Returns:
+            object: The default class instance
+        """
         klass = self.default
         return klass(*args, **kwargs)

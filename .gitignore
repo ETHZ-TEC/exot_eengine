@@ -73,3 +73,5 @@ venv.bak/
 /.adb_key*
 /adb-server.out*
 
+# Backed up data
+backup_*

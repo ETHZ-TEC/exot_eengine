@@ -409,4 +409,7 @@ class TimeValue(Layer, LabelConversions, layer=Layer.Type.InputOutput):
             }
         )
 
-        return rdpstream
+        # Crop rdpstream to the actual length
+        actual_length_samples = np.where(rdpstream.iloc[:,0] <= self.config.rdpstream.iloc[:,0].sum())[0][-1]+1
+        return rdpstream.iloc[:actual_length_samples,:]
+

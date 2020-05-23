@@ -180,7 +180,6 @@ class LabelRefactoring(metaclass=abc.ABCMeta):
                         if(len(symstream[discontinuities[idx]+1:,0]) > 0):
                             symstream[discontinuities[idx]+1:,1:-2] = self.augment(symstream[discontinuities[idx]+1:,0]-symstream[discontinuities[idx],0],
                                                                                    symstream[discontinuities[idx]+1:,1:-2],
-                                                                                   0,
                                                                                    symstream[discontinuities[idx],1:-2])
 
         X_cols = list(range(1,symstream.shape[1]))
@@ -210,12 +209,12 @@ class ThermalLabelRefactoring(LabelRefactoring, Layer, layer=Layer.Type.Line):
         return self._build_parameter_datastruct(self.config.environments_apps_zones[self.config.env]['snk']['zone_config'].beta_z)
 
     @property
-    def beta_zenv_inc(self):
-        return self._build_parameter_datastruct(self.config.environments_apps_zones[self.config.env]['snk']['zone_config'].beta_zenv_inc)
+    def beta_z_heat(self):
+        return self._build_parameter_datastruct(self.config.environments_apps_zones[self.config.env]['snk']['zone_config'].beta_z_heat)
 
     @property
-    def beta_zenv_dec(self):
-        return self._build_parameter_datastruct(self.config.environments_apps_zones[self.config.env]['snk']['zone_config'].beta_zenv_dec)
+    def beta_z_cool(self):
+        return self._build_parameter_datastruct(self.config.environments_apps_zones[self.config.env]['snk']['zone_config'].beta_z_cool)
 
     @property
     def T_idle(self):
@@ -235,22 +234,23 @@ class ThermalLabelRefactoring(LabelRefactoring, Layer, layer=Layer.Type.Line):
             T_idle.append(self.T_idle[col_name])
         return T_idle
 
+    def _thermal_function(self, T, beta, t):
+        return T * np.exp(-beta * t)
+
     def augment(self, *args, **kwargs):
-        timestamps   = args[0]
-        T_zones      = args[1]
-        T_amb        = args[2]
-        T_0          = args[3]
+        time = args[0]
+        T_z  = args[1]
+        T0_z = args[2]
         if 'beta_key' in kwargs:
           betas = getattr(self, kwargs['beta_key'], self.beta_z) # TODO dirty
         else:
           betas = self.beta_z
 
-        if len(T_0.shape) == 1:
-            T_0 = T_0.reshape((1, T_0.shape[0]))
-        T_aug = np.empty(T_zones.shape)
-        for col_idx in range(T_zones.shape[1]):
-            beta_z_val = betas[self.config.beta_z_names[col_idx]]
-            augmentation_function = np.vectorize(lambda t: (T_0[0, col_idx] - T_zones[0,col_idx]) * np.exp(-1 * beta_z_val * t) + T_amb)
-            T_aug[:,col_idx] = T_zones[:,col_idx] + augmentation_function(timestamps)
+        if len(T0_z.shape) == 1:
+            T0_z = T0_z.reshape((1, T0_z.shape[0]))
+        T_aug = np.empty(T_z.shape)
+        for col_idx in range(T_z.shape[1]):
+            beta_val = betas[self.config.beta_z_names[col_idx]]
+            T_aug[:,col_idx] = T_z[:,col_idx] + self._thermal_function((T0_z[0, col_idx] - T_z[0,col_idx]), beta_val, time)
         return T_aug
 

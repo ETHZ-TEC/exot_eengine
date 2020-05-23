@@ -51,6 +51,7 @@ global COLUMN_FREQ
 global COLUMN_PSD
 
 COLUMN_FREQ = "frequency:fft::Hz"
+#COLUMN_PSD = "power_spectral_density:*/Hz"
 COLUMN_PSD = "power_spectral_density:K²/Hz"
 
 
@@ -75,7 +76,7 @@ class FrequencySweepExperiment(
     @classmethod
     def read(cls, *args, **kwargs) -> object:
         instance = super().read(*args, **kwargs)
-        instance.load_data(prefix="data")
+        instance.load_data_bundled(prefix="data")
 
         return instance
 
@@ -228,10 +229,8 @@ class FrequencySweepExperiment(
             )
 
         matcher = kwargs.pop("matcher", kwargs.get("io", {}).get("matcher", None))
-        if not isinstance(matcher, Matcher):
-            raise TypeError(f"'matcher' should be of type {Matcher}, got: {type(matcher)}")
 
-        description = "{}_{}".format(matcher._quantity, matcher._method)
+        description = "{}_{}".format(matcher[0][0]._quantity, matcher[0][0]._method)
         ingest_args = kwargs.copy()
         ingest_args["io"] = ingest_args.get("io", {})
         ingest_args["io"].update(matcher=matcher)
@@ -250,7 +249,7 @@ class FrequencySweepExperiment(
                     ingest_args["io"]["rep"] = rep
 
                     df, p0 = self._inner_generate_spectra(
-                        phase=phase, env=env, rep=rep, **kwargs
+                        phase=phase, env=env, rep=rep, **ingest_args
                     )
                     df_holder.append(df)
                     p0_holder.append(dict(phase=phase, environment=env, repetition=rep, p0=p0))
@@ -322,7 +321,7 @@ class FrequencySweepExperiment(
                     {
                         "variable": str(Syy["variable"].iloc[-1]),
                         COLUMN_FREQ: Syy[COLUMN_FREQ].iloc[-1],
-                        COLUMN_PSD: Syy[COLUMN_PSD].iloc[-1],
+                        COLUMN_PSD: Syy[COLUMN_PSD].iloc[-1]/Sxx[COLUMN_PSD].iloc[-1],
                     },
                     ignore_index=True,
                 )
@@ -450,11 +449,12 @@ class FrequencySweepRun(
     Ilnestream, Irdpstream, Irawstream,
     Olnestream, Ordpstream, Orawstream, Oschedules,
     serialise_save=[
-        "o_fspectrum",
         "o_lnestream",
         "o_rdpstream",
         "o_rawstream",
-        "o_schedules",
+        "o_schedules",],
+    serialise_ignore=[
+        "o_fspectrum",
         "i_rawstream",
         "i_rdpstream",
         "i_lnestream",
@@ -470,7 +470,7 @@ class FrequencySweepRun(
     @classmethod
     def read(cls, path: Path, parent: t.Optional[object] = None) -> object:
         instance = super().read(path, parent)
-        instance.load_data()
+        instance.load_data_bundled()
         return instance
 
     def write(self) -> None:
@@ -480,7 +480,7 @@ class FrequencySweepRun(
         archive with output streams and writes the schedules to *.sched files.
         """
         super().write()
-        self.save_data()
+        self.save_data_bundled()
         self.write_schedules()
 
     @property
@@ -632,23 +632,25 @@ class FrequencySweepRun(
             self.parent.config.ENVIRONMENTS[kwargs.get("io")["env"]].APPS.src.zone
         ]["schedule_tag"]
 
+
         def resample_o_lnestream():
             data = np.vstack(
-                [self.o_rdpstream["timestamp"].values, self.o_lnestream]
+                [np.hstack([0, self.o_rdpstream["timestamp"].values.cumsum()]), np.hstack([self.o_lnestream[0], self.o_lnestream])]
             ).transpose()
             interpolation = interpolate.interp1d(
-                data[:, 0].cumsum(), data[:, 1], kind="previous"
+                data[:, 0], data[:, 1], kind="next"
             )
-            x_new = np.arange(
-                data[0, 0],
-                data[:, 0].cumsum()[-1],
-                self.parent.config.EXPERIMENT.GENERAL.sampling_period,
-            )
+            #x_new = np.arange(
+            #    data[0, 0],
+            #    data[:, 0].cumsum()[-1],
+            #    self.parent.config.EXPERIMENT.GENERAL.sampling_period,
+            #)
+            x_new = self.i_rdpstream.iloc[:,0].to_numpy()
 
             try:
                 data_new = interpolation(x_new)
             except ValueError:
-                x_new = x_new[x_new < data[:, 0].cumsum()[-1]]
+                x_new = x_new[x_new < data[-1, 0]]
                 data_new = interpolation(x_new)
 
             data_new = data_new - (

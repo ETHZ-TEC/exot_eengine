@@ -800,6 +800,20 @@ class Serialisable(metaclass=abc.ABCMeta):
                 "'load_data' function."
             )
 
+        # Get names and valid paths of
+        stubbed = {
+            _: list(
+                get_valid_access_paths(
+                    getattr(self, _),
+                    _leaf_only=True,
+                    _use_lists=False,
+                    _fallthrough_empty=False,
+                )
+            )
+            for _ in self._serialise_to_save
+            if hasattr(self, _) and isinstance(getattr(self, _), t.Mapping)
+        }
+
         _filepath = path if path and path.is_dir() else self.path
         for attribute in self._serialise_to_save:
             _np_path = _filepath / (prefix + attribute + ".npz")
@@ -807,34 +821,37 @@ class Serialisable(metaclass=abc.ABCMeta):
             if _np_path.exists():
                 with np.load(_np_path) as _np_store:
                     for _data in _np_store.files:
-                        attribute, delimiter, rest = _data.partition(self._serialise_sep)
-                        if delimiter and attribute in stubbed:
-                            # Split the 'rest' and form an access query tuple, check if it's valid
-                            query = tuple(rest.split(self._serialise_sep))
-                            if query not in stubbed[attribute]:
-                                raise SerialisableDataLoadError(
-                                    f"Access query {query!r} not valid for attribute{attribute!r}"
-                                )
+                        sub_attribute, delimiter, rest = _data.partition(self._serialise_sep)
+                        # TODO - this does not work correctly, the mapping gets overwritten by the data - BUG
+                        #if delimiter and sub_attribute in stubbed:
+                        #    # Split the 'rest' and form an access query tuple, check if it's valid
+                        #    query = tuple(rest.split(self._serialise_sep))
+                        #    if query not in stubbed[sub_attribute]:
+                        #        raise SerialisableDataLoadError(
+                        #            f"Access query {query!r} not valid for sub_attribute {sub_attribute!r}"
+                        #        )
 
-                            setitem(getattr(self, attribute), query, _np_store[_data])
-                        else:
-                            setattr(self, _data, _np_store[_data])
+                        #    setitem(getattr(self, attribute), query, _np_store[_data])
+                        #else:
+                        #    setattr(self, _data, _np_store[_data])
 
             elif _pd_path.exists():
                 with pd.HDFStore(_pd_path, "r") as _pd_store:
                     for _data in _pd_store:
-                        attribute, delimiter, rest = _data.strip("/").partition(self._serialise_sep)
-                        if delimiter and attribute in stubbed:
-                            # Split the 'rest' and form an access query tuple, check if it's valid
-                            query = tuple(rest.split(self._serialise_sep))
-                            if query not in stubbed[attribute]:
-                                raise SerialisableDataLoadError(
-                                    f"Access query {query!r} not valid for attribute{attribute!r}"
-                                )
+                        sub_attribute, delimiter, rest = _data.strip("/").partition(self._serialise_sep)
+                        # TODO - this does not work correctly, the mapping gets overwritten by the data - BUG
+                        #if delimiter and sub_attribute in stubbed:
+                        #    # Split the 'rest' and form an access query tuple, check if it's valid
+                        #    query = tuple(rest.split(self._serialise_sep))
+                        #    if query not in stubbed[sub_attribute]:
+                        #        raise SerialisableDataLoadError(
+                        #            f"Access query {query!r} not valid for sub_attribute {sub_attribute!r}"
+                        #        )
 
-                            setitem(getattr(self, attribute), query, _pd_store.get(_data))
-                        elif attribute in self._serialise_to_save:
-                            setattr(self, attribute, _pd_store.get(_data))
+                        #    setitem(getattr(self, attribute), query, _pd_store.get(_data))
+                        #elif attribute in self._serialise_to_save:
+                        #    setattr(self, attribute, _pd_store.get(_data))
+                        setattr(self, attribute, _pd_store.get(_data))
             else:
                 get_root_logger().warning(f"No file found to load attribute{attribute!r}!")
 

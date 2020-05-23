@@ -111,12 +111,16 @@ validate_helper         :: (what: Mapping, key: Any, *types: type, msg: str = ''
 
 
 def call_with_leaves(function: t.Callable[[t.Any], t.Any], obj: t.T, _seq: bool = True) -> None:
-    """Call a function on leaves of an object
+    """Calls a function on leaves of an object
 
     A leaf is considered to be an object that is not a Mapping (or, when _seq is set,
     also not a Sequence except a string, which is also a Sequence).
-    """
 
+    Args:
+        function (t.Callable[[t.Any], t.Any]): The callable
+        obj (t.T): The tree-like or sequence-like object
+        _seq (bool, optional): Should sequences be considered?. Defaults to True.
+    """
     def inner(obj: t.T) -> t.Any:
         if isinstance(obj, Map):
             for v in obj.values():
@@ -132,6 +136,10 @@ def call_with_leaves(function: t.Callable[[t.Any], t.Any], obj: t.T, _seq: bool 
 
 def dict_depth(obj: t.Any, level: int = 0) -> int:
     """Get maximum depth of a dict-like object
+
+    Args:
+        obj (t.Any): The dict-like object
+        level (int): For internal use only. Defaults to 0.
 
     .. note::
         The depth of a non-dict-like object is considered to be 0.
@@ -152,6 +160,10 @@ def dict_depth(obj: t.Any, level: int = 0) -> int:
 
 def dict_diff(left: Map, right: Map) -> t.List[t.Dict]:
     """Get the difference between 2 dict-like objects
+
+    Args:
+        left (Map): The left dict-like object
+        right (Map): The right dict-like object
 
     The value returned is a list of dictionaries with keys ["path", "left", "right"]
     which contain the query path and the differences between the left and right mapping.
@@ -178,7 +190,15 @@ def dict_diff(left: Map, right: Map) -> t.List[t.Dict]:
 
 
 def find_attributes(klass: t.Any, attr: str) -> t.List:
-    """Find attributes in any of a klass'es bases"""
+    """Find attributes in any of a class'es bases
+
+    Args:
+        klass (t.Any): The type object
+        attr (str): The attribute
+
+    Returns:
+        t.List: List of found instances of the attribute in the class hierarchy
+    """
     if not isinstance(attr, str):
         raise TypeError(attr)
 
@@ -188,6 +208,13 @@ def find_attributes(klass: t.Any, attr: str) -> t.List:
 
 def flatten_dict(obj: Map, sep: str = ".") -> Map:
     """Flatten a dict to a 1-level dict combining keys with a separator
+
+    Args:
+        obj (Map): The dict-like object
+        sep (str): The separator used when combining keys. Defaults to ".".
+
+    Returns:
+        Map: A flattened object of same type as 'obj'.
 
     .. warning::
         Flattening will enforce all keys to be string-types!
@@ -256,6 +283,9 @@ def expand_dict(obj: Map, sep: str = ".") -> Map:
         TypeError: If wrong type is supplied
         ValueError: If a non-flat dict is supplied
 
+    Returns:
+        Map: The expanded mapping object of same type as 'obj'.
+
     Example:
         >>> d = {'a': 1, 'b': 2, 'c.ca': 1, 'c.cb': 2}
         >>> expand_dict(d)
@@ -289,8 +319,17 @@ def expand_dict(obj: Map, sep: str = ".") -> Map:
     return inner(obj)
 
 
-def get_concrete_subclasses(klass, recursive=True, derived=True) -> t.List:
-    """Get a list of non-abstract subclasses of a type"""
+def get_concrete_subclasses(klass, recursive: bool = True, derived: bool = True) -> t.List:
+    """Get a list of non-abstract subclasses of a type
+
+    Args:
+        klass (t.Type): The type object
+        recursive (bool): Should the classes be extracted recursively? Defaults to True.
+        derived (bool): Use the 'derived' property of SubclassTracker-enhanced types? [True]
+
+    Returns:
+        t.List: A list of concrete subclasses of the type
+    """
     from exot.util.mixins import _SubclassTracker as __
 
     if derived and hasattr(klass, __.concrete):
@@ -300,8 +339,17 @@ def get_concrete_subclasses(klass, recursive=True, derived=True) -> t.List:
     return [k for k in subclasses if not isabstract(k)]
 
 
-def get_subclasses(klass, recursive=True, derived=True) -> t.List:
-    """Get a list of subclasses of a type"""
+def get_subclasses(klass, recursive: bool = True, derived: bool = True) -> t.List:
+    """Get a list of subclasses of a type
+
+    Args:
+        klass (t.Type): The type object
+        recursive (bool): Should the classes be extracted recursively? Defaults to True.
+        derived (bool): Use the 'derived' property of SubclassTracker-enhanced types? [True]
+
+    Returns:
+        t.List: A list of concrete subclasses of the type
+    """
     from exot.util.mixins import _SubclassTracker as __
 
     if not (hasattr(klass, "__subclasses__") or hasattr(klass, __.derived)):
@@ -338,14 +386,25 @@ def get_valid_access_paths(
     _leaf_only: bool = False,
     _use_lists: bool = True,
     _fallthrough_empty: bool = True,
-) -> t.Generator:
+) -> t.Generator[t.Tuple,None,None]:
     """Generate valid key sequences in a dict, optionally including lists
 
-    If `_leaf_only` is set, only paths to leaves will be produced, a leaf being a value
-    that is not a mapping (or list).
-    If `_use_lists` is set, lists will also be recursively checked for valid paths.
-    if `_fallthrough_empty` is set, an empty dict or list will yield an empty tuple,
-    rendering a parent path.
+    Args:
+        obj (Map): The dict-like object
+        _limit (int): Maximum number of paths that can be created with list-like elements.
+        _leaf_only (bool): Provide paths for only the leaves of the mapping. Defaults to True.
+        _use_lists (bool): Provide paths for list-like elements in the mapping. Defaults to True.
+        _fallthrough_empty (bool): Discard empty list- or dict-like elements? Defaults to True.
+
+    Details:
+        If `_leaf_only` is set, only paths to leaves will be produced, a leaf being a value
+        that is not a mapping (or list).
+        If `_use_lists` is set, lists will also be *recursively* checked for valid paths.
+        if `_fallthrough_empty` is set, an empty dict or list will yield an empty tuple,
+        rendering a parent path.
+
+    Returns:
+        t.Generator[t.Tuple,None,None]: A generator that yields the access paths (tuples).
 
     Examples:
     >>> # Only leaves:
@@ -364,10 +423,10 @@ def get_valid_access_paths(
             )
 
     thrower(obj, Map, "obj")
-    thrower(_limit, int, "obj")
-    thrower(_leaf_only, bool, "obj")
-    thrower(_use_lists, bool, "obj")
-    thrower(_fallthrough_empty, bool, "obj")
+    thrower(_limit, int, "_limit")
+    thrower(_leaf_only, bool, "_leaf_only")
+    thrower(_use_lists, bool, "_use_lists")
+    thrower(_fallthrough_empty, bool, "_fallthrough_empty")
 
     def inner(obj: t.Union[Map, t.List, t.Set]) -> t.Generator:
         if _fallthrough_empty and not obj:
@@ -509,7 +568,15 @@ def getitem(obj: Map, query: t.Union[str, t.Tuple], *args: t.Any, sep: str = "/"
 
 
 def has_method(klass: t.Union[type, object], name: str) -> bool:
-    """Check if a method exists in any of a klass'es bases"""
+    """Check if a method exists in any of a klass'es bases
+
+    Args:
+        klass (t.Union[type, object]): The type or object
+        name (str): The name of the method
+
+    Returns:
+        bool: True if has a method with the given name.
+    """
 
     candidates = find_attributes(klass, name)
     if not candidates:
@@ -522,7 +589,15 @@ def has_method(klass: t.Union[type, object], name: str) -> bool:
 
 
 def has_property(klass: t.Union[type, object], name: str) -> bool:
-    """Check if a variable exists in any of a klass'es bases"""
+    """Check if a variable exists in any of a klass'es bases
+
+    Args:
+        klass (t.Union[type, object]): The type or object
+        name (str): The name of the property
+
+    Returns:
+        bool: True if has a property with the given name.
+    """
 
     candidates = find_attributes(klass, name)
     if not candidates:
@@ -535,7 +610,14 @@ def has_property(klass: t.Union[type, object], name: str) -> bool:
 
 
 def has_type(klass: t.Union[type, object]) -> bool:
-    """Check if a type or instance has a Type member type that derives from Enum"""
+    """Check if a type or instance has a Type member type that derives from Enum
+
+    Args:
+        klass (t.Union[type, object]): The type or object
+
+    Returns:
+        bool: True if has the "Type" attribute.
+    """
     if not isinstance(klass, (type, object)):
         raise TypeError(klass)
 
@@ -543,7 +625,15 @@ def has_type(klass: t.Union[type, object]) -> bool:
 
 
 def has_variable(klass: t.Union[type, object], name: str) -> bool:
-    """Check if a variable exists in any of a klass'es bases"""
+    """Check if a variable exists in any of a klass'es bases
+
+    Args:
+        klass (t.Union[type, object]): The type or object
+        name (str): The name of the variable
+
+    Returns:
+        bool: True if has a variable with the given name.
+    """
 
     candidates = find_attributes(klass, name)
     if not candidates:
@@ -556,7 +646,14 @@ def has_variable(klass: t.Union[type, object], name: str) -> bool:
 
 
 def is_abstract(klass: t.Union[type, object]) -> bool:
-    """Check if a type or instance is abstract"""
+    """Check if a type or instance is abstract
+
+    Args:
+        klass (t.Union[type, object]): The type or object
+
+    Returns:
+        bool: True if the type/instance is abstract.
+    """
     if not isinstance(klass, (type, object)):
         raise TypeError(klass)
 
@@ -569,12 +666,26 @@ def is_abstract(klass: t.Union[type, object]) -> bool:
 
 
 def is_scalar_numeric(value: t.Any) -> bool:
-    """Check if is an int, a float, or a NumPy variant thereof"""
+    """Check if is an int, a float, or a NumPy variant thereof
+
+    Args:
+        value (t.Any): The value to inspect
+
+    Returns:
+        bool: True if scalar and numeric.
+    """
     return isinstance(value, (float, int, np.integer, np.floating))
 
 
-def leaves(obj: Map):
-    """Get leaves of a mapping"""
+def leaves(obj: Map) -> t.Generator:
+    """Get leaves of a mapping
+
+    Args:
+        obj (Map): The dict-like object
+
+    Returns:
+        t.Generator: A generator that yields the leaf elements of the mapping.
+    """
     paths = get_valid_access_paths(obj, _leaf_only=True, _use_lists=False)
     return (getitem(obj, path) for path in paths)
 
@@ -599,7 +710,6 @@ def map_to_leaves(function: t.Callable[[t.Any], t.Any], obj: t.T, _seq: bool = T
     A leaf is considered to be an object that is not a Mapping (or, when _seq is set,
     also not a Sequence except a string, which is also a Sequence).
 
-
     Args:
         function (t.Callable[[t.Any], t.Any]): a function or signatude "a -> a"
         obj (t.T): a dict-like, list-like, or plain object
@@ -621,7 +731,22 @@ def map_to_leaves(function: t.Callable[[t.Any], t.Any], obj: t.T, _seq: bool = T
 
 
 def mro_getattr(cls: type, attr: str, *args: t.Any) -> t.Any:
-    """Get an attribute from a type's class hierarchy"""
+    """Get an attribute from a type's class hierarchy
+
+    Args:
+        cls (type): The type
+        attr (str): The attribute
+        *args (t.Any): The default value (like in Python's default getattr)
+
+    Returns:
+        t.Any: The attribute, or when not found the default value (if provided)
+
+    Raises:
+        TypeError: Not called on a type
+        TypeError: Wrong number of arguments
+        AttributeError: Attribute not found and no default value provided
+    """
+
     if not isinstance(cls, type):
         raise TypeError(f"mro_getattr can only be used on types, got {type(cls)}")
 
@@ -641,7 +766,19 @@ def mro_getattr(cls: type, attr: str, *args: t.Any) -> t.Any:
 
 
 def mro_hasattr(cls: type, attr: str) -> bool:
-    """Check if an attribute exists in a type's class hierarchy"""
+    """Check if an attribute exists in a type's class hierarchy
+
+    Args:
+        cls (type): The type
+        attr (str): The attribute
+
+    Returns:
+        bool: True if has the attribute.
+
+    Raises:
+        TypeError: Not called on a type
+    """
+
     if not isinstance(cls, type):
         raise TypeError(f"mro_getattr can only be used on types, got {type(cls)}")
 
@@ -677,6 +814,11 @@ def safe_eval(
     to_eval: str, *, expect: t.Tuple[type] = (list, np.ndarray), timeout: int = 10
 ) -> object:
     """Evaluate a restricted subset of Python (and numpy) from a string
+
+    Args:
+        to_eval (str): The string to evaluate
+        expect (t.Tuple[type]): The list of expected resulting types. Defaults to list, ndarray.
+        timeout (int): The timeout after which the call fails in seconds. Defaults to 10.
 
     The `safe_eval` function allows using a subset of commands, listed in `_globals` and
     `_locals`, which includes a few numpy functions: linspace, arange, array, rand, and
@@ -747,7 +889,14 @@ def safe_eval(
 
 
 def sanitise_ansi(value: t.Union[t.List[str], str]) -> t.Union[t.List[str], str]:
-    """Remove all ANSI escape characters from a str or a list of str"""
+    """Remove all ANSI escape characters from a str or a list of str
+
+    Args:
+        value (t.Union[t.List[str], str]): The string or list of strings
+
+    Returns:
+        t.Union[t.List[str], str]: The sanitised string or a list of sanitised strings
+    """
     _ansi_escape = re.compile(r"(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]")
 
     if isinstance(value, str):
@@ -759,7 +908,12 @@ def sanitise_ansi(value: t.Union[t.List[str], str]) -> t.Union[t.List[str], str]
 
 
 def setgetattr(klass: t.Union[type, object], attr: str, default: t.Any) -> None:
-    """convenience :meth:`setattr` + :meth:`getattr` helper
+    """Combines `setattr` and `getattr` to set attributes
+
+    Args:
+        klass (t.Union[type, object]): The type or object
+        attr (str): The attribute
+        default (t.Any): The default value
     """
     if not any([isinstance(klass, type), isinstance(klass, object)]):
         raise TypeError("'klass' should be a type or an object", klass)
@@ -826,7 +980,14 @@ def stub_recursively(
 
 
 def unpack__all__(*imports: t.Collection[str]) -> t.Tuple[str]:
-    """Upacks a list of lists/tuples into a 1-dimensional list"""
+    """Upacks a list of lists/tuples into a 1-dimensional list
+
+    Args:
+        *imports (t.Collection[str]): The collections of strings in "__all__"
+
+    Returns:
+        t.Tuple[str]: The flattened imports as a tuple of strings.
+    """
     from itertools import chain
 
     _name = f"{__name__}.unpack__all__"
@@ -844,7 +1005,14 @@ def unpack__all__(*imports: t.Collection[str]) -> t.Tuple[str]:
 
 
 def validate_helper(what: t.Mapping, key: t.Any, *types: type, msg: str = "") -> t.NoReturn:
-    """Validate types of key in a mapping using key-paths"""
+    """Validate types of key in a mapping using key-paths
+
+    Args:
+        what (t.Mapping): The mapping
+        key (t.Any): The key
+        *types (type): The valid types
+        msg (str): An additional error message. Defaults to "".
+    """
     if not isinstance(what, t.Mapping):
         raise TypeError(f"validate_helper works only on mappings, got {type(what)}")
     if not types:

@@ -217,7 +217,10 @@ class PerformanceExperimentPlotter(ExperimentPlotter):
             axis.legend(loc="upper left", frameon=False)
 
         sns.despine(f)
-        f.suptitle("Performance metrics")
+        if 'title' in kwargs:
+            f.suptitle(kwargs['title'])
+        else:
+            f.suptitle("Performance metrics")
         f.tight_layout()
         f.subplots_adjust(top=0.85)
         self._plot_save_helper(f, **kwargs)

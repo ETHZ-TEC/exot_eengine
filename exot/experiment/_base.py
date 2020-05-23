@@ -159,6 +159,41 @@ class Experiment(
         super().__init_subclass__(*args, **kwargs)
 
     @property
+    def _config_general_standard(self):
+        return "STANDARD"
+
+    @property
+    def config(self):
+        if hasattr(self, '_config'):
+            setting_key = self._config_general_standard
+            if hasattr(self.layers, 'io'):
+                if self.layers['io'].configured:
+                    if 'env' in self.layers['io'].config:
+                        setting_key = self.layers['io'].config['env']
+            if setting_key in self._config.EXPERIMENT.GENERAL:
+                elem_keys = list(self._config.EXPERIMENT.GENERAL[setting_key])
+                for elem_key in elem_keys:
+                    self._config.EXPERIMENT.GENERAL[elem_key] = cp.deepcopy(self._config.EXPERIMENT.GENERAL[setting_key][elem_key])
+            return self._config
+        else:
+            return None
+
+    @config.setter
+    def config(self, value):
+        self._config = AttributeDict(value)
+        elem_keys = list(self._config.EXPERIMENT.GENERAL)
+        if self._config_general_standard not in self._config.EXPERIMENT.GENERAL:
+            self._config.EXPERIMENT.GENERAL[self._config_general_standard] = AttributeDict()
+        for key in elem_keys:
+            if key != self._config_general_standard and key not in list(self.environments.keys()):
+                self._config.EXPERIMENT.GENERAL[self._config_general_standard][key] = cp.deepcopy(self._config.EXPERIMENT.GENERAL[key])
+
+    @config.deleter
+    def config(self):
+        if hasattr(self, '_config'):
+            delattr(self, '_config')
+
+    @property
     def run_type(self):
         """Get the associated Run type"""
         return self._run_type
@@ -293,7 +328,7 @@ class Experiment(
     @property
     def layers(self) -> AttributeDict:
         """Get experiment layers"""
-        return self._layers
+        return getattr(self, '_layers', None)
 
     @property
     def layers_with_runtime_encoding(self) -> AttributeDict:
@@ -871,12 +906,14 @@ class Experiment(
         finally:
             os.chdir(_original_cwd)
 
+        _need_bootstrap = False
         # Check if saved config differs from that in the file
         contained_config = instance.path / "_configuration.toml"
         if contained_config.exists() and diff_and_replace:
             config_from_directory = toml.load(contained_config)
             differences = dict_diff(instance.config, config_from_directory)
             if differences:
+                _need_bootstrap = True
                 get_root_logger().warning(
                     f"configs from pickle and directory differ at {differences!r}"
                 )
@@ -888,6 +925,7 @@ class Experiment(
             environments_from_directory = toml.load(contained_environments)
             differences = dict_diff(instance.environments, environments_from_directory)
             if differences:
+                _need_bootstrap = True
                 get_root_logger().warning(
                     f"environments from pickle and directory differ at {differences!r}"
                 )
@@ -910,6 +948,8 @@ class Experiment(
                 get_root_logger().warning(
                     f"unpickled in a directory that is not a git directory"
                 )
+        if _need_bootstrap:
+            instance.bootstrap()
 
         # Deserialise all contained Runs
         for pickled_run in instance.path.rglob("*/_run.pickle"):
@@ -990,6 +1030,37 @@ class Experiment(
             - The experiment should be configured and bootstrapped.
         """
         pass
+
+    def integrate(self) -> None:
+        """Populate the experiment phases and read existing Run's
+
+        Preconditions:
+            - The experiment should be configured and bootstrapped.
+        """
+        assert self.configured, "Experiment must be configured before generating"
+        assert self.bootstrapped, "Experiment must be bootstrapped before generating"
+
+        self.phases = {tag: {} for tag in self.config.EXPERIMENT.PHASES}
+        self.estimated_duration = {
+            tag: self.config.EXPERIMENT.GENERAL.delay_after_bootstrap
+            if "delay_after_bootstrap" in self.config.EXPERIMENT.GENERAL
+            else 10.0
+            for tag in self.config.EXPERIMENT.PHASES
+        }
+
+
+        # Deserialise all contained Runs
+        for pickled_run in instance.path.rglob("*/_run.pickle"):
+            run_directory = pickled_run.parent.name
+            run_query = run_path_unformatter(run_directory)
+            # TODO [ACCESS_PATHS]: setitem will only allow setting existing keys, but
+            # these can be checked explicitly, as long as access paths are available.
+            assert (
+                run_query in instance._phases_access_paths
+            ), f"{run_query!r} must be a valid query"
+            setitem(
+                instance.phases, run_query, instance.run_type.read(pickled_run, parent=instance)
+            )
 
     """
     The following methods are used to estimate the duration of the experiment.
@@ -1767,29 +1838,34 @@ class Run(
             _filepath = _filepath / elem
         return _filepath
 
-    def load_ingestion_data(self, prefix: t.Optional[str] = '', **kwargs) -> None:
+    def load_ingestion_data(self, prefix: t.Optional[str] = '', bundled: bool = False, **kwargs) -> None:
         self.clear_ingest()
         self._configure_layers_proxy("decode", **kwargs)
         self.update_ingestion_tag()
         self.intermediates = AttributeDict()
-        i_streams = self.load_mapping(path=self.path_ingestion_data, prefix=prefix+"stream.i_")
+        if bundled:
+            i_streams = self.load_mapping_bundled(path=self.path_ingestion_data, prefix=prefix+"stream.i_")
+        else:
+            i_streams = self.load_mapping(path=self.path_ingestion_data, prefix=prefix+"stream.i_")
         for stream in i_streams:
             setattr(self, "i_" + stream, i_streams[stream])
         self.intermediates = self.load_mapping(path=self.path_ingestion_data, prefix=prefix+"im_")
         if not self.ingested:
             raise Exception("Loading ingestion data failed due to missing data!")
 
-    def save_ingestion_data(self, prefix: t.Optional[str] = '') -> None:
+    def save_ingestion_data(self, prefix: t.Optional[str] = '', bundled: bool = False) -> None:
         if self.ingested:
-            self.save_mapping("i_streams",     path=self.path_ingestion_data, prefix=prefix+"stream.i_")
-            self.save_mapping("intermediates", path=self.path_ingestion_data, prefix=prefix+"im_")
+            if bundled:
+                self.save_mapping_bundled("i_streams",     path=self.path_ingestion_data, prefix=prefix+"stream.i_")
+                self.save_mapping_bundled("intermediates", path=self.path_ingestion_data, prefix=prefix+"im_")
+            else:
+                self.save_mapping("i_streams",     path=self.path_ingestion_data, prefix=prefix+"stream.i_")
+                self.save_mapping("intermediates", path=self.path_ingestion_data, prefix=prefix+"im_")
         else:
             get_root_logger().warning("Run not ingested, nothing to be saved!")
 
-    def remove_ingestion_data(self, prefix: t.Optional[str] = '', **kwargs) -> None:
+    def remove_ingestion_data(self, prefix: t.Optional[str] = '') -> None:
         self.clear_ingest()
-        self._configure_layers_proxy("decode", **kwargs)
-        self.update_ingestion_tag()
         self.intermediates = AttributeDict()
         self.remove_mapping("i_streams",     path=self.path_ingestion_data, prefix=prefix+"stream.i_")
         self.remove_mapping("intermediates", path=self.path_ingestion_data, prefix=prefix+"im_")
@@ -1977,12 +2053,12 @@ class Run(
                 )
 
             # These keys are needed by default. Will be added if not already preset.
-            apps[app].app_config["host"] = apps[app].app_config.get("host", dict())
+            apps[app].app_config["meter"] = apps[app].app_config.get("meter", dict())
             apps[app].app_config["logging"] = apps[app].app_config.get("logging", dict())
             apps[app].app_config["schedule_reader"] = apps[app].app_config.get(
                 "schedule_reader", dict()
             )
-            apps[app].app_config["host"]["period"] = self.parent.environment_config_general(
+            apps[app].app_config["meter"]["period"] = self.parent.environment_config_general(
                 env
             ).sampling_period
             apps[app].app_config["logging"]["app_log_filename"] = str(

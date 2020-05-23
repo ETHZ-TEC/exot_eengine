@@ -58,11 +58,12 @@ class AttributeDict(MutableMapping):
     the data. Attempting to set a key of type 'dict' will cast it to this type, to
     ensure consistent access 'recursively'.
 
-    :extends: MutableMapping
+    Extends MutableMapping.
 
-    :param _locals: local member variables
-    :param _warn_list: list of keys which might be tricky to set/access
-    :param _mutate_on_init: flag to recursively mutate contained data
+    Attributes:
+        _locals (List[str]): local member variables
+        _warn_list (List[str]): list of keys which might be tricky to set/access
+        _mutate_on_init (bool): flag to recursively mutate contained data
     """
 
     # the `__slots__` magic attribute prevents a `__dict__` being created on instances
@@ -259,12 +260,12 @@ class AttributeDict(MutableMapping):
 
         Implementation of an analogous method of the built-in dict.
 
-        :param iterable: an iterable
-        :type iterable: Iterable
-        :param value: value to which the new keys are set, defaults to None
-        :type value: Any, optional
-        :returns: an AttributeDict
-        :rtype: {AttributeDict}
+        Args:
+            iterable (Iterable): The iterable
+            value (Any): Value to which the new keys are set, defaults to None
+
+        Returns:
+            AttributeDict: The dict created from the iterable
         """
         o = cls()
         for key in iterable:
@@ -275,9 +276,11 @@ class AttributeDict(MutableMapping):
     def from_dict(cls, o: Any) -> AttributeDict:
         """Produce an AttributeDict from a built-in dict
 
-        :param o: a Dict when called, other types when called recursively
-        :returns: an AttributeDict
-        :rtype: {AttributeDict}
+        Args:
+            o (Any): A Dict when called, other types when called recursively.
+
+        Returns:
+            AttributeDict: The converted dict
         """
         if isinstance(o, MutableMapping):
             return cls((k, cls.from_dict(v)) for k, v in o.items())
@@ -290,10 +293,11 @@ class AttributeDict(MutableMapping):
     def to_dict(cls, o: Any) -> Dict:
         """Convert an AttributeDict to a built-in dict recursively
 
-        :param o: an AttributeDict when called, other types when called
-        recursively
-        :returns: a plain built-in dict
-        :rtype: {Dict}
+        Args:
+            o (Any): An AttributeDict when called, other types when called
+
+        Returns:
+            Dict: A plain built-in dict
         """
         if isinstance(o, MutableMapping):
             return dict((k, cls.to_dict(v)) for k, v in o.items())
@@ -310,9 +314,9 @@ class AttributeDict(MutableMapping):
     def mutate(self, to: Union[AttributeDict, Dict, Type[AttributeDict], Type[Dict]]) -> None:
         """Mutate the internal data to AttributeDict or dict, recursively
 
-        :param to: a type to which the internal data is to be mutated
-        :type to: Union[AttributeDict, Dict, Type[AttributeDict], Type[Dict]]
-        :raises: TypeError
+        Args:
+            to (Union[AttributeDict, Dict, Type[AttributeDict], Type[Dict]]): The type
+                to which the internal data is to be mutated
         """
         if isinstance(to, (AttributeDict, AttributeDict.__class__)):
             self._data = dict((k, AttributeDict.from_dict(v)) for k, v in self._data.items())

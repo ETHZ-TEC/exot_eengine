@@ -173,7 +173,7 @@ class ExploratoryRun(
     @classmethod
     def read(cls, path: Path, parent: t.Optional[object] = None) -> object:
         instance = super().read(path, parent)
-        instance.load_data()
+        instance.load_data_bundled()
         return instance
 
     def write(self) -> None:
@@ -183,7 +183,7 @@ class ExploratoryRun(
         archive with output streams and writes the schedules to *.sched files.
         """
         super().write()
-        self.save_data()
+        self.save_data_bundled()
         self.write_schedules()
 
     @property

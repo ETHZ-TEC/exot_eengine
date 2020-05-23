@@ -150,8 +150,9 @@ class DataAugmentation(
             setattr(self, '_' + analysis_phase + '_runs', [])
             for meas_phase in getattr(self, analysis_phase + '_phases'):
                 for cur_run in self.experiment.phases[meas_phase].values():
-                    for rep in range(self.experiment.config.EXPERIMENT.PHASES[meas_phase].repetitions):
-                        getattr(self, '_' + analysis_phase + '_runs').append((cur_run, rep))
+                    #for rep in range(self.experiment.config.EXPERIMENT.PHASES[meas_phase].repetitions):
+                    #    getattr(self, '_' + analysis_phase + '_runs').append((cur_run, rep))
+                    getattr(self, '_' + analysis_phase + '_runs').append((cur_run, self.experiment.config.EXPERIMENT.PHASES[meas_phase].repetitions))
         return getattr(self, '_' + analysis_phase + '_runs')
 
     @property
@@ -422,10 +423,15 @@ class DataAugmentation(
         return self.experiment.path.joinpath(self.name)
 
     @property
+    def num_sensors(self):
+        return len(self.config.DATASET.matcher_data['dimensions'])
+
+    @property
     def num_feature_dims(self):
         if not hasattr(self.config.DATASET, 'num_feature_dims'):
             self.config.DATASET.num_feature_dims = len(self.config.DATASET.matcher_data['dimensions'])
         return self.config.DATASET.num_feature_dims
+        # TODO try this at some point return 1
 
     # -------------------------------------------------------------------------------------------- #
     #                                           Methods                                            #
@@ -456,38 +462,32 @@ class DataAugmentation(
 
     def _init_sample_selection(self, analysis_phase:str  = ''):
         self._num_runs = len(getattr(self, analysis_phase + '_runs'))
-        if self.sample_selection_mode == SampleSelectionMode.Uniform:
-            self._prev_run = random.randint(0, self._num_runs-1)
-            self._sample_selection = np.zeros((self._num_runs, self._num_runs))
-        elif self.sample_selection_mode == SampleSelectionMode.Alternating:
+        self._prev_run = random.randint(0, self._num_runs-1)
+        self._sample_selection = np.zeros((self._num_runs, self._num_runs))
+        self._repetition_selection = [np.zeros((run_reps[1],)) for run_reps in getattr(self, analysis_phase + '_runs')]
+        if self.sample_selection_mode == SampleSelectionMode.Alternating:
             self._sample_lists_selector = True
             self._sample_lists = {True:[],False:[]}
+            tmp_idx = 0
             for run_rep in getattr(self, analysis_phase + '_runs'):
                 if run_rep[0].config.name in self.config.DATASET.sample_selection.runs:
-                    self._sample_lists[True].append(run_rep)
+                    self._sample_lists[True].append(tmp_idx)
                 else:
-                    self._sample_lists[False].append(run_rep)
-            self._num_runs         = {True:len(self._sample_lists[True]), False:len(self._sample_lists[False])}
-            self._sample_selection = {
-                                      True:np.zeros((self._num_runs[True])),
-                                      False:np.zeros((self._num_runs[False]))
-                                     }
+                    self._sample_lists[False].append(tmp_idx)
+                tmp_idx += 1
+            for tmp_key in [True, False]:
+                self._sample_lists[tmp_key] = np.array(self._sample_lists[tmp_key])
 
     def _serialise_sample_selection(self, analysis_phase:str  = ''):
         selection_path = self.path.joinpath('sample_selection')
         selection_path.mkdir(exist_ok=True)
 
         toml_dict = {}
-        if self.sample_selection_mode == SampleSelectionMode.Uniform:
-            toml_dict['num_runs'] = self._num_runs
-
-            np.savetxt(selection_path.joinpath(analysis_phase + '_sample_selection.dat'), self._sample_selection, fmt='%d')
-        elif self.sample_selection_mode == SampleSelectionMode.Alternating:
-            toml_dict['num_runs'] = {'True':self._num_runs[True], 'False':self._num_runs[False]}
-
+        if self.sample_selection_mode == SampleSelectionMode.Alternating:
             for key in [False, True]:
                 np.savetxt(selection_path.joinpath(analysis_phase + '_sample_lists_'     + str(key) + '.dat'), self._sample_lists[key],     fmt='%s')
-                np.savetxt(selection_path.joinpath(analysis_phase + '_sample_selection_' + str(key) + '.dat'), self._sample_selection[key], fmt='%d')
+        toml_dict['num_runs'] = self._num_runs
+        np.savetxt(selection_path.joinpath(analysis_phase + '_sample_selection.dat'), self._sample_selection, fmt='%d')
 
         with selection_path.joinpath(analysis_phase + '_sample_selection.toml').open("w") as tomlfile:
             toml.dump(toml_dict, tomlfile)
@@ -498,26 +498,31 @@ class DataAugmentation(
             if 'key' in run_spec:
                 run_key = run_spec['key']
                 for run in getattr(self, analysis_phase + '_runs'):
-                    if run.config.name == run_spec['key']:
-                        run_rep[0] = self.experiment.phases[meas_phase][run_key]
+                    if run[0].config.name == run_spec['key']:
+                        run_rep[0] = run[0]
             else:
                 run_rep[0] = run_spec['run']
-            run_rep[1] = run_spec['rep']
+            cur_rep = run_spec['rep']
         elif self.sample_selection_mode == SampleSelectionMode.Random:
             run_rep = random.choice(getattr(self, analysis_phase + '_runs'))
+            cur_rep = random.randint(0, run_rep[1]-1)
         elif self.sample_selection_mode == SampleSelectionMode.Alternating:
-            run_idx = random.choice(np.where(self._sample_selection[self._sample_lists_selector] == self._sample_selection[self._sample_lists_selector].min())[0])
-            self._sample_selection[self._sample_lists_selector][run_idx] += 1
-            run_rep = self._sample_lists[self._sample_lists_selector][run_idx]
-
+            # TODO: This method has the problem that often thermal profiles listed after one another get choosen, which leads to thermal sequences where the same application is called many times in a row.
+            min_runs = np.where(self._sample_selection[self._prev_run, self._sample_lists[self._sample_lists_selector]] == self._sample_selection[self._prev_run, self._sample_lists[self._sample_lists_selector]].min())[0]
+            min_runs = self._sample_lists[self._sample_lists_selector][min_runs]
             self._sample_lists_selector = not self._sample_lists_selector
         elif self.sample_selection_mode == SampleSelectionMode.Uniform:
-            run_idx = random.choice(np.where(self._sample_selection[self._prev_run,:] == self._sample_selection[self._prev_run,:].min())[0])
+            min_runs = np.where(self._sample_selection[self._prev_run,:] == self._sample_selection[self._prev_run,:].min())[0]
+
+        if (self.sample_selection_mode == SampleSelectionMode.Alternating or self.sample_selection_mode == SampleSelectionMode.Uniform) and (run_spec is None):
+            run_idx = min_runs[self._sample_selection[min_runs, :].sum(axis=1).argmin()]
             self._sample_selection[self._prev_run,run_idx] += 1
             self._prev_run = run_idx
-            run_rep = getattr(self, analysis_phase + '_runs')[run_idx]
+            run_rep        = getattr(self, analysis_phase + '_runs')[run_idx]
+            cur_rep = random.choice(np.where(self._repetition_selection[run_idx] == self._repetition_selection[run_idx].min())[0])
+
         cur_run = run_rep[0]
-        cur_rep = run_rep[1]
+
         ingest = False
         try:
             cur_run.load_ingestion_data(**self.ingest_args(cur_rep, analysis_phase), prefix=self.name + '_')
@@ -525,10 +530,44 @@ class DataAugmentation(
             ingest = True
 
         if ingest:
-            get_root_logger().info(f"No ingestion data present, ingesting run {cur_run}")
+            get_root_logger().debug(f"No ingestion data present, ingesting run {cur_run}")
             cur_run.ingest(**self.ingest_args(cur_rep, analysis_phase))
             cur_run.save_ingestion_data(prefix=self.name + '_')
         return cur_run
+
+    def _generate_thermal_offset(self, time, T_offset_shape):
+      T_offset = np.empty(T_offset_shape)
+      dT_ambient = []
+
+      min_duration_ambient = math.ceil((60 * 5) / np.diff(time).mean())
+      if self.ambient[0] < self.ambient[1]:
+          cur_t_enter = 0
+
+          dT_ambient.append((random.uniform(self.ambient[0], self.ambient[1]) - self.T_meas_ambient, cur_t_enter))
+          while cur_t_enter < time.size:
+              new_t_enter = random.randint(cur_t_enter+min_duration_ambient, time.size)
+              dT_ambient.append((random.uniform(self.ambient[0], self.ambient[1]) - self.T_meas_ambient, new_t_enter))
+              cur_t_enter = new_t_enter
+              if cur_t_enter+min_duration_ambient > time.size:
+                  break
+      else:
+          dT_ambient.append((self.ambient[0], 0))
+
+      for idx in range(len(dT_ambient)):
+          idx_enter = dT_ambient[idx][1]
+          if idx == 0 and len(dT_ambient) > 1:
+              idx_exit = dT_ambient[idx+1][1]
+              T0_z     = np.full((1,self.num_sensors), dT_ambient[idx][0])
+          elif idx < len(dT_ambient) - 1:
+              idx_exit = dT_ambient[idx+1][1]
+              T0_z     = T_offset[idx_enter-1, :].reshape((1,-1))
+          else:
+              idx_exit = len(time)
+              T0_z     = T_offset[idx_enter-1, :].reshape((1,-1))
+          T_z      = np.full((idx_exit-idx_enter,self.num_sensors), dT_ambient[idx][0])
+          T_offset[idx_enter:idx_exit] = self.experiment.layers.lne.augment(*[time[idx_enter:idx_exit] - time[idx_enter], T_z, T0_z], **{'beta_key':'beta_z_heat' if dT_ambient[idx][0] > 0 else 'beta_z_cool'})
+
+      return T_offset + np.random.randint(-1, high=1, size=T_offset.shape, dtype='int32')
 
     def _prepare_with_augmentation(self, analysis_phase: str):
         """
@@ -546,9 +585,10 @@ class DataAugmentation(
         sample_timestamps = np.linspace(0, (self.batch_size_timesteps-1) * self.resampling_period_s, self.batch_size_timesteps)
         data_col_idx = range(1,min(self.label_columns_idxes))
         self._init_sample_selection(analysis_phase)
-        X                = np.zeros(getattr(self, analysis_phase + '_X_shape'         ))
-        Y                = np.full(getattr(self,  analysis_phase + '_Y_shape'         ), self.label_mapping['UNKNOWN']['int']+1, dtype=np.int32)
-        actual_batch_len = np.zeros(getattr(self, analysis_phase + '_actual_batch_len_shape'))
+        X                 = np.zeros(getattr(self, analysis_phase + '_X_shape'         ))
+        Y                 = np.full(getattr(self,  analysis_phase + '_Y_shape'         ), self.label_mapping['UNKNOWN']['int']+1, dtype=np.int32)
+        actual_batch_len  = np.zeros(getattr(self, analysis_phase + '_actual_batch_len_shape'))
+
         if analysis_phase == "train" or analysis_phase == "test":
             weights      = np.zeros( getattr(self, analysis_phase + '_weights_shape'   ))
         histlabels       = np.zeros((self.num_labels,))
@@ -556,11 +596,14 @@ class DataAugmentation(
             T_0 = None
             remaining_len = self.batch_size_timesteps
             cur_batch_len = 0
+            # 1.) Generate the sequence
             while remaining_len >= self.min_len_profile:
+                # 1.1.) Choose run and ingest to get the processed thermal and labelling trace
                 cur_run         = self._choose_and_ingest_run(analysis_phase)
                 while cur_run.i_symstream.shape[0] <= 1:
                     cur_run     = self._choose_and_ingest_run(analysis_phase)
 
+                # 1.2.) Crop the trace to the required length
                 if cur_run.i_symstream.shape[0] > self.min_len_profile:
                     if batch_idx < self.batch_size and analysis_phase != 'verif':
                         # This statement should make sure that shorter snippets appear more often
@@ -584,13 +627,14 @@ class DataAugmentation(
                     trace[cur_snippet_len:, :] = self.experiment.layers.lne.augment(
                                                              *[cur_run.i_symstream[context_changes[0]:context_changes[0]+self.duration_context_change,0] - cur_run.i_symstream[context_changes[0],0],
                                                                cur_run.i_symstream[context_changes[0]:context_changes[0]+self.duration_context_change,self.data_columns_idxes],
-                                                               0, cur_run.i_symstream[cur_snippet_len,self.data_columns_idxes]
+                                                               cur_run.i_symstream[cur_snippet_len,self.data_columns_idxes]
                                                                ])
                 else:
                     cur_profile_len = cur_snippet_len
                     trace = np.empty((cur_profile_len, len(self.data_columns_idxes)))
                     trace[:cur_profile_len, :] = cur_run.i_symstream[:cur_profile_len,self.data_columns_idxes]
 
+                # 1.3.) Concatenate the traces
                 if T_0 is None:
                   T_0 = trace[0, :].reshape((1,-1))
                 else:
@@ -598,56 +642,23 @@ class DataAugmentation(
                 Y[batch_idx, cur_batch_len:cur_batch_len+cur_profile_len, :] = cur_run.i_symstream[:cur_profile_len, self.label_columns_idxes]
                 X[batch_idx, cur_batch_len:cur_batch_len+cur_profile_len, :] = self.experiment.layers.lne.augment(
                                                                                            *[cur_run.i_symstream[:cur_profile_len,0],
-                                                                                             trace, 0, T_0
-                                                                                            ]) + np.random.randint(-1, high=1, size=X[batch_idx, cur_batch_len:cur_batch_len+cur_profile_len, :].shape, dtype='int32')
+                                                                                             trace, T_0
+                                                                                            ])
                 remaining_len -= cur_profile_len
                 cur_batch_len += cur_profile_len
 
-            sampling_period = np.mean(np.diff(cur_run.i_symstream[:,0]))
-            time            = np.linspace(0, (X[batch_idx, :cur_batch_len, :].shape[0]-1) * sampling_period, X[batch_idx, :cur_batch_len, :].shape[0])
+            # 2. Add augmentation offset to the traces
+            sampling_period                  = np.mean(np.diff(cur_run.i_symstream[:,0]))
+            time                             = np.linspace(0, (X[batch_idx, :cur_batch_len, :].shape[0]-1) * sampling_period, X[batch_idx, :cur_batch_len, :].shape[0])
+            X[batch_idx, :cur_batch_len, :] += self._generate_thermal_offset(time, X[batch_idx, :cur_batch_len, :].shape)
 
-            # Number of different environments (ambient temperatures) in the trace
-            max_num_T_ambient = math.floor(time[-1] / (60 * 5)) # Stay in one environment for at least 5 minutes
-            if max_num_T_ambient > 2 and self.ambient[0] < self.ambient[1]:
-              actual_num_ambient = random.randint(2,max_num_T_ambient)
-              amb_len_min = max([1, int((60*4)/sampling_period)])
-              amb_len_max = int(cur_batch_len / (actual_num_ambient - 1))
-              T_ambient  = np.empty((cur_batch_len, X.shape[-1]))
-              T_ambient[0,:] = np.array(self.experiment.layers.lne.np_T_idle) - min(self.experiment.layers.lne.np_T_idle) + random.uniform(self.ambient[0], self.ambient[1])
-              done_len = 1
-              for cnt_ambient in range(actual_num_ambient):
-                if cnt_ambient == actual_num_ambient - 1 and amb_len_max > amb_len_min:
-                  cur_len = cur_batch_len - done_len
-                else:
-                  cur_len = random.randint(amb_len_min, amb_len_max)
-                tmp_T_ambient = np.full((cur_len, 1), random.uniform(self.ambient[0], self.ambient[1]))
-                T_ambient[done_len:done_len+cur_len,:] = self.experiment.layers.lne.augment(
-                                                                 *[time[:cur_len],
-                                                                   tmp_T_ambient, 0, T_ambient[done_len-1,:]
-                                                                   ], **{'beta_key':'beta_zenv_inc' if tmp_T_ambient.max() > T_ambient[done_len-1,:].min() else 'beta_zenv_dec'})
-                done_len += cur_len
-                if done_len >= cur_batch_len:
-                  break
-              X[batch_idx, :cur_batch_len, :] = X[batch_idx, :cur_batch_len, :] + T_ambient
-            else:
-              if self.ambient[0] < self.ambient[1]:
-                T_ambient      = random.uniform(self.ambient[0], self.ambient[1])
-              else:
-                T_ambient      = self.ambient[0]
-              if self.dynamic_start[0] < self.dynamic_start[1]:
-                dynamic_offset = np.full(X[batch_idx,0,:].shape, random.uniform(self.dynamic_start[0], min([self.dynamic_start[1], self.thermal_throttling - T_ambient])), dtype=np.float64)
-              else:
-                dynamic_offset = np.full(X[batch_idx,0,:].shape, self.dynamic_start[0], dtype=np.float64)
-              X[batch_idx, :cur_batch_len, :] = self.experiment.layers.lne.augment(
-                                                                                   *[time,
-                                                                                     X[batch_idx, :cur_batch_len, :], T_ambient, dynamic_offset
-                                                                                    ])
             for cur_lbl_col in range(Y.shape[-1]):
                 hist, _ = np.histogram(Y[batch_idx, :, cur_lbl_col], bins=np.array(list(range(self.num_labels+1)))-0.5, density=False)
                 histlabels[:] += hist
             # Set length of each iteration sample
             actual_batch_len[batch_idx, 0] = cur_batch_len
             get_root_logger().info("%s batch %i of %i finished" % (analysis_phase, batch_idx, getattr(self, "num_" + analysis_phase + "_batches")))
+
         if analysis_phase == "train" or analysis_phase == "test":
             per_label_weights = self.compute_weights(histlabels, mode=WeightCalculationMode.Proportional)
             for label in per_label_weights:
@@ -679,27 +690,28 @@ class DataAugmentation(
             weights      = np.zeros(reshape_Y)
             histlabels   = np.zeros((self.num_labels,))
         for run_rep in getattr(self, analysis_phase + '_runs'):
-          cur_run = self._choose_and_ingest_run(analysis_phase, {'run':run_rep[0], 'rep':run_rep[1]})
-          _, num_batches = math.modf(cur_run.i_symstream.shape[0] / self.batch_size_timesteps)
-          num_batches = int(num_batches) + 1
-          for batch_idx in range(num_batches):
-              idx_start = min([(batch_idx + 0) * self.batch_size_timesteps, cur_run.i_symstream.shape[0]])
-              idx_end   = min([(batch_idx + 1) * self.batch_size_timesteps, cur_run.i_symstream.shape[0]])
-              x_shape = list(X.shape); x_shape[0] = 1
-              y_shape = list(Y.shape); y_shape[0] = 1
-              X = np.vstack([X, np.zeros(x_shape)])
-              Y = np.vstack([Y, np.zeros(y_shape)])
-              X[-1, :(idx_end-idx_start), :] = cur_run.i_symstream[idx_start:idx_end, self.data_columns_idxes] + self.T_meas_ambient
-              Y[-1, :(idx_end-idx_start), :] = cur_run.i_symstream[idx_start:idx_end, self.label_columns_idxes]
+          for cur_rep in range(run_rep[1]):
+            cur_run = self._choose_and_ingest_run(analysis_phase, {'run':run_rep[0], 'rep':cur_rep})
+            _, num_batches = math.modf(cur_run.i_symstream.shape[0] / self.batch_size_timesteps)
+            num_batches = int(num_batches) + 1
+            for batch_idx in range(num_batches):
+                idx_start = min([(batch_idx + 0) * self.batch_size_timesteps, cur_run.i_symstream.shape[0]])
+                idx_end   = min([(batch_idx + 1) * self.batch_size_timesteps, cur_run.i_symstream.shape[0]])
+                x_shape = list(X.shape); x_shape[0] = 1
+                y_shape = list(Y.shape); y_shape[0] = 1
+                X = np.vstack([X, np.zeros(x_shape)])
+                Y = np.vstack([Y, np.zeros(y_shape)])
+                X[-1, :(idx_end-idx_start), :] = cur_run.i_symstream[idx_start:idx_end, self.data_columns_idxes] + self.T_meas_ambient
+                Y[-1, :(idx_end-idx_start), :] = cur_run.i_symstream[idx_start:idx_end, self.label_columns_idxes]
 
-              # Set length of each iteration sample
-              actual_batch_len.append(cur_run.i_symstream[idx_start:idx_end,self.data_columns_idxes].shape[0])
-              if analysis_phase != 'verif':
-                  weights = np.vstack([weights, np.zeros(y_shape)])
-                  for cur_lbl_col in range(Y.shape[-1]):
-                      hist, _ = np.histogram(Y[batch_idx, :, cur_lbl_col], bins=np.array(list(range(self.num_labels+1)))-0.5, density=False)
-                      histlabels[:] += hist
-          get_root_logger().info(f"Processing run {cur_run} finished, processed {num_batches}")
+                # Set length of each iteration sample
+                actual_batch_len.append(cur_run.i_symstream[idx_start:idx_end,self.data_columns_idxes].shape[0])
+                if analysis_phase != 'verif':
+                    weights = np.vstack([weights, np.zeros(y_shape)])
+                    for cur_lbl_col in range(Y.shape[-1]):
+                        hist, _ = np.histogram(Y[batch_idx, :, cur_lbl_col], bins=np.array(list(range(self.num_labels+1)))-0.5, density=False)
+                        histlabels[:] += hist
+          get_root_logger().debug(f"Processing run {cur_run} finished, processed {num_batches}")
 
         actual_batch_len = np.array(actual_batch_len).reshape((-1,1))
         if analysis_phase == "verif":

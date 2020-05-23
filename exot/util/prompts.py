@@ -103,8 +103,25 @@ def prompt(
     _handler: t.Optional[t.Callable[[str], t.Any]] = None,
     _fail: bool = False,
     **kwargs,
-):
-    """prompt user for input, with timeouts and type handling
+) -> t.Any:
+    """Prompt user for input, with timeouts and type handling
+
+    Args:
+        msg (str): The message to print
+        expect (t.Optional[t.Type], optional): The expected response type. Defaults to bool.
+        _timeout (t.Optional[int], optional): The timeout duration. Defaults to None.
+        _prompt (str, optional): The prompt prefix. Defaults to "> ".
+        _ask (str, optional): The asking postfix. Defaults to "? ".
+        _handler (t.Optional[t.Callable[[str], t.Any]], optional): The response handler.
+        _fail (bool, optional): Should raise if prompting failed?. Defaults to False.
+
+    Raises:
+        TypeError: Wrong type supplied to 'expect'
+        TypeError: Wrong type supplied to '_handler'
+        TimeoutError: Timed out
+
+    Returns:
+        t.Any: The response
     """
     if expect and not isinstance(expect, type):
         raise TypeError(f"'expect' should be a type, got: {type(expect)}")

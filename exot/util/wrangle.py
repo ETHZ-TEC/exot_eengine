@@ -75,6 +75,9 @@ def filter_factory(where, which, value):
 def run_path_formatter(*param: t.Hashable) -> str:
     """Produce a formatted path from parameters
 
+    Args:
+        param (t.Hashable): a sequence of hashable params
+
     ..note::
         The function aims to proide a unified way of translating between parameters
         in phases and strings
@@ -88,15 +91,15 @@ def run_path_formatter(*param: t.Hashable) -> str:
         While 'phases' can have have different depths, we will tentatively constrain
         the file hierarchy depth to 1. For example: these are valid paths:
 
-        >>> run_path_formatte("run", 1) # run_00001
-        >>> run_path_formatte("eval", 123) # eval_00123
-        >>> run_path_formatte("run", "param1", 1) # run_param1_00001
+        >>> run_path_formatter("run", 1) # run_00001
+        >>> run_path_formatter("eval", 123) # eval_00123
+        >>> run_path_formatter("run", "param1", 1) # run_param1_00001
 
         These are some of the invalid paths:
 
-        >>> run_path_formatte("train", ("float", 0.1))
-        >>> run_path_formatte("train", {1: 1})
-        >>> run_path_formatte("train", [1, 2])
+        >>> run_path_formatter("train", ("float", 0.1))
+        >>> run_path_formatter("train", {1: 1})
+        >>> run_path_formatter("train", [1, 2])
     """
 
     def visitor(x):
@@ -132,6 +135,7 @@ def run_path_unformatter(path: str) -> t.Tuple:
     assert isinstance(path, str), "path must be a str"
     assert not any(c in whitespace for c in path), "no whitespace in valid path"
     split = path.split("_")
+
     def visitor(x):
         if "-" in x:
             return tuple(visitor(_x) for _x in x.split("-"))
@@ -142,13 +146,16 @@ def run_path_unformatter(path: str) -> t.Tuple:
 
     return tuple(visitor(x) for x in split)
 
+
 def repetition_formatter(rep: int) -> Path:
     return Path("{:>03d}".format(rep))
+
 
 def app_configfile_formatter(app: str) -> Path:
     """Produce a formatted json filename"""
 
     return "{}.config.json".format(app)
+
 
 def app_log_formatter(app: str, dbg: bool) -> Path:
     """Produce a formatted log filename"""
@@ -160,6 +167,7 @@ def generic_log_formatter(app: str, dbg: bool) -> Path:
     """Produce a formatted log filename"""
 
     return "{}.{}".format(app, "stderr.txt" if dbg else "stdout.txt")
+
 
 def log_path_unformatter(path: Path) -> (int, str, bool):
     """Produce a formatted log filename"""
@@ -174,7 +182,17 @@ def log_path_unformatter(path: Path) -> (int, str, bool):
 
     return env, rep, app, dbg
 
+
 def parse_header_entry(entry: str) -> dict:
+    """Parses a header entry
+
+    Args:
+        entry (str): The header entry
+
+    Returns:
+        dict: The parsed entry (dict with keys: module, value, dimension, unit)
+    """
+
     assert isinstance(entry, str), "entry must be a string"
     _categories = ["module", "value", "dimension", "unit"]
     _split_by_colon = entry.split(":")
@@ -185,13 +203,31 @@ def parse_header_entry(entry: str) -> dict:
     return _dict
 
 
-def parse_header(header: t.Union[t.Iterable, str]) -> t.List:
+def parse_header(header: t.Union[t.Iterable, str]) -> t.List[dict]:
+    """Parses the entire header
+
+    Args:
+        header (t.Union[t.Iterable, str]): The header
+
+    Returns:
+        t.List[dict]: A list of parsed header entries
+    """
+
     assert isinstance(header, (t.Iterable, str)), "must be a str or a list"
     header = header.split(",") if isinstance(header, str) else header
     return list(map(parse_header_entry, header))
 
 
 def parse_and_describe(header: t.Union[t.Iterable, str]) -> dict:
+    """Parses and describes the header
+
+    Args:
+        header (t.Union[t.Iterable, str]): The header
+
+    Returns:
+        dict: A dict with available modules, quantities, and methods
+    """
+
     _parsed = parse_header(header)
     _modules = {_["module"] for _ in _parsed}
     _quantities = {_["quantity"] for _ in _parsed if _["quantity"]}
@@ -269,10 +305,31 @@ def filter_data(
 
 
 def filter_with_callable(data: t.T, callable: t.Callable) -> t.T:
+    """Filters data with a callable
+
+    Args:
+        data (t.T): The data
+        callable (t.Callable): The callable
+
+    Returns:
+        t.T: The filtered data
+    """
     return type(data)(filter(callable, data))
 
 
-def get_unique_column_combinations(data: pd.DataFrame, columns=[]):
+def get_unique_column_combinations(data: pd.DataFrame, columns=[]) -> t.Tuple:
+    """Gets the unique combinations of columns
+
+    Args:
+        data (pd.DataFrame): The data frame
+        columns (list, optional): The columns to choose. Defaults to [].
+
+    Raises:
+        TypeError: Wrong type provided to 'data'
+
+    Returns:
+        t.Tuple: The unique combinations of columns
+    """
     if not isinstance(data, pd.DataFrame):
         raise TypeError("'get_unique_column_combinations' must receive a Pandas DataFrame")
 
@@ -391,7 +448,10 @@ class Matcher:
             bool: True if contains a timestamp, False otherwise
         """
         parsed = parse_header_entry(entry)
-        if parsed["module"] == "host" and parsed["value"] == "timestamp":
+        if (
+            parsed["module"] in ["host", "meter", "generator"]
+            and parsed["value"] == "timestamp"
+        ):
             return True
         else:
             return False

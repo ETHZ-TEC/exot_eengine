@@ -143,11 +143,11 @@ class Huffman(SourceCoding):
             # fill to compression factor
             bitstream.extend(1 for _ in range(len(bitstream) % int(self.compression_factor)))
         else:
-            _ = bitarray()
-            _.encode(self.codebook, np.array(bitstream.decode(self.codebook)))
+            padded_bitstream = bitarray()
+            padded_bitstream.encode(self.codebook, np.array(bitstream.decode(self.codebook)))
 
             for v in self.codebook.values():
-                end = bitstream[len(_) :]
+                end = bitstream[len(padded_bitstream) :]
                 if end in v[0 : len(end)]:
                     break
                 bitstream.extend(bit for bit in v[(len(end) - 1) :])
@@ -155,6 +155,6 @@ class Huffman(SourceCoding):
         return np.array(bitstream.decode(self.codebook))
 
     def _decode(self, symstream: np.ndarray) -> np.ndarray:
-        _ = bitarray()
-        _.encode(self.codebook, symstream.tolist())
-        return np.array(_).astype(int)
+        bitstream = bitarray()
+        bitstream.encode(self.codebook, symstream.tolist())
+        return np.array(bitstream).astype(int)

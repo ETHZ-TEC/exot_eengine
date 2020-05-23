@@ -112,7 +112,8 @@ class RunPlotter(Plotter):
             axis.plot(
                 timestamps, data.iloc[:, i], marker="+", markersize=2, linewidth=0.5, alpha=0.5
             )
-            axis.set_ylim(0.975 * lower_ylim, 1.025 * upper_ylim)
+            if lower_ylim < upper_ylim:
+                axis.set_ylim(0.975 * lower_ylim, 1.025 * upper_ylim)
             axis.get_xaxis().get_major_formatter().set_useOffset(False)
             axis.set_xlim(timestamps.iloc[0], timestamps.iloc[-1])
             axis.set_ylabel("{}\n{}\n{} ({})".format(*data.columns[i].split(":")), color="gray")
@@ -937,7 +938,8 @@ class PerformanceRunPlotter(RunPlotter):
                 linewidth=0.5,
                 alpha=0.5,
             )
-            axis.set_ylim(0.975 * lower_ylim, 1.025 * upper_ylim)
+            if lower_ylim < upper_ylim:
+                axis.set_ylim(0.975 * lower_ylim, 1.025 * upper_ylim)
             axis.set_ylabel(
                 "{}\n{}\n{} ({})".format(*data[interval].columns[i].split(":")), color="gray"
             )

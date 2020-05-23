@@ -363,6 +363,50 @@ class LatencyMethods:
 
 
 class FanMethods:
+    KNOWN_FAN_ENDPOINTS = {
+        "thinkpad": {"path": "/proc/acpi/ibm/fan", "endpoints": []},
+        "odroid-xu3": {
+            "path": "/sys/devices/odroid_fan.14/",
+            "endpoints": ["fan_mode", "pwm_duty"],
+        },
+        "odroid-2": {
+            "path": "/sys/devices/platform/odroidu2-fan/",
+            "endpoints": ["fan_mode", "pwm_duty"],
+        },
+        "pwm-fan-hwmon": {
+            "path": "/sys/devices/platform/pwm-fan/hwmon/hwmon0/",
+            "endpoints": ["automatic", "pwm1"],
+        },
+        "pwm-fan": {
+            "path": "/sys/bus/platform/devices/pwm-fan/",
+            "endpoints": ["cur_pwm", "target_pwm"],
+        },
+    }
+
+    @property
+    def _available_fan_endpoints(self) -> t.List[t.Dict]:
+        """Gets the available fan endpoints info
+
+        Returns:
+            t.List[t.Dict]: The available fan endpoints (mapping with keys
+                            ["key", "path", "path_exists", "endpoints_exist"])
+        """
+        availability_mapping = [
+            {
+                "key": k,  # str
+                "path": v["path"],  # str
+                "path_exists": self.exists(v["path"]),  # bool
+                "endpoints_exist": all(
+                    self.exists(v["path"] + endpoint) for endpoint in v["endpoints"]
+                ),  # bool
+            }
+            for k, v in FanMethods.KNOWN_FAN_ENDPOINTS.items()
+        ]
+
+        return [
+            _ for _ in availability_mapping if _["path_exists"] and _["endpoints_exist"]
+        ]
+
     @property
     def fan_path(self) -> t.Optional[t.Dict]:
         """Gets the path to fan settings on the device
@@ -372,18 +416,8 @@ class FanMethods:
                                    None if no path has been found.
         """
         # The keys are only used to identify various endpoints
-        _ = {
-            "thinkpad": "/proc/acpi/ibm/fan",
-            "odroid-xu3": "/sys/devices/odroid_fan.14/",
-            "odroid-2": "/sys/devices/platform/odroidu2-fan/",
-            "odroid-xu4": "/sys/devices/platform/pwm-fan/hwmon/hwmon0/",
-            "pwm-fan": "/sys/bus/platform/devices/pwm-fan/",
-        }
-
-        availability = [{"key": k, "path": v, "exists": self.exists(v)} for k, v in _.items()]
-        existing_paths = [p for p in availability if p["exists"]]
-        assert len(existing_paths) <= 1, "There should be at most 1 fan settings path"
-        return existing_paths[0] if existing_paths else None
+        existing_endpoints = self._available_fan_endpoints
+        return existing_endpoints[0] if existing_endpoints else None
 
     @property
     def fan(self) -> t.Optional[t.Union[str, tuple]]:
@@ -406,7 +440,7 @@ class FanMethods:
             _ = self.backend.run(["cat", fan["path"] + "{fan_mode,pwm_duty}"])
             return tuple(_.stdout.splitlines()) if _.ok else None
 
-        elif fan["key"] == "odroid-xu4":
+        elif fan["key"] == "pwm-fan-hwmon":
             _ = self.backend.run(["cat", fan["path"] + "{automatic,pwm1}"])
             return tuple(_.stdout.splitlines()) if _.ok else None
 
@@ -478,7 +512,7 @@ class FanMethods:
                         f"exit code: {_pwm.exited}, stderr: {_pwm.stderr}"
                     )
 
-        elif fan["key"] == "odroid-xu4":
+        elif fan["key"] == "pwm-fan-hwmon":
             if isinstance(value, bool):
                 value = ("0", "255") if value is True else ("1", "0")
             elif not isinstance(value, (tuple, list)) and len(value) != 2:
@@ -491,7 +525,7 @@ class FanMethods:
 
             if not _.ok:
                 get_root_logger().warning(
-                    f"setting odroid fan 'AUTOMATIC' to {value[0]!r} failed, "
+                    f"setting pwm-fan-hwmon fan 'AUTOMATIC' to {value[0]!r} failed, "
                     f"exit code: {_.exited}, stderr: {_.stderr}"
                 )
 
@@ -499,7 +533,7 @@ class FanMethods:
 
             if not _.ok:
                 get_root_logger().warning(
-                    f"setting odroid fan 'PWM1' to {value[1]!r} failed, "
+                    f"setting pwm-fan-hwmon fan 'PWM1' to {value[1]!r} failed, "
                     f"exit code: {_.exited}, stderr: {_.stderr}"
                 )
 

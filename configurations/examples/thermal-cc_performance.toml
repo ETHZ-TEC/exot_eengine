@@ -46,7 +46,7 @@ experiment_exists_action = "move" # overwrite, move, halt
 # Experiment settings
 [EXPERIMENT]
 type = "PerformanceExperiment"
-channel = "Thermal"
+channel = "ThermalCC"
 
 [EXPERIMENT.PHASES]
 train = {bit_count =  60, symbol_rates = [1], repetitions = 1}

@@ -139,6 +139,14 @@ TODO
 
 class PowerCC(CovertChannel, CapacityContinuous, PerformanceSweep):
     @property
+    def inputs(self) -> np.array:
+        """
+        0  -> Do not utilise core (cool down)
+        n  -> Utilise n cores
+        """
+        return np.arange(999)
+
+    @property
     def signal(self) -> t.Mapping:
         """
         0 -> Do not utilise core (low power consumption)
@@ -149,6 +157,10 @@ class PowerCC(CovertChannel, CapacityContinuous, PerformanceSweep):
     @property
     def fixed_length_symbols(self) -> bool:
         return True
+
+    @property
+    def analyses_classes(self):
+        return {}  # TODO
 
 """
 Thermal Covert Channels
@@ -173,4 +185,8 @@ class ThermalCC(CovertChannel, CapacityDiscrete, PerformanceSweep):
     @property
     def fixed_length_symbols(self) -> bool:
         return True
+
+    @property
+    def analyses_classes(self):
+        return {}  # TODO
 
