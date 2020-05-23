@@ -1,0 +1,573 @@
+# Copyright (c) 2015-2020, Swiss Federal Institute of Technology (ETH Zurich)
+# All rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+# 
+# * Redistributions of source code must retain the above copyright notice, this
+#   list of conditions and the following disclaimer.
+# 
+# * Redistributions in binary form must reproduce the above copyright notice,
+#   this list of conditions and the following disclaimer in the documentation
+#   and/or other materials provided with the distribution.
+# 
+# * Neither the name of the copyright holder nor the names of its
+#   contributors may be used to endorse or promote products derived from
+#   this software without specific prior written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+# 
+# ------------------------------------------------------------------------------------------------ #
+#                                    General Experiment Parameters                                 #
+# ------------------------------------------------------------------------------------------------ #
+name = "Thermal-SC_Final"
+save_path = "./data"
+backup_path = "./data/_backup"
+experiment_exists_action = "update" # Optional: Action to perform if experiment directory exists: overwrite, move, halt, update
+
+[EXPERIMENT]
+type = "AppExecExperiment"
+channel = "ThermalSC"
+
+[EXPERIMENT.LAYERS]
+io  = {name = "TimeValue", params = {timebase='ns', synchronise = false}}
+rdp = {name = "Normalise", params = {resampling_period_s=0.04, offset=22}}  # Resampling period and ambient temperature (offset)
+lne = {name = "ThermalLabelRefactoring", params = {}}
+
+[EXPERIMENT.GENERAL]
+sampling_period = 1e-3
+delay_after_spawn = 60.0
+delay_after_auxiliary = 0.0
+active_wait = true
+
+# ------------------------------------------------------------------------------------------------ #
+#                                     Experiment Phases                                            #
+# ------------------------------------------------------------------------------------------------ #
+
+[EXPERIMENT.PHASES]
+[EXPERIMENT.PHASES.bm]
+repetitions=10
+
+[EXPERIMENT.PHASES.bm.androbench0]
+schedules=[
+ '../RepetiTouchFiles/S5/Benchmark/AndroBench/0_2019-07-16_09-33-00.rpt',
+ '../RepetiTouchFiles/Z5/Benchmark/AndroBench/0_2019-07-21_13-43-00.rpt'
+ ]
+durations=[186.117580, 131.433588]
+environments=['S5', 'Z5']
+
+[EXPERIMENT.PHASES.bm.androbench1]
+schedules=[
+ '../RepetiTouchFiles/S5/Benchmark/AndroBench/1_2019-07-16_10-41-00.rpt',
+ '../RepetiTouchFiles/Z5/Benchmark/AndroBench/1_2019-07-23_20-03-00.rpt'
+ ]
+durations=[107.989068, 72.143893]
+environments=['S5', 'Z5']
+
+[EXPERIMENT.PHASES.bm.androbench2]
+schedules=[
+ '../RepetiTouchFiles/S5/Benchmark/AndroBench/2_2019-07-31_XX-XX-00.rpt',
+ '../RepetiTouchFiles/Z5/Benchmark/AndroBench/2_2019-07-23_20-05-00.rpt'
+ ]
+durations=[86.694651, 72.133988]
+environments=['S5', 'Z5']
+
+ 
+[EXPERIMENT.PHASES.bm.antutu0]
+schedules=[
+ '../RepetiTouchFiles/S5/Benchmark/AnTuTu/0_2019-08-08_17-45-00.rpt',
+ '../RepetiTouchFiles/Z5/Benchmark/AnTuTu/0_2019-08-08_17-46-00_MitPause.rpt',
+ ]
+durations=[
+            935.278840, 
+           1014.240704, 
+          ]
+environments=['S5', 'Z5']
+
+ 
+[EXPERIMENT.PHASES.bm.antutu1]
+schedules=[
+ '../RepetiTouchFiles/S5/Benchmark/AnTuTu/1_2019-07-15_11-27-00.rpt',
+ '../RepetiTouchFiles/Z5/Benchmark/AnTuTu/1_2019-07-23_19-57-00.rpt'
+ ]
+durations=[43.860342, 129.167235]
+environments=['S5', 'Z5']
+
+ 
+[EXPERIMENT.PHASES.bm.antutu2]
+schedules=[
+ '../RepetiTouchFiles/S5/Benchmark/AnTuTu/2_2019-08-08_17-58-00_new.rpt',
+ '../RepetiTouchFiles/Z5/Benchmark/AnTuTu/2_2019-08-12_20-56-00.rpt'
+ ]
+durations=[
+  180.315137, 
+  162.017750
+  ]
+environments=['S5', 'Z5']
+
+ 
+[EXPERIMENT.PHASES.bm.antutu4]
+schedules=[
+ '../RepetiTouchFiles/S5/Benchmark/AnTuTu/4_2019-08-08_18-10-00.rpt',
+ '../RepetiTouchFiles/Z5/Benchmark/AnTuTu/4_2019-07-23_19-33-00.rpt'
+ ]
+durations=[66.667496, 39.464821]
+environments=['S5', 'Z5']
+ 
+ 
+[EXPERIMENT.PHASES.bm.antutu5]
+schedules=[
+ '../RepetiTouchFiles/S5/Benchmark/AnTuTu/5_2019-08-08_18-19-00.rpt',
+ '../RepetiTouchFiles/Z5/Benchmark/AnTuTu/5_2019-08-12_20-57-00.rpt'
+ ]
+durations=[48.377701, 30.346728]
+environments=['S5', 'Z5']
+ 
+ 
+[EXPERIMENT.PHASES.bm.antutu6]
+schedules=[
+ '../RepetiTouchFiles/S5/Benchmark/AnTuTu/6_2019-07-15_11-27-00.rpt',
+ '../RepetiTouchFiles/Z5/Benchmark/AnTuTu/6_2019-08-12_20-59-00.rpt'
+ ]
+durations=[46.168986, 34.411516]
+environments=['S5', 'Z5']
+
+ 
+[EXPERIMENT.PHASES.bm.chrome1]
+schedules=[
+ '../RepetiTouchFiles/S5/Browsing/Chrome/1_2019-08-12_14-34-00.rpt',
+ '../RepetiTouchFiles/Z5/Browsing/Chrome/1_2019-08-13_12-28-00.rpt'
+ ]
+durations=[151.001825, 115.211106]
+environments=['S5', 'Z5']
+
+
+[EXPERIMENT.PHASES.bm.chrome2]
+schedules=[
+ '../RepetiTouchFiles/S5/Browsing/Chrome/2_2019-08-12_16-05-00.rpt',
+ '../RepetiTouchFiles/Z5/Browsing/Chrome/2_2019-08-13_12-32-00_new.rpt'
+ ]
+durations=[275.663995, 205.046]
+environments=['S5', 'Z5']
+
+ 
+[EXPERIMENT.PHASES.bm.chrome3]
+schedules=[
+ '../RepetiTouchFiles/S5/Browsing/Chrome/3_2019-08-12_14-42-00.rpt',
+ '../RepetiTouchFiles/Z5/Browsing/Chrome/3_2019-08-13_12-35-00.rpt'
+ ]
+durations=[138.477534, 133.923614]
+environments=['S5', 'Z5']
+
+ 
+[EXPERIMENT.PHASES.bm.chrome4]
+schedules=[
+ '../RepetiTouchFiles/S5/Browsing/Chrome/4_2019-08-12_16-10-00.rpt',
+ '../RepetiTouchFiles/Z5/Browsing/Chrome/4_2019-08-13_12-39-00.rpt'
+ ]
+durations=[138.395418, 185.813495]
+environments=['S5', 'Z5']
+
+ 
+[EXPERIMENT.PHASES.bm.dropbox2]
+schedules=[
+ '../RepetiTouchFiles/S5/Cloud/Dropbox/2_2019-08-08_19-44-00.rpt',
+ '../RepetiTouchFiles/Z5/Cloud/Dropbox/2_2019-08-12_21-03-00.rpt'
+ ]
+durations=[30.200163, 44.614104]
+environments=['S5', 'Z5']
+ 
+ 
+[EXPERIMENT.PHASES.bm.dropbox4]
+schedules=[
+ '../RepetiTouchFiles/S5/Cloud/Dropbox/4_2019-08-08_19-47-00.rpt',
+ '../RepetiTouchFiles/Z5/Cloud/Dropbox/4_2019-08-12_21-01-00.rpt'
+ ]
+durations=[42.190291, 44.984109]
+environments=['S5', 'Z5']
+
+ 
+[EXPERIMENT.PHASES.bm.dropbox5]
+schedules=[
+ '../RepetiTouchFiles/S5/Cloud/Dropbox/5_2019-08-08_19-50-00.rpt',
+ '../RepetiTouchFiles/Z5/Cloud/Dropbox/5_2019-08-12_21-05-00.rpt'
+ ]
+durations=[33.199039, 62.182862]
+environments=['S5', 'Z5']
+ 
+ 
+[EXPERIMENT.PHASES.bm.gmail0]
+schedules=[
+ '../RepetiTouchFiles/S5/Email/Gmail/0_2019-07-15_13-43-00.rpt',
+ '../RepetiTouchFiles/Z5/Email/Gmail/0_2019-07-28_13-43-00.rpt'
+ ]
+durations=[72.261020, 52.622470]
+environments=['S5', 'Z5']
+
+ 
+[EXPERIMENT.PHASES.bm.gmail1]
+schedules=[
+ '../RepetiTouchFiles/S5/Email/Gmail/1_2019-07-15_13-44-00.rpt',
+ '../RepetiTouchFiles/Z5/Email/Gmail/1_2019-07-28_13-44-00.rpt'
+ ]
+durations=[68.333808, 99.121980]
+environments=['S5', 'Z5']
+
+ 
+[EXPERIMENT.PHASES.bm.gmail2]
+schedules=[
+ '../RepetiTouchFiles/S5/Email/Gmail/2_2019-08-12_16-12-00.rpt',
+ '../RepetiTouchFiles/Z5/Email/Gmail/2_2019-07-28_13-51-00.rpt'
+ ]
+durations=[67.454884, 47.439054]
+environments=['S5', 'Z5']
+
+ 
+[EXPERIMENT.PHASES.bm.gmail3]
+schedules=[
+ '../RepetiTouchFiles/S5/Email/Gmail/3_2019-08-12_16-14-00.rpt',
+ '../RepetiTouchFiles/Z5/Email/Gmail/3_2019-08-13_12-47-00.rpt'
+ ]
+durations=[64.269724, 46.074304]
+environments=['S5', 'Z5']
+ 
+ 
+[EXPERIMENT.PHASES.bm.gmail4]
+schedules=[
+ '../RepetiTouchFiles/S5/Email/Gmail/4_2019-07-15_15-18-00.rpt',
+ '../RepetiTouchFiles/Z5/Email/Gmail/4_2019-07-28_15-18-00.rpt'
+ ]
+durations=[268.101854, 348.450938]
+environments=['S5', 'Z5']
+
+ 
+[EXPERIMENT.PHASES.bm.angrybirdsrio0]
+schedules=[
+ '../RepetiTouchFiles/S5/Game/AngryBirdsRio/0_2019-08-08_19-58-00_new.rpt',
+ '../RepetiTouchFiles/Z5/Game/AngryBirdsRio/0_2019-08-13_22-20-00.rpt_new'
+ ]
+durations=[
+            97.89349,
+           152.348514
+          ]
+environments=['S5', 'Z5']
+
+ 
+[EXPERIMENT.PHASES.bm.angrybirdsrio1]
+schedules=[
+ '../RepetiTouchFiles/S5/Game/AngryBirdsRio/1_2019-08-08_20-10-00_new.rpt',
+ '../RepetiTouchFiles/Z5/Game/AngryBirdsRio/1_2019-08-13_22-23-00.rpt_new'
+ ]
+durations=[
+           158.942426, 
+           151.324664
+          ]
+environments=['S5', 'Z5']
+ 
+ 
+[EXPERIMENT.PHASES.bm.angrybirdsrio2]
+schedules=[
+ '../RepetiTouchFiles/S5/Game/AngryBirdsRio/2_2019-08-08_23-11-00_new.rpt',
+ '../RepetiTouchFiles/Z5/Game/AngryBirdsRio/2_2019-08-13_22-29-00.rpt_new'
+ ]
+durations=[
+           251.817426, 
+           300.413739
+          ]
+environments=['S5', 'Z5']
+
+ 
+[EXPERIMENT.PHASES.bm.angrybirdsrio3]
+schedules=[
+ '../RepetiTouchFiles/S5/Game/AngryBirdsRio/3_2019-08-13_10-55-00_new.rpt',
+ '../RepetiTouchFiles/Z5/Game/AngryBirdsRio/3_2019-07-23_21-07-00.rpt'
+ ]
+durations=[512.409394, 489.626]
+environments=['S5', 'Z5']
+
+ 
+[EXPERIMENT.PHASES.bm.angrybirdsrio4]
+schedules=[
+ '../RepetiTouchFiles/S5/Game/AngryBirdsRio/4_2019-08-13_11-06-00.rpt',
+ '../RepetiTouchFiles/Z5/Game/AngryBirdsRio/4_2019-07-23_21-58-00.rpt_new'
+ ]
+durations=[602.923312, 628.471693]
+environments=['S5', 'Z5']
+
+ 
+[EXPERIMENT.PHASES.bm.wire0]
+schedules=[
+ '../RepetiTouchFiles/S5/IM/Wire/0_2019-07-21_16-18-00.rpt',
+ '../RepetiTouchFiles/Z5/IM/Wire/0_2019-07-21_16-16-00.rpt'
+ ]
+durations=[55.212140, 31.866085, ]
+environments=['S5', 'Z5']
+
+ 
+[EXPERIMENT.PHASES.bm.wire1]
+schedules=[
+ '../RepetiTouchFiles/S5/IM/Wire/1_2019-07-21_16-54-00_new.rpt',
+ '../RepetiTouchFiles/Z5/IM/Wire/1_2019-07-21_16-54-00.rpt'
+ ]
+durations=[120.581177, 141.057915]
+environments=['S5', 'Z5']
+
+ 
+[EXPERIMENT.PHASES.bm.wire2]
+schedules=[
+ '../RepetiTouchFiles/S5/IM/Wire/2_2019-07-21_12-24-00.rpt',
+ '../RepetiTouchFiles/Z5/IM/Wire/2_2019-07-21_17-24-00.rpt'
+ ]
+durations=[155.387177, 152.271116]
+environments=['S5', 'Z5']
+
+ 
+[EXPERIMENT.PHASES.bm.wire4]
+schedules=[
+ '../RepetiTouchFiles/S5/IM/Wire/5_2019-10-21_16-30-00.rpt',
+ '../RepetiTouchFiles/Z5/IM/Wire/4_2019-07-21_16-20-00.rpt'
+ ]
+durations=[80.036454, 151.444616]
+environments=['S5', 'Z5']
+
+[EXPERIMENT.PHASES.bm.googlemaps0]
+schedules=[
+ '../RepetiTouchFiles/S5/Location/GoogleMaps/0_2019-07-15_15-58-00.rpt',
+ '../RepetiTouchFiles/Z5/Location/GoogleMaps/0_2019-07-28_23-36-00.rpt'
+ ]
+durations=[39.614324, 59.113969]
+environments=['S5', 'Z5']
+
+ 
+[EXPERIMENT.PHASES.bm.googlemaps1]
+schedules=[
+ '../RepetiTouchFiles/S5/Location/GoogleMaps/1_2019-07-15_15-22-00.rpt',
+ '../RepetiTouchFiles/Z5/Location/GoogleMaps/1_2019-07-28_23-38-00.rpt'
+ ]
+durations=[106.457501, 70.442892]
+environments=['S5', 'Z5']
+
+ 
+[EXPERIMENT.PHASES.bm.googlemaps2]
+schedules=[
+ '../RepetiTouchFiles/S5/Location/GoogleMaps/2_2019-08-12_16-18-00.rpt',
+ '../RepetiTouchFiles/Z5/Location/GoogleMaps/2_2019-07-28_23-43-00.rpt'
+ ]
+durations=[110.552914, 160.341013]
+environments=['S5', 'Z5']
+
+ 
+[EXPERIMENT.PHASES.bm.googlemaps3]
+schedules=[
+ '../RepetiTouchFiles/S5/Location/GoogleMaps/3_2019-08-12_20-17-00.rpt',
+ '../RepetiTouchFiles/Z5/Location/GoogleMaps/3_2019-08-13_12-49-00.rpt'
+ ]
+durations=[66.519396, 52.524961]
+environments=['S5', 'Z5']
+
+ 
+[EXPERIMENT.PHASES.bm.googlemaps4]
+schedules=[
+ '../RepetiTouchFiles/S5/Location/GoogleMaps/4_2019-08-12_20-19-00.rpt',
+ '../RepetiTouchFiles/Z5/Location/GoogleMaps/4_2019-08-13_14-53-00.rpt'
+ ]
+durations=[
+             48.992687, 
+            132.933445
+          ]
+environments=['S5', 'Z5']
+
+ 
+[EXPERIMENT.PHASES.bm.googlemaps5]
+schedules=[
+ '../RepetiTouchFiles/S5/Location/GoogleMaps/5_2019-08-12_20-23-00.rpt',
+ '../RepetiTouchFiles/Z5/Location/GoogleMaps/5_2019-08-13_14-57-00.rpt'
+ ]
+durations=[185.193956, 197.908012]
+environments=['S5', 'Z5']
+ 
+[EXPERIMENT.PHASES.bm.facebook2]
+schedules=[
+ '../RepetiTouchFiles/S5/SocialMedia/Facebook/2_2019-07-11_17-48-00.rpt',
+ '../RepetiTouchFiles/Z5/SocialMedia/Facebook/2_2019-07-09_17-25-00.rpt'
+ ]
+durations=[23.035681, 26.849243]
+environments=['S5', 'Z5']
+
+ 
+[EXPERIMENT.PHASES.bm.facebook3]
+schedules=[
+ '../RepetiTouchFiles/S5/SocialMedia/Facebook/3_2019-07-11_17-51-00.rpt',
+ '../RepetiTouchFiles/Z5/SocialMedia/Facebook/3_2019-07-09_17-30-00.rpt'
+ ]
+durations=[52.663049, 61.105290]
+environments=['S5', 'Z5']
+
+ 
+[EXPERIMENT.PHASES.bm.facebook4]
+schedules=[
+ '../RepetiTouchFiles/S5/SocialMedia/Facebook/4_2019-08-12_14-23-00.rpt',
+ '../RepetiTouchFiles/Z5/SocialMedia/Facebook/4_2019-08-12_21-11-00.rpt'
+ ]
+durations=[46.984843, 50.110613]
+environments=['S5', 'Z5']
+
+ 
+[EXPERIMENT.PHASES.bm.facebook5]
+schedules=[
+ '../RepetiTouchFiles/S5/SocialMedia/Facebook/5_2019-07-11_17-56-00.rpt',
+ '../RepetiTouchFiles/Z5/SocialMedia/Facebook/5_2019-07-09_XX-XX-00.rpt'
+ ]
+durations=[83.440393, 52.051757]
+environments=['S5', 'Z5']
+
+ 
+[EXPERIMENT.PHASES.bm.facebook6]
+schedules=[
+ '../RepetiTouchFiles/S5/SocialMedia/Facebook/6_2019-07-11_18-01-00.rpt',
+ '../RepetiTouchFiles/Z5/SocialMedia/Facebook/6_2019-07-09_17-38-00.rpt'
+ ]
+durations=[173.960985, 38.766851]
+environments=['S5', 'Z5']
+
+ 
+[EXPERIMENT.PHASES.bm.facebook7]
+schedules=[
+ '../RepetiTouchFiles/S5/SocialMedia/Facebook/7_2019-07-11_21-16-00.rpt',
+ '../RepetiTouchFiles/Z5/SocialMedia/Facebook/7_2019-07-09_17-46-00.rpt'
+ ]
+durations=[62.293409, 27.407924]
+environments=['S5', 'Z5']
+
+ 
+[EXPERIMENT.PHASES.bm.youtube0]
+schedules=[
+ '../RepetiTouchFiles/S5/Video/YouTube/0_2019-08-12_20-29-00.rpt',
+ '../RepetiTouchFiles/Z5/Video/YouTube/0_2019-08-13_15-24-00.rpt'
+ ]
+durations=[208.866472, 166.567410]
+environments=['S5', 'Z5']
+
+ 
+[EXPERIMENT.PHASES.bm.youtube1]
+schedules=[
+ '../RepetiTouchFiles/S5/Video/YouTube/1_2019-07-21_14-02-00.rpt',
+ '../RepetiTouchFiles/Z5/Video/YouTube/1_2019-08-13_19-22-00.rpt'
+ ]
+durations=[465.111143, 249.742856]
+environments=['S5', 'Z5']
+
+ 
+[EXPERIMENT.PHASES.bm.youtube2]
+schedules=[
+ '../RepetiTouchFiles/S5/Video/YouTube/2_2019-07-21_15-43-00.rpt',
+ '../RepetiTouchFiles/Z5/Video/YouTube/2_2019-07-29_21-48-00.rpt'
+ ]
+durations=[366.605143, 250.621805]
+environments=['S5', 'Z5']
+
+ 
+[EXPERIMENT.PHASES.bm.youtube3]
+schedules=[
+ '../RepetiTouchFiles/S5/Video/YouTube/3_2019-07-21_15-49-00.rpt',
+ '../RepetiTouchFiles/Z5/Video/YouTube/3_2019-07-29_22-00-00.rpt'
+ ]
+durations=[299.218925, 580.039726]
+environments=['S5', 'Z5']
+
+ 
+[EXPERIMENT.PHASES.bm.youtube4]
+schedules=[
+ '../RepetiTouchFiles/S5/Video/YouTube/4_2019-07-29_17-46-00.rpt',
+ '../RepetiTouchFiles/Z5/Video/YouTube/4_2019-08-13_22-17-00.rpt'
+ ]
+durations=[599.077842, 375.190468]
+environments=['S5', 'Z5']
+
+[EXPERIMENT.PHASES.verificationBM]
+repetitions = 1
+
+[EXPERIMENT.PHASES.verificationBM.freestyle]
+schedules = [ "../RepetiTouchFiles/S5/315s_pause.rpt", "../RepetiTouchFiles/Z5/315s_pause.rpt",]
+durations = [ 320, 320,]
+environments = [ "S5", "Z5",]
+
+# ------------------------------------------------------------------------------------------------ #
+#                                    Platform: Bilbo                                             #
+# ------------------------------------------------------------------------------------------------ #
+[ENVIRONMENTS.Bilbo.APPS]
+src = {executable = "com.cygery.repetitouch.pro/com.cygery.repetitouch.pro.FireReceiver", zone = "bigLITTLE", type="standalone"}
+snk = {executable = "ch.ethz.exot.thermalsc/.MeterService", zone = "bigLITTLE"}
+
+[ENVIRONMENTS.Bilbo.src]
+COMPONENT_NAME = "ch.ethz.exot.intentproxy/.IntentProxyService"
+ACTION         = "ch.ethz.exot.intents.IntentProxy.action.BUNDLE_EXTRAS"
+
+[ENVIRONMENTS.Bilbo.src.ei]
+"intent.flags" = 20
+"looptimes"    = 1
+"replayspeed"  = 1
+
+[ENVIRONMENTS.Bilbo.src.es]
+"intent.component" = "com.cygery.repetitouch.pro/com.cygery.repetitouch.pro.FireReceiver"
+"intent.action"    = "com.twofortyfouram.locale.intent.action.FIRE_SETTING"
+"intent.extra.key" = "com.twofortyfouram.locale.intent.extra.BUNDLE"
+"condition"        = "None"
+"action"           = "Start Replay"
+
+[ENVIRONMENTS.Bilbo.src.ez]
+"appendingrecord"  = false
+"hidepanel"        = true
+"closeafteraction" = false
+"silent"           = false        
+
+[ENVIRONMENTS.Bilbo.snk]
+logging.log_level      = "info"
+host.log_header        = true
+host.start_immediately = false
+
+# ------------------------------------------------------------------------------------------------ #
+#                                    Platform: Frodo                                               #
+# ------------------------------------------------------------------------------------------------ #
+[ENVIRONMENTS.Frodo.APPS]
+src = {executable = "com.cygery.repetitouch.pro/com.cygery.repetitouch.pro.FireReceiver", zone = "bigLITTLE", type="standalone"}
+snk = {executable = "ch.ethz.exot.thermalsc/.MeterService", zone = "bigLITTLE"}
+
+[ENVIRONMENTS.Frodo.src]
+COMPONENT_NAME = "ch.ethz.exot.intentproxy/.IntentProxyService"
+ACTION         = "ch.ethz.exot.intents.IntentProxy.action.BUNDLE_EXTRAS"
+
+[ENVIRONMENTS.Frodo.src.ei]
+"intent.flags" = 20
+"looptimes"    = 1
+"replayspeed"  = 1
+
+[ENVIRONMENTS.Frodo.src.es]
+"intent.component" = "com.cygery.repetitouch.pro/com.cygery.repetitouch.pro.FireReceiver"
+"intent.action"    = "com.twofortyfouram.locale.intent.action.FIRE_SETTING"
+"intent.extra.key" = "com.twofortyfouram.locale.intent.extra.BUNDLE"
+"condition"        = "None"
+"action"           = "Start Replay"
+
+[ENVIRONMENTS.Frodo.src.ez]
+"appendingrecord"  = false
+"hidepanel"        = true
+"closeafteraction" = false
+"silent"           = false        
+
+[ENVIRONMENTS.Frodo.snk]
+logging.log_level      = "info"
+host.log_header        = true
+host.start_immediately = false
+
+
+[ANALYSES]

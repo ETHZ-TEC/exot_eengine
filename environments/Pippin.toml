@@ -1,0 +1,97 @@
+# Copyright (c) 2015-2020, Swiss Federal Institute of Technology (ETH Zurich)
+# All rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+# 
+# * Redistributions of source code must retain the above copyright notice, this
+#   list of conditions and the following disclaimer.
+# 
+# * Redistributions in binary form must reproduce the above copyright notice,
+#   this list of conditions and the following disclaimer in the documentation
+#   and/or other materials provided with the distribution.
+# 
+# * Neither the name of the copyright holder nor the names of its
+#   contributors may be used to endorse or promote products derived from
+#   this software without specific prior written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+# 
+# zone mapping big Cluster
+[big]
+# zone/platform details
+model        = "Odroid-XU3"
+cores        = [4, 5, 6, 7]
+frequencies  = [200000, 300000, 400000, 500000, 600000,  700000,  800000,  900000, 1000000, 1100000, 1200000, 1300000, 1400000, 1500000, 1600000, 1700000, 1800000, 1900000, 2000000]
+schedule_tag = "odroid"
+
+# experiment details
+path_apps    = "bin"
+path_data    = "data"
+
+# connection details
+driver_type  = "SSHUnixDriver"
+
+[big.driver_params]
+ip           = "172.31.43.133"
+port         = 51808
+user         = "exot"
+group        = "exot"
+key          = "$EXOT_ACCESS_DIR/id_ed25519"
+# gateway      = "exot-gateway"
+
+# zone mapping LITTLE cluster
+[LITTLE]
+# zone/platform details
+model        = "Odroid-XU3"
+cores        = [0, 1, 2, 3]
+frequencies  = [200000, 300000, 400000, 500000, 600000, 700000, 800000, 900000, 1000000, 1100000, 1200000, 1300000, 1400000, 1500000]
+schedule_tag = "odroid"
+
+# experiment details
+path_apps    = "bin"
+path_data    = "data"
+
+# connection details
+driver_type  = "SSHUnixDriver"
+
+[LITTLE.driver_params]
+ip           = "172.31.43.133"
+port         = 51808
+user         = "exot"
+group        = "exot"
+key          = "$EXOT_ACCESS_DIR/id_ed25519"
+# gateway      = "exot-gateway"
+
+# zone mapping both cluster
+[bigLITTLE]
+# zone/platform details
+model        = "Odroid-XU3"
+cores        = [0, 1, 2, 3, 4, 5, 6, 7]
+frequencies  = []
+schedule_tag = "odroid"
+
+# experiment details
+path_apps    = "bin"
+path_data    = "data"
+
+# connection details
+driver_type  = "SSHUnixDriver"
+
+[bigLITTLE.driver_params]
+ip           = "172.31.43.133"
+port         = 51808
+user         = "exot"
+group        = "exot"
+key          = "$EXOT_ACCESS_DIR/id_ed25519"
+# gateway      = "exot-gateway"
+

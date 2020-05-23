@@ -1,0 +1,192 @@
+# Copyright (c) 2015-2020, Swiss Federal Institute of Technology (ETH Zurich)
+# All rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+# 
+# * Redistributions of source code must retain the above copyright notice, this
+#   list of conditions and the following disclaimer.
+# 
+# * Redistributions in binary form must reproduce the above copyright notice,
+#   this list of conditions and the following disclaimer in the documentation
+#   and/or other materials provided with the distribution.
+# 
+# * Neither the name of the copyright holder nor the names of its
+#   contributors may be used to endorse or promote products derived from
+#   this software without specific prior written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+# 
+# Configuration name
+name = "Thermal-SC_Tcoefficients_test"
+# Save path
+save_path = "./data"
+# Optional: Local backup path
+backup_path = "./data/_backup"
+# Optional: Action to perform if experiment directory exists
+experiment_exists_action = "overwrite" # overwrite, move, halt
+
+# Optional: Backup configuration
+# [BACKUP]
+# user = ""
+# host = ""
+# ssh_key = ""
+# port = ""
+# path = ""
+
+# Experiment settings
+[EXPERIMENT]
+type = "AppExecExperiment"
+channel = "Thermal"
+
+[EXPERIMENT.PHASES]
+
+[EXPERIMENT.PHASES.tcoeff]
+repetitions=1
+
+[EXPERIMENT.PHASES.tcoeff."05-35"] # t_init + t_run + t_cool
+schedules=['../RepetiTouchFiles/Z5/Benchmark/CPU_Throttling_Test/short.rpt',
+           '../RepetiTouchFiles/S5/Benchmark/CPU_Throttling_Test/short.rpt']
+#Deserialised ../RepetiTouchFiles/S5/Benchmark/CPU_Throttling_Test/short.rpt with duration of 14.937s
+#Deserialised ../RepetiTouchFiles/Z5/Benchmark/CPU_Throttling_Test/short.rpt with duration of 11.652s
+durations=[24.937,21.652]  # t_run + t_cool
+environments=['Z5', 'S5']
+
+[EXPERIMENT.PHASES.tcoeff."10-35"] # t_init + t_run + t_cool 
+schedules=['../RepetiTouchFiles/Z5/Benchmark/CPU_Throttling_Test/short.rpt',
+           '../RepetiTouchFiles/S5/Benchmark/CPU_Throttling_Test/short.rpt']
+durations=[24.937,21.652]  # t_run + t_cool
+environments=['Z5', 'S5']
+
+#[EXPERIMENT.PHASES.tcoeff."05-424"] # t_init + t_run + t_cool
+#schedules=['../RepetiTouchFiles/Z5/Benchmark/CPU_Throttling_Test/1_minutes.rpt',
+#           '../RepetiTouchFiles/S5/Benchmark/CPU_Throttling_Test/1_minutes.rpt']
+#durations=[244.0,244.0]  # t_run + t_cool
+#environments=['Z5', 'S5']
+#
+#[EXPERIMENT.PHASES.tcoeff."05-484"] # t_init + t_run + t_cool
+#schedules=['../RepetiTouchFiles/Z5/Benchmark/CPU_Throttling_Test/2_minutes.rpt',
+#           '../RepetiTouchFiles/S5/Benchmark/CPU_Throttling_Test/2_minutes.rpt']
+#durations=[304.0,304.0] # t_run + t_cool
+#environments=['Z5', 'S5']
+#
+#[EXPERIMENT.PHASES.tcoeff."50-424"] # t_init + t_run + t_cool
+#schedules=['../RepetiTouchFiles/Z5/Benchmark/CPU_Throttling_Test/1_minutes.rpt',
+#           '../RepetiTouchFiles/S5/Benchmark/CPU_Throttling_Test/1_minutes.rpt']
+#durations=[244.0,244.0]  # t_run + t_cool
+#environments=['Z5', 'S5']
+#
+#[EXPERIMENT.PHASES.tcoeff."50-484"] # t_init + t_run + t_cool
+#schedules=['../RepetiTouchFiles/Z5/Benchmark/CPU_Throttling_Test/2_minutes.rpt',
+#           '../RepetiTouchFiles/S5/Benchmark/CPU_Throttling_Test/2_minutes.rpt']
+#durations=[304.0,304.0] # t_run + t_cool
+#environments=['Z5', 'S5']
+
+# Experiment layers
+[EXPERIMENT.LAYERS]
+io = {name = "TimeValue", params = {timebase='ns'}} 
+
+# Experiment general settings
+[EXPERIMENT.GENERAL]
+sampling_period = 1e-3
+delay_after_spawn = 0 # 180.0     # settling period
+delay_after_auxiliary = 10.0 # 180.0 # t_init
+active_wait = true
+
+# --------------------------------------------------------------------------
+# Apps and zones
+[ENVIRONMENTS.Aman_Manwe_Bilbo.APPS]
+src = {executable = "com.cygery.repetitouch.pro/com.cygery.repetitouch.pro.FireReceiver", zone = "bigLITTLE", type="standalone"}
+snk = {executable = "ch.ethz.exot.thermalsc/.MeterService", zone = "bigLITTLE"}
+
+[ENVIRONMENTS.Aman_Manwe_Bilbo.APPS."ttb"]
+executable = "/home/rocketlogger/exot/bin/ttb_phase_temp_time.sh"
+type = "standalone"
+start_individually = true
+zone = "ttb"
+
+# Platform settings -> source
+[ENVIRONMENTS.Aman_Manwe_Bilbo.src]
+COMPONENT_NAME="ch.ethz.exot.intentproxy/.IntentProxyService"
+ACTION="ch.ethz.exot.intents.IntentProxy.action.BUNDLE_EXTRAS"
+
+[ENVIRONMENTS.Aman_Manwe_Bilbo.src.ei]
+"intent.flags"= 20
+"looptimes"= 1
+"replayspeed"= 1
+
+[ENVIRONMENTS.Aman_Manwe_Bilbo.src.es]
+"intent.component"= "com.cygery.repetitouch.pro/com.cygery.repetitouch.pro.FireReceiver"
+"intent.action"= "com.twofortyfouram.locale.intent.action.FIRE_SETTING"
+"intent.extra.key"= "com.twofortyfouram.locale.intent.extra.BUNDLE"
+"condition"= "None"
+"action"= "Start Replay"
+
+[ENVIRONMENTS.Aman_Manwe_Bilbo.src.ez]
+"appendingrecord"= false
+"hidepanel"= true
+"closeafteraction"= false
+"silent"= false        
+
+# Platform settings -> sink
+[ENVIRONMENTS.Aman_Manwe_Bilbo.snk]
+# logging
+logging.log_level = "info"
+
+# host
+host.log_header = true
+host.start_immediately = false
+
+# --------------------------------------------------------------------------
+# Apps and zones
+[ENVIRONMENTS.Aman_Manwe_Frodo.APPS]
+src = {executable = "com.cygery.repetitouch.pro/com.cygery.repetitouch.pro.FireReceiver", zone = "bigLITTLE", type="standalone"}
+snk = {executable = "ch.ethz.exot.thermalsc/.MeterService", zone = "bigLITTLE"}
+
+[ENVIRONMENTS.Aman_Manwe_Frodo.APPS."ttb"]
+executable = "/home/rocketlogger/exot/bin/ttb_phase_temp_time.sh"
+type = "standalone"
+start_individually = true
+zone = "ttb"
+
+# Platform settings -> source
+[ENVIRONMENTS.Aman_Manwe_Frodo.src]
+COMPONENT_NAME="ch.ethz.exot.intentproxy/.IntentProxyService"
+ACTION="ch.ethz.exot.intents.IntentProxy.action.BUNDLE_EXTRAS"
+
+[ENVIRONMENTS.Aman_Manwe_Frodo.src.ei]
+"intent.flags"= 20
+"looptimes"= 1
+"replayspeed"= 1
+
+[ENVIRONMENTS.Aman_Manwe_Frodo.src.es]
+"intent.component"= "com.cygery.repetitouch.pro/com.cygery.repetitouch.pro.FireReceiver"
+"intent.action"= "com.twofortyfouram.locale.intent.action.FIRE_SETTING"
+"intent.extra.key"= "com.twofortyfouram.locale.intent.extra.BUNDLE"
+"condition"= "None"
+"action"= "Start Replay"
+
+[ENVIRONMENTS.Aman_Manwe_Frodo.src.ez]
+"appendingrecord"= false
+"hidepanel"= true
+"closeafteraction"= false
+"silent"= false        
+
+# Platform settings -> sink
+[ENVIRONMENTS.Aman_Manwe_Frodo.snk]
+# logging
+logging.log_level = "info"
+
+# host
+host.log_header = true
+host.start_immediately = false
+

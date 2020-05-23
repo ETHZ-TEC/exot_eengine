@@ -1,0 +1,11 @@
+[Unit]
+Description=hugetlbfs setup for experimental purposes
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+StandardOutput=journal
+ExecStart=/setup/setup-hugetlbfs.sh
+
+[Install]
+WantedBy=multi-user.target

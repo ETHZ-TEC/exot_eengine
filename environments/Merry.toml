@@ -1,0 +1,127 @@
+# Copyright (c) 2015-2020, Swiss Federal Institute of Technology (ETH Zurich)
+# All rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+# 
+# * Redistributions of source code must retain the above copyright notice, this
+#   list of conditions and the following disclaimer.
+# 
+# * Redistributions in binary form must reproduce the above copyright notice,
+#   this list of conditions and the following disclaimer in the documentation
+#   and/or other materials provided with the distribution.
+# 
+# * Neither the name of the copyright holder nor the names of its
+#   contributors may be used to endorse or promote products derived from
+#   this software without specific prior written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+# 
+# zone mapping big Cluster
+[big]
+# zone/platform details
+model        = "Dragonboard 810"
+cores        = [4, 5, 6, 7]
+frequencies  = [384000, 480000, 633600, 768000, 864000, 960000, 1248000, 1344000, 1440000, 1536000, 1632000, 1728000, 1824000, 1958400]
+schedule_tag = "db810"
+
+# experiment details
+path_apps    = ""
+path_data    = "/sdcard/exot/data"
+
+# connection details
+driver_type  = "AndroidDriver"
+
+[big.driver_params]
+ip           = "172.31.43.132"
+port         = 51808
+user         = "exot"
+group        = "exot"
+key          = "$EXOT_ACCESS_DIR/exot.adb_key"
+# gateway      = "exot-gateway"
+
+# zone mapping LITTLE cluster
+[LITTLE]
+# zone/platform details
+model        = "Dragonboard 810"
+cores        = [0, 1, 2, 3]
+frequencies  = [384000, 460800, 600000, 672000, 768000, 864000, 960000, 1248000, 1344000, 1478400, 1555200]
+schedule_tag = "db810"
+
+# experiment details
+path_apps    = ""
+path_data    = "/sdcard/exot/data"
+
+# connection details
+driver_type  = "AndroidDriver"
+
+[LITTLE.driver_params]
+ip           = "172.31.43.132"
+port         = 51808
+user         = "exot"
+group        = "exot"
+key          = "$EXOT_ACCESS_DIR/exot.adb_key"
+# gateway      = "exot-gateway"
+
+# zone mapping both cluster
+[bigLITTLE]
+# zone/platform details
+model        = "Dragonboard 810"
+cores        = [0, 1, 2, 3, 4, 5, 6, 7]
+frequencies  = []
+schedule_tag = "db810"
+
+# experiment details
+path_apps    = ""
+path_data    = "/sdcard/exot/data"
+
+# connection details
+driver_type  = "AndroidDriver"
+
+[bigLITTLE.driver_params]
+ip           = "172.31.43.132"
+port         = 51808
+user         = "exot"
+group        = "exot"
+key          = "$EXOT_ACCESS_DIR/exot.adb_key"
+# gateway      = "exot-gateway"
+
+[bigLITTLE.beta_z]
+"thermal_sysfs:zone:9:°C"  = 0.139024086806707300
+"thermal_sysfs:zone:10:°C" = 0.168907718947842260
+"thermal_sysfs:zone:11:°C" = 0.133864836563060780
+"thermal_sysfs:zone:12:°C" = 0.164926104588554940
+"thermal_sysfs:zone:15:°C" = 0.219861019700662600
+"thermal_sysfs:zone:16:°C" = 0.239522139671746320
+"thermal_sysfs:zone:17:°C" = 0.170069126531726960
+"thermal_sysfs:zone:8:°C"  = 0.173442973330809320
+"thermal_sysfs:zone:14:°C" = 0.049331789203316800
+"thermal_sysfs:zone:18:°C" = 0.024538061999478190
+"thermal_sysfs:zone:19:°C" = 0.015766155976506834
+
+[bigLITTLE.T_idle]
+"thermal_sysfs:zone:9:°C"  = 39 
+"thermal_sysfs:zone:10:°C" = 39 
+"thermal_sysfs:zone:11:°C" = 39 
+"thermal_sysfs:zone:12:°C" = 39 
+"thermal_sysfs:zone:15:°C" = 39 
+"thermal_sysfs:zone:16:°C" = 39 
+"thermal_sysfs:zone:17:°C" = 39 
+"thermal_sysfs:zone:8:°C"  = 39 
+"thermal_sysfs:zone:14:°C" = 39 
+"thermal_sysfs:zone:18:°C" = 39 
+"thermal_sysfs:zone:19:°C" = 39 
+
+[bigLITTLE.T_norm]
+"thermal_sysfs:zone:9:°C"   = 1
+"thermal_sysfs:zone:18:°C"  = 1000
+

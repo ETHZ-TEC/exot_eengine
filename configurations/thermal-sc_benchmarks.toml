@@ -1,0 +1,595 @@
+# Copyright (c) 2015-2020, Swiss Federal Institute of Technology (ETH Zurich)
+# All rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+# 
+# * Redistributions of source code must retain the above copyright notice, this
+#   list of conditions and the following disclaimer.
+# 
+# * Redistributions in binary form must reproduce the above copyright notice,
+#   this list of conditions and the following disclaimer in the documentation
+#   and/or other materials provided with the distribution.
+# 
+# * Neither the name of the copyright holder nor the names of its
+#   contributors may be used to endorse or promote products derived from
+#   this software without specific prior written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+# 
+# Configuration name
+name = "Thermal-SC_Benchmarks"
+# Save path
+save_path = "./data"
+# Optional: Local backup path
+backup_path = "./data/_backup"
+# Optional: Action to perform if experiment directory exists
+experiment_exists_action = "update" # overwrite, move, halt, update
+
+# Optional: Backup configuration
+# [BACKUP]
+# user = ""
+# host = ""
+# ssh_key = ""
+# port = ""
+# path = ""
+
+# Experiment settings
+[EXPERIMENT]
+type = "AppExecExperiment"
+channel = "ThermalSC"
+
+# Experiment layers
+[EXPERIMENT.LAYERS]
+io  = {name = "TimeValue", params = {timebase='ns', synchronise = false}}
+rdp = {name = "Normalise", params = {resampling_period_s=0.04, offset=22}}  # Resampling period and ambient temperature (offset)
+lne = {name = "ThermalLabelRefactoring", params = {}}
+
+# Experiment general settings
+[EXPERIMENT.GENERAL]
+sampling_period = 10e-3
+delay_after_spawn = 60.0
+delay_after_auxiliary = 0.0
+active_wait = true
+
+
+[EXPERIMENT.PHASES]
+[EXPERIMENT.PHASES.lab]
+repetitions=72
+
+[EXPERIMENT.PHASES.lab.androbench]
+schedules=[
+ '/dev/null',
+ ]
+durations=[0]
+environments=['db810',]
+
+[EXPERIMENT.PHASES.lab.antutu]
+schedules=[
+ '/dev/null',
+ ]
+durations=[0]
+environments=['db810',]
+
+[EXPERIMENT.PHASES.lab.vellamobrowser]
+schedules=[
+ '/dev/null',
+ ]
+durations=[0]
+environments=['db810',]
+
+[EXPERIMENT.PHASES.lab.vellamometal]
+schedules=[
+ '/dev/null',
+ ]
+durations=[0]
+environments=['db810',]
+
+[EXPERIMENT.PHASES.lab.vellamomulticore]
+schedules=[
+ '/dev/null',
+ ]
+durations=[0]
+environments=['db810',]
+
+
+# --------------------------------------------------------------------------
+# Apps and zones
+[ENVIRONMENTS.Merry.APPS]
+src = {executable = "DUMMY", zone = "bigLITTLE", type="standalone"}
+snk = {executable = "ch.ethz.exot.thermalsc/.MeterService", zone = "bigLITTLE"}
+
+# Platform settings -> source
+[ENVIRONMENTS.Merry.src]
+COMPONENT_NAME="ch.ethz.exot.intentproxy/.IntentProxyService"
+ACTION="ch.ethz.exot.intents.IntentProxy.action.BUNDLE_EXTRAS"
+
+# Platform settings -> sink
+[ENVIRONMENTS.Merry.snk]
+# logging
+logging.log_level = "info"
+
+# host
+host.log_header = true
+host.start_immediately = false
+
+[ANALYSES]
+# ------------------------------------------------------------------------------------------------ #
+#                                                                                                  #
+# ------------------------------------------------------------------------------------------------ #
+[ANALYSES.data_merry_originalsmall]
+type = "DataAugmentation"
+
+[ANALYSES.data_merry_originalsmall.DATASET]
+env                       = 'Merry'
+ambient                   = [25,40]
+batch_size_s              = 1800
+min_len_profile_s         = 10 
+train_phases              = ['lab']
+test_phases               = ['lab']
+verif_phases              = ['lab']
+duration_context_change_s = 0
+resampling_period_s       = 0.040
+augmentation_train        = true
+augmentation_test         = true
+augmentation_verif        = true
+num_train_batches         = 35
+num_test_batches          = 15
+num_verif_batches         = 15
+
+[ANALYSES.data_merry_originalsmall.DATASET.matcher_data]
+quantity = "thermal"
+method = "sysfs"
+values = ["zone"]
+dimensions = [9,10,11,12,15,16,17,8,14,18,19] 
+
+[ANALYSES.data_merry_originalsmall.DATASET.matcher_labels]
+quantity = "process"
+method = "android"
+values = ["ForegroundActivity"]
+dimensions = [0]
+
+[ANALYSES.data_merry_originalsmall.DATASET.label_refactoring_rule]
+[ANALYSES.data_merry_originalsmall.DATASET.label_refactoring_rule."remove_unknown"]
+train = false
+test  = false
+verif = false
+
+[ANALYSES.data_merry_originalsmall.DATASET.label_mapping]
+"AndroBench".str       = "ST"
+"AndroBench".int       = 0
+"AnTuTu".str           = "VI"
+"AnTuTu".int           = 1
+"VellamoBrowser".str   = "WB"
+"VellamoBrowser".int   = 2
+"VellamoMetal".str     = "GP"
+"VellamoMetal".int     = 3
+"VellamoMulticore".str = "MU"
+"VellamoMulticore".int = 4
+
+# ------------------------------------------------------------------------------------------------ #
+#                                                                                                  #
+# ------------------------------------------------------------------------------------------------ #
+[ANALYSES.data_merry_originalbig]
+type = "DataAugmentation"
+
+[ANALYSES.data_merry_originalbig.DATASET]
+env                       = 'Merry'
+ambient                   = [25,40]
+batch_size_s              = 1800
+min_len_profile_s         = 10 
+train_phases              = ['lab']
+test_phases               = ['lab']
+verif_phases              = ['lab']
+duration_context_change_s = 0
+resampling_period_s       = 0.040
+augmentation_train        = true
+augmentation_test         = true
+augmentation_verif        = true
+num_train_batches         = 167
+num_test_batches          = 56
+num_verif_batches         = 56
+
+[ANALYSES.data_merry_originalbig.DATASET.matcher_data]
+quantity = "thermal"
+method = "sysfs"
+values = ["zone"]
+dimensions = [9,10,11,12,15,16,17,8,14,18,19] 
+
+[ANALYSES.data_merry_originalbig.DATASET.matcher_labels]
+quantity = "process"
+method = "android"
+values = ["ForegroundActivity"]
+dimensions = [0]
+
+[ANALYSES.data_merry_originalbig.DATASET.label_refactoring_rule]
+[ANALYSES.data_merry_originalbig.DATASET.label_refactoring_rule."remove_unknown"]
+train = false
+test  = false
+verif = false
+
+[ANALYSES.data_merry_originalbig.DATASET.label_mapping]
+"AndroBench".str       = "ST"
+"AndroBench".int       = 0
+"AnTuTu".str           = "VI"
+"AnTuTu".int           = 1
+"VellamoBrowser".str   = "WB"
+"VellamoBrowser".int   = 2
+"VellamoMetal".str     = "GP"
+"VellamoMetal".int     = 3
+"VellamoMulticore".str = "MU"
+"VellamoMulticore".int = 4
+
+# ------------------------------------------------------------------------------------------------ #
+#                                                                                                  #
+# ------------------------------------------------------------------------------------------------ #
+[ANALYSES.data_merry_test]
+type = "DataAugmentation"
+
+[ANALYSES.data_merry_test.DATASET]
+env                       = 'Merry'
+ambient                   = [-10,40]
+dynamic_start             = [20,60]
+thermal_throttling        = 100
+batch_size_s              = 1800
+min_len_profile_s         = 10 
+train_phases              = ['lab']
+test_phases               = ['lab']
+verif_phases              = ['lab']
+duration_context_change_s = 0
+resampling_period_s       = 0.040
+augmentation_train        = true
+augmentation_test         = false
+augmentation_verif        = true
+num_train_batches         = 1
+num_test_batches          = 1
+num_verif_batches         = 1
+
+[ANALYSES.data_merry_test.DATASET.matcher_data]
+quantity = "thermal"
+method = "sysfs"
+values = ["zone"]
+dimensions = [9,10,11,12,15,16,17,8,14,18,19] 
+
+[ANALYSES.data_merry_test.DATASET.matcher_labels]
+quantity = "process"
+method = "android"
+values = ["ForegroundActivity"]
+dimensions = [0]
+
+[ANALYSES.data_merry_test.DATASET.label_refactoring_rule]
+[ANALYSES.data_merry_test.DATASET.label_refactoring_rule."remove_unknown"]
+train = false
+test  = false
+verif = false
+
+[ANALYSES.data_merry_test.DATASET.label_mapping]
+"AndroBench".str       = "ST"
+"AndroBench".int       = 0
+"AnTuTu".str           = "VI"
+"AnTuTu".int           = 1
+"VellamoBrowser".str   = "WB"
+"VellamoBrowser".int   = 2
+"VellamoMetal".str     = "GP"
+"VellamoMetal".int     = 3
+"VellamoMulticore".str = "MU"
+"VellamoMulticore".int = 4
+
+# ------------------------------------------------------------------------------------------------ #
+#                                                                                                  #
+# ------------------------------------------------------------------------------------------------ #
+[ANALYSES.data_merry_feasibility]
+type = "DataAugmentation"
+
+[ANALYSES.data_merry_feasibility.DATASET]
+env                       = 'Merry'
+ambient                   = [22,22]
+dynamic_start             = [20,60]
+thermal_throttling        = 100
+batch_size_s              = 10800 # 3 hours 00 minutes 
+min_len_profile_s         = 10 
+train_phases              = ['lab']
+test_phases               = ['lab']
+verif_phases              = ['lab']
+duration_context_change_s = 0
+resampling_period_s       = 0.040
+augmentation_train        = true
+augmentation_test         = true
+augmentation_verif        = true
+# MAX fitting into memory batch_size_s              = 13500 # 3 hours 45 minutes 
+# MAX fitting into memory num_total_batches         = 35    # 35 * 6.75 = 236h 15m in total
+num_train_batches         = 28   # 35 * 3 = 105h 00m in total
+num_test_batches          =  7   # 35 * 3 = 105h 00m in total
+num_verif_batches         = 10
+
+[ANALYSES.data_merry_feasibility.DATASET.matcher_data]
+quantity = "thermal"
+method = "sysfs"
+values = ["zone"]
+dimensions = [9,10,11,12,15,16,17,8,14,18,19] 
+
+[ANALYSES.data_merry_feasibility.DATASET.matcher_labels]
+quantity = "process"
+method = "android"
+values = ["ForegroundActivity"]
+dimensions = [0]
+
+[ANALYSES.data_merry_feasibility.DATASET.label_refactoring_rule]
+[ANALYSES.data_merry_feasibility.DATASET.label_refactoring_rule."remove_unknown"]
+train = false
+test  = false
+verif = false
+
+[ANALYSES.data_merry_feasibility.DATASET.label_mapping]
+"AndroBench".str       = "ST"
+"AndroBench".int       = 0
+"AnTuTu".str           = "VI"
+"AnTuTu".int           = 1
+"VellamoBrowser".str   = "WB"
+"VellamoBrowser".int   = 2
+"VellamoMetal".str     = "GP"
+"VellamoMetal".int     = 3
+"VellamoMulticore".str = "MU"
+"VellamoMulticore".int = 4
+
+# ------------------------------------------------------------------------------------------------ #
+#                                                                                                  #
+# ------------------------------------------------------------------------------------------------ #
+[ANALYSES.data_merry_noaug]
+type = "DataAugmentation"
+
+[ANALYSES.data_merry_noaug.DATASET]
+env                       = 'Merry'
+ambient                   = [22,22]
+dynamic_start             = [20,60]
+thermal_throttling        = 100
+batch_size_s              = 10800 # 3 hours 00 minutes 
+min_len_profile_s         = 10 
+train_phases              = ['lab']
+test_phases               = ['lab']
+verif_phases              = ['lab']
+duration_context_change_s = 0
+resampling_period_s       = 0.040
+augmentation_train        = false 
+augmentation_test         = false 
+augmentation_verif        = false 
+# MAX fitting into memory batch_size_s              = 13500 # 3 hours 45 minutes 
+# MAX fitting into memory num_total_batches         = 35    # 35 * 6.75 = 236h 15m in total
+num_train_batches         = 28   # 35 * 3 = 105h 00m in total
+num_test_batches          =  7   # 35 * 3 = 105h 00m in total
+num_verif_batches         = 10
+
+[ANALYSES.data_merry_noaug.DATASET.matcher_data]
+quantity = "thermal"
+method = "sysfs"
+values = ["zone"]
+dimensions = [9,10,11,12,15,16,17,8,14,18,19] 
+
+[ANALYSES.data_merry_noaug.DATASET.matcher_labels]
+quantity = "process"
+method = "android"
+values = ["ForegroundActivity"]
+dimensions = [0]
+
+[ANALYSES.data_merry_noaug.DATASET.label_refactoring_rule]
+[ANALYSES.data_merry_noaug.DATASET.label_refactoring_rule."remove_unknown"]
+train = false
+test  = false
+verif = false
+
+[ANALYSES.data_merry_noaug.DATASET.label_mapping]
+"AndroBench".str       = "ST"
+"AndroBench".int       = 0
+"AnTuTu".str           = "VI"
+"AnTuTu".int           = 1
+"VellamoBrowser".str   = "WB"
+"VellamoBrowser".int   = 2
+"VellamoMetal".str     = "GP"
+"VellamoMetal".int     = 3
+"VellamoMulticore".str = "MU"
+"VellamoMulticore".int = 4
+
+# ------------------------------------------------------------------------------------------------ #
+#                                                                                                  #
+# ------------------------------------------------------------------------------------------------ #
+[ANALYSES.data_merry_testaug]
+type = "DataAugmentation"
+
+[ANALYSES.data_merry_testaug.DATASET]
+env                       = 'Merry'
+ambient                   = [22,22]
+dynamic_start             = [20,60]
+thermal_throttling        = 100
+batch_size_s              = 10800 # 3 hours 00 minutes 
+min_len_profile_s         = 10 
+train_phases              = ['lab']
+test_phases               = ['lab']
+verif_phases              = ['lab']
+duration_context_change_s = 0
+resampling_period_s       = 0.040
+augmentation_train        = false 
+augmentation_test         = true
+augmentation_verif        = true
+# MAX fitting into memory batch_size_s              = 13500 # 3 hours 45 minutes 
+# MAX fitting into memory num_total_batches         = 35    # 35 * 6.75 = 236h 15m in total
+num_train_batches         = 28   # 35 * 3 = 105h 00m in total
+num_test_batches          =  7   # 35 * 3 = 105h 00m in total
+num_verif_batches         = 10
+
+[ANALYSES.data_merry_testaug.DATASET.matcher_data]
+quantity = "thermal"
+method = "sysfs"
+values = ["zone"]
+dimensions = [9,10,11,12,15,16,17,8,14,18,19] 
+
+[ANALYSES.data_merry_testaug.DATASET.matcher_labels]
+quantity = "process"
+method = "android"
+values = ["ForegroundActivity"]
+dimensions = [0]
+
+[ANALYSES.data_merry_testaug.DATASET.label_refactoring_rule]
+[ANALYSES.data_merry_testaug.DATASET.label_refactoring_rule."remove_unknown"]
+train = false
+test  = false
+verif = false
+
+[ANALYSES.data_merry_testaug.DATASET.label_mapping]
+"AndroBench".str       = "ST"
+"AndroBench".int       = 0
+"AnTuTu".str           = "VI"
+"AnTuTu".int           = 1
+"VellamoBrowser".str   = "WB"
+"VellamoBrowser".int   = 2
+"VellamoMetal".str     = "GP"
+"VellamoMetal".int     = 3
+"VellamoMulticore".str = "MU"
+"VellamoMulticore".int = 4
+
+# ------------------------------------------------------------------------------------------------ #
+#                                                                                                  #
+# ------------------------------------------------------------------------------------------------ #
+[ANALYSES.proc_merry_test]
+type = "AppDetection"
+[ANALYSES.proc_merry_test.DATASET]
+load_from                = 'data_merry_test'
+
+[ANALYSES.proc_merry_test.TRAIN]
+n_epochs                 = 5
+debug_step               = 1
+early_stopping_threshold = 60
+
+[ANALYSES.proc_merry_test.MODEL]
+type          = 'CNNLSTM'
+max_grad_norm = 5.0
+p_dropout     = 0.2
+num_layers    = 2
+num_hidden    = 8
+learning_rate = 0.001
+max_timesteps = 1250
+filtering_window_size = 75  # 3 seconds
+#model_files   = path without .meta
+
+# ------------------------------------------------------------------------------------------------ #
+[ANALYSES.proc_merry_originalsmall]
+type = "AppDetection"
+[ANALYSES.proc_merry_originalsmall.DATASET]
+load_from                = 'data_merry_originalsmall'
+
+[ANALYSES.proc_merry_originalsmall.TRAIN]
+n_epochs                 = 1500
+debug_step               = 10
+early_stopping_threshold = 60
+
+[ANALYSES.proc_merry_originalsmall.MODEL]
+type          = 'CNNLSTM'
+max_grad_norm = 5.0
+p_dropout     = 0.2
+num_layers    = 1
+num_hidden    = 128
+learning_rate = 0.001
+max_timesteps = 1250
+filtering_window_size = 75  # 3 seconds
+#model_files   = path without .meta
+
+# ------------------------------------------------------------------------------------------------ #
+[ANALYSES.proc_merry_originalbig]
+type = "AppDetection"
+[ANALYSES.proc_merry_originalbig.DATASET]
+load_from                = 'data_merry_originalbig'
+
+[ANALYSES.proc_merry_originalbig.TRAIN]
+n_epochs                 = 1500
+debug_step               = 10
+early_stopping_threshold = 60
+
+[ANALYSES.proc_merry_originalbig.MODEL]
+type          = 'CNNLSTM'
+max_grad_norm = 5.0
+p_dropout     = 0.2
+num_layers    = 4
+num_hidden    = 128
+learning_rate = 0.001
+max_timesteps = 1250
+filtering_window_size = 75  # 3 seconds
+#model_files   = path without .meta
+
+# ------------------------------------------------------------------------------------------------ #
+[ANALYSES.proc_merry_feasibility]
+type = "AppDetection"
+[ANALYSES.proc_merry_feasibility.DATASET]
+load_from                = 'data_merry_feasibility'
+
+[ANALYSES.proc_merry_feasibility.TRAIN]
+n_epochs                 = 1500
+debug_step               = 10
+early_stopping_threshold = 20
+
+[ANALYSES.proc_merry_feasibility.MODEL]
+type          = 'CNNLSTM'
+#type          = 'LSTM'
+max_grad_norm = 5.0
+p_dropout     = 0.2
+num_layers    = 4
+num_hidden    = 128
+learning_rate = 0.001
+max_timesteps = 16875
+#max_timesteps = 67500
+filtering_window_size = 0  # filtering disabled
+#model_files   = path without .meta
+
+# ------------------------------------------------------------------------------------------------ #
+[ANALYSES.proc_merry_noaug]
+type = "AppDetection"
+[ANALYSES.proc_merry_noaug.DATASET]
+load_from                = 'data_merry_noaug'
+
+[ANALYSES.proc_merry_noaug.TRAIN]
+n_epochs                 = 1500
+debug_step               = 10
+early_stopping_threshold = 60
+
+[ANALYSES.proc_merry_noaug.MODEL]
+type          = 'CNNLSTM'
+max_grad_norm = 5.0
+p_dropout     = 0.2
+num_layers    = 4
+num_hidden    = 128
+learning_rate = 0.001
+max_timesteps = 16875
+#max_timesteps = 67500
+filtering_window_size = 0  # filtering disabled
+#model_files   = path without .meta
+
+# ------------------------------------------------------------------------------------------------ #
+[ANALYSES.proc_merry_testaug]
+type = "AppDetection"
+[ANALYSES.proc_merry_testaug.DATASET]
+load_from                = 'data_merry_testaug'
+
+[ANALYSES.proc_merry_testaug.TRAIN]
+n_epochs                 = 1500
+debug_step               = 10
+early_stopping_threshold = 60
+
+[ANALYSES.proc_merry_testaug.MODEL]
+type          = 'CNNLSTM'
+max_grad_norm = 5.0
+p_dropout     = 0.2
+num_layers    = 4
+num_hidden    = 128
+learning_rate = 0.001
+max_timesteps = 16875
+#max_timesteps = 67500
+filtering_window_size = 0  # filtering disabled
+#model_files   = path without .meta
+

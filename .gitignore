@@ -1,0 +1,75 @@
+# junk
+junk/
+_junk/
+
+data/
+
+_logs/
+*/_logs/
+
+# OS
+.DS_Store
+.DS_Store?
+
+# IDE
+*.sublime-*
+.idea/
+
+# build & distribution
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# pyinstaller
+*.manifest
+*.spec
+
+# python
+__pycache__/
+*/__pycache__/
+*.py[cod]
+*$py.class
+
+.mypy_cache/
+.ipynb*
+*.local*
+
+# poetry & pyenv
+.python-version
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# git
+!*/.git*
+!.git*
+
+# Work in progress files
+*WiP*
+
+# ADB temporary files
+/.adb_key*
+/adb-server.out*
+

@@ -1,0 +1,99 @@
+# Copyright (c) 2015-2020, Swiss Federal Institute of Technology (ETH Zurich)
+# All rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+# 
+# * Redistributions of source code must retain the above copyright notice, this
+#   list of conditions and the following disclaimer.
+# 
+# * Redistributions in binary form must reproduce the above copyright notice,
+#   this list of conditions and the following disclaimer in the documentation
+#   and/or other materials provided with the distribution.
+# 
+# * Neither the name of the copyright holder nor the names of its
+#   contributors may be used to endorse or promote products derived from
+#   this software without specific prior written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+# 
+# zone for the quad-core Cortex-A57 package (physical package 1)
+[arm]
+
+# zone/platform details
+model        = "Nvidia Jetson Tegra TX2"
+cores        = [0, 3, 4, 5]
+frequencies  = [345600, 499200, 652800, 806400, 960000, 1113600, 1267200, 1420800, 1574400, 1728000, 1881600, 2035200]
+schedule_tag = "tegraTX2"
+
+# experiment details
+path_apps    = "bin"
+path_data    = "data"
+
+# connection details
+driver_type  = "SSHUnixDriver"
+
+[arm.driver_params]
+ip           = "172.31.43.134"
+port         = 51808
+user         = "exot"
+group        = "exot"
+key          = "$EXOT_ACCESS_DIR/id_ed25519"
+# gateway      = "exot-gateway"
+
+# zone for the dual-core Denver 2 package (physical package 0)
+[denver2]
+
+# zone/platform details
+model        = "Nvidia Jetson Tegra TX2"
+cores        = [1, 2]
+frequencies  = [345600, 499200, 652800, 806400, 960000, 1113600, 1267200, 1420800, 1574400, 1728000, 1881600, 2035200]
+schedule_tag = "tegraTX2"
+
+# experiment details
+path_apps    = "bin"
+path_data    = "data"
+
+# connection details
+driver_type  = "SSHUnixDriver"
+
+[denver2.driver_params]
+ip           = "172.31.43.134"
+port         = 51808
+user         = "exot"
+group        = "exot"
+key          = "$EXOT_ACCESS_DIR/id_ed25519"
+# gateway      = "exot-gateway"
+
+# zone for the combined packages
+[combined]
+
+# zone/platform details
+model        = "Nvidia Jetson Tegra TX2"
+cores        = [0, 1, 2, 3, 4, 5]
+frequencies  = [345600, 499200, 652800, 806400, 960000, 1113600, 1267200, 1420800, 1574400, 1728000, 1881600, 2035200]
+schedule_tag = "tegraTX2"
+
+# experiment details
+path_apps    = "bin"
+path_data    = "data"
+
+# connection details
+driver_type  = "SSHUnixDriver"
+
+[combined.driver_params]
+ip           = "172.31.43.134"
+port         = 51808
+user         = "exot"
+group        = "exot"
+key          = "$EXOT_ACCESS_DIR/id_ed25519"
+# gateway      = "exot-gateway"
