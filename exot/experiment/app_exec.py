@@ -26,12 +26,12 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # 
-"""Capacity bound experiment"""
+"""Experiment based on executing specific applications as an input"""
+
+import copy as cp
 import typing as t
 from functools import partial
 from pathlib import Path
-
-import copy as cp
 from shutil import copyfile
 
 import numpy as np
@@ -40,7 +40,6 @@ import pandas as pd
 from exot.exceptions import *
 from exot.util.attributedict import AttributeDict
 from exot.util.misc import safe_eval, validate_helper
-from exot.util.wrangle import run_path_formatter
 
 from ._base import Experiment, Run
 from ._mixins import *
@@ -96,7 +95,7 @@ class AppExecExperiment(Experiment, type=Experiment.Type.AppExec):
         assert self.configured, "Experiment must be configured before generating"
         assert self.bootstrapped, "Experiment must be bootstrapped before generating"
         self.phases = {tag: {} for tag in self.config.EXPERIMENT.PHASES}
-        cp_phases   = cp.deepcopy(self.config.EXPERIMENT.PHASES)
+        cp_phases = cp.deepcopy(self.config.EXPERIMENT.PHASES)
 
         self.estimated_duration = {
             tag: self.config.EXPERIMENT.GENERAL.delay_after_bootstrap
@@ -109,7 +108,7 @@ class AppExecExperiment(Experiment, type=Experiment.Type.AppExec):
             for runname, runparam in values.items():
                 if "schedules" not in runparam:
                     raise LookupError("No schedules specified!")
-                schedules = runparam['schedules']
+                schedules = runparam["schedules"]
                 if not isinstance(schedules, (list)):
                     raise GenerateTypeAssertion("schedules must be a list")
                 types = set(type(x) for x in schedules)
@@ -120,7 +119,7 @@ class AppExecExperiment(Experiment, type=Experiment.Type.AppExec):
 
                 if "environments" not in runparam:
                     raise LookupError("No environments specified!")
-                envs = runparam['environments']
+                envs = runparam["environments"]
                 if not isinstance(envs, (list)):
                     raise GenerateTypeAssertion("environments must be a list")
                 types = set(type(x) for x in envs)
@@ -132,7 +131,7 @@ class AppExecExperiment(Experiment, type=Experiment.Type.AppExec):
                 if "durations" not in runparam:
                     durations = [None for _ in range(len(envs))]
                 else:
-                    durations = runparam['durations']
+                    durations = runparam["durations"]
 
                 o_schedules = {}
                 for env, sched, dur in zip(envs, schedules, durations):
@@ -155,35 +154,34 @@ class AppExecExperiment(Experiment, type=Experiment.Type.AppExec):
                     + self.estimated_delays_duration
                 )
 
+
 """
 AppExecRun
 --------------
-
-AppExec runs are considered to be immutable during the Experiment execution. Once
-the configuration is provided, the instance is 'frozen' and the config should not be
-updated.
-
-Values that are always provided to layers at runtime:
-- From a Run's config: phase, bit_count, trace, repetitions,
-- Obtained from a Run's config and the parent: bit_rate.
-
-Values in the parent Experiment can be easily accessed through the parent proxy:
-`self.parent`.
 """
 
 
 class AppExecRun(
     Run,
     StreamHandler,
-    Ibitstream, Isymstream, Ilnestream, Irdpstream, Irawstream,
+    Ibitstream,
+    Isymstream,
+    Ilnestream,
+    Irdpstream,
+    Irawstream,
     serialise_save=[],
-    serialise_ignore=["i_rawstream", "i_rdpstream", "i_lnestream", "i_symstream", "i_bitstream"],
+    serialise_ignore=[
+        "i_rawstream",
+        "i_rdpstream",
+        "i_lnestream",
+        "i_symstream",
+        "i_bitstream",
+    ],
     parent=AppExecExperiment,
 ):
     @property
-    def path(self):
-        formatted_directory = run_path_formatter(self.config.phase, self.config.name)
-        return Path.joinpath(self.parent.path, formatted_directory)
+    def identifier(self):
+        return self.config.name
 
     @classmethod
     def read(cls, path: Path, parent: t.Optional[object] = None) -> object:
@@ -234,15 +232,14 @@ class AppExecRun(
         if not layers:
             return
 
-        if 'env' in kwargs:
-            config = {layer: {'env':kwargs['env']} for layer in layers}
+        if "env" in kwargs:
+            config = {layer: {"env": kwargs["env"]} for layer in layers}
         else:
             config = {layer: {} for layer in layers}
         for layer in config:
             config[layer].update(self.config)
             config[layer].update(
-                environments_apps_zones=self.parent.environments_apps_zones,
-                path=self.path,
+                environments_apps_zones=self.parent.environments_apps_zones, path=self.path
             )
 
             if which == "decode" and self.digested:
@@ -281,7 +278,7 @@ class AppExecRun(
         assert self.parent, "must have a parent experiment"
         assert self.config.o_schedules, "must have output schedules"
         for env in self.config.o_schedules:
-          copyfile(self.config.o_schedules[env][0], Path.joinpath(self.path, env + '.sched'))
+            copyfile(self.config.o_schedules[env][0], Path.joinpath(self.path, env + ".sched"))
 
     def ingest(self, *, skip_checks: bool = True, **kwargs) -> None:
         """Perform all decoding operations, propagating the streams to preceding Layers
@@ -299,24 +296,26 @@ class AppExecRun(
         self.i_rawstream = self.parent.layers.io.get_measurements()
         self.logger.debug("producing rdpstream <- choosing data and preprocessing rawstream")
         self.i_rdpstream = self.parent.layers.io.decode(self.i_rawstream, skip_checks)
-        if 'rdp' in self.parent.layers and self.parent.layers.rdp.configured:
+        if "rdp" in self.parent.layers and self.parent.layers.rdp.configured:
             self.logger.debug("producing lnestream <- preprocessing rdpstream")
             self.i_lnestream = self.parent.layers.rdp.decode(self.i_rdpstream, skip_checks)
-            if 'lne' in self.parent.layers and self.parent.layers.lne.configured:
+            if "lne" in self.parent.layers and self.parent.layers.lne.configured:
                 self.logger.debug("producing symstream <- decoding lnestream")
                 self.i_symstream = self.parent.layers.lne.decode(self.i_lnestream, skip_checks)
-                if 'src' in self.parent.layers and self.parent.layers.src.configured:
+                if "src" in self.parent.layers and self.parent.layers.src.configured:
                     self.logger.debug("producing bitstream <- decoding symstream")
-                    self.i_bitstream = self.parent.layers.src.decode(self.i_symstream, skip_checks)
+                    self.i_bitstream = self.parent.layers.src.decode(
+                        self.i_symstream, skip_checks
+                    )
                 else:
-                    self.i_bitstream = np.full((1,1),np.nan)
+                    self.i_bitstream = np.full((1, 1), np.nan)
             else:
-                self.i_symstream = np.full((1,1),np.nan)
-                self.i_bitstream = np.full((1,1),np.nan)
+                self.i_symstream = np.full((1, 1), np.nan)
+                self.i_bitstream = np.full((1, 1), np.nan)
         else:
-            self.i_lnestream = np.full((1,1),np.nan)
-            self.i_symstream = np.full((1,1),np.nan)
-            self.i_bitstream = np.full((1,1),np.nan)
+            self.i_lnestream = np.full((1, 1), np.nan)
+            self.i_symstream = np.full((1, 1), np.nan)
+            self.i_bitstream = np.full((1, 1), np.nan)
         self.logger.debug("<--- ingesting completed! --->")
         self.collect_intermediates(self.parent.layers)
 

@@ -1,0 +1,224 @@
+# Copyright (c) 2015-2020, Swiss Federal Institute of Technology (ETH Zurich)
+# All rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+# 
+# * Redistributions of source code must retain the above copyright notice, this
+#   list of conditions and the following disclaimer.
+# 
+# * Redistributions in binary form must reproduce the above copyright notice,
+#   this list of conditions and the following disclaimer in the documentation
+#   and/or other materials provided with the distribution.
+# 
+# * Neither the name of the copyright holder nor the names of its
+#   contributors may be used to endorse or promote products derived from
+#   this software without specific prior written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+# 
+# Configuration name
+name = "demo_performance_with_interference"
+# Save path
+save_path = "./data"
+# Optional: Local backup path
+backup_path = "./data/_backup"
+# Optional: Action to perform if experiment directory exists
+experiment_exists_action = "move" # overwrite, move, halt, update
+
+# Experiment settings
+[EXPERIMENT]
+type = "PerformanceExperiment"
+channel = "FlushFlushCC"
+
+[EXPERIMENT.PHASES]
+train = {bit_count = 150, symbol_rates = "[100, 500, 5000]", repetitions = 2}
+eval  = {bit_count = 500, symbol_rates = "[100, 500, 5000]", repetitions = 2}
+
+# Experiment layers
+[EXPERIMENT.LAYERS]
+src = {name = "BitsetCoding", params = {bitset_length = 64}}
+lne = {name = "MultiN", params = {N = 64}}
+rdp = {name = "DirectActivation", params = {}}
+io  = {name = "TimeValue", params = {timebase = "ns"}}
+
+# Experiment general settings
+[EXPERIMENT.GENERAL]
+latency = 10
+fan = true
+governors = "userspace"
+frequencies = "max"
+sampling_period = 20e-6
+delay_after_spawn = 5.0
+delay_after_auxiliary = 1.0
+active_wait = false
+
+[EXPERIMENT.GENERAL.ARMv8]
+fan = "255"
+sampling_period = 225e-6
+
+# --------------------------------------------------------------------------------------------------
+# ENVIRONMENT: Haswell
+# Apps and zones
+[ENVIRONMENTS.Haswell.APPS]
+snk = {executable = "meter_cache_ff", zone = "host"}
+src = {executable = "generator_cache_read_st", zone = "host"}
+
+[ENVIRONMENTS.Haswell.src]
+
+# generator
+generator.host_pinning = 3
+generator.should_pin_host = true
+generator.cores = [0]
+generator.should_pin_workers = true
+generator.worker_policy = "round_robin"
+generator.host_policy = "round_robin"
+generator.worker_priority = 98
+generator.host_priority = 97
+generator.use_busy_sleep = true
+generator.busy_sleep_yield = false
+generator.use_huge_pages = true
+generator.shm_file = "/dev/hugepages/8"
+generator.set_count = 64
+generator.set_increment = 64
+
+# logging
+logging.append_governor_to_files = false
+logging.async = true
+logging.async_size = 4096
+logging.log_level = "debug"
+logging.provide_platform_identification = false
+
+# schedule reader
+schedule_reader.reading_from_file = true
+
+# Platform settings -> sink
+[ENVIRONMENTS.Haswell.snk]
+
+# logging
+logging.append_governor_to_files = false
+logging.async = true
+logging.async_size = 4096
+logging.log_level = "debug"
+logging.provide_platform_identification = true
+logging.rotating_logs = false
+logging.rotating_logs_count = 10
+logging.rotating_logs_size = 104857600
+logging.timestamp_files = false
+
+meter.host_policy = "round_robin"
+meter.host_pinning = 7
+meter.should_pin_host = true
+meter.host_priority = 95
+meter.log_header = true
+meter.start_immediately = false
+meter.use_busy_sleep = true
+meter.busy_sleep_yield = false
+
+cache.use_huge_pages = true
+cache.shm_file = "/dev/hugepages/8"
+cache.set_count = 64
+cache.set_increment = 64
+
+[ENVIRONMENTS.Haswell.APPS."ffmpeg"]
+executable = "ffmpeg"
+type = "standalone"
+start_individually = true
+zone = "host"
+args = [
+"-y",
+"-loglevel", "error",
+"-stream_loop", "-1",
+"-i", "media/video.mp4",
+"-c:v", "libx264",
+"-b:v", "1000k",
+"-f", "null", "/dev/null"
+]
+
+# --------------------------------------------------------------------------------------------------
+# ENVIRONMENT: ARMv8
+# Apps and zones
+[ENVIRONMENTS.ARMv8.APPS]
+snk = {executable = "meter_cache_ff", zone = "combined"}
+src = {executable = "generator_cache_read_st", zone = "combined"}
+
+[ENVIRONMENTS.ARMv8.src]
+
+# generator
+generator.host_pinning = 2
+generator.should_pin_host = true
+generator.cores = [0]
+generator.should_pin_workers = true
+generator.worker_policy = "round_robin"
+generator.host_policy = "round_robin"
+generator.worker_priority = 98
+generator.host_priority = 97
+generator.use_busy_sleep = true
+generator.busy_sleep_yield = false
+generator.use_huge_pages = true
+generator.shm_file = "/dev/hugepages/8"
+generator.set_count = 64
+generator.set_increment = 16
+
+# logging
+logging.append_governor_to_files = false
+logging.async = true
+logging.async_size = 4096
+logging.log_level = "debug"
+logging.provide_platform_identification = false
+
+# schedule reader
+schedule_reader.reading_from_file = true
+
+# Platform settings -> sink
+[ENVIRONMENTS.ARMv8.snk]
+
+# logging
+logging.append_governor_to_files = false
+logging.async = true
+logging.async_size = 4096
+logging.log_level = "debug"
+logging.provide_platform_identification = true
+logging.rotating_logs = false
+logging.rotating_logs_count = 10
+logging.rotating_logs_size = 104857600
+logging.timestamp_files = false
+
+meter.host_policy = "round_robin"
+meter.host_pinning = 3
+meter.should_pin_host = true
+meter.host_priority = 95
+meter.log_header = true
+meter.start_immediately = false
+meter.use_busy_sleep = true
+meter.busy_sleep_yield = false
+
+cache.use_huge_pages = true
+cache.shm_file = "/dev/hugepages/8"
+cache.set_count = 64
+cache.set_increment = 16
+
+[ENVIRONMENTS.ARMv8.APPS."ffmpeg"]
+executable = "ffmpeg"
+type = "standalone"
+start_individually = true
+zone = "combined" # "host"
+args = [
+"-y",
+"-loglevel", "error",
+"-stream_loop", "-1",
+"-i", "media/video.mp4",
+"-c:v", "libx264",
+"-b:v", "1000k",
+"-f", "null", "/dev/null"
+]
+

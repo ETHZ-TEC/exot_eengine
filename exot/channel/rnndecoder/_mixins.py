@@ -26,26 +26,54 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # 
-[ttb]
+"""Mixins for the recurrent neural network signal decoder analysis"""
 
-# zone/platform details
-model        = "SolarThermalTestbed"
-cores        = []
-frequencies  = []
-schedule_tag = "ttb"
+import os
+import pickle
+from datetime import datetime
 
-# experiment details
-path_apps    = "bin"
-path_data    = "data"
+import numpy as np
+import tensorflow as tf
 
-# connection details
-driver_type  = "SSHUnixDriver"
 
-[ttb.driver_params]
-ip           = "82.130.102.133"
-port         = 2322
-user         = "rocketlogger"
-group        = "rocketlogger"
-key          = "$EXOT_ACCESS_DIR/solar.thermal.testbed_rsa"
-# gateway      = "exot-gateway"
-# HostName bb-1.ethz.ch
+def cut_minibatch(label, freqv, minibatch_length):
+    """Cut minibatches to equal length."""
+    cut_length = len(freqv) % minibatch_length
+    zip_array = list(zip(label, freqv))
+    zip_array.sort(key=lambda x: len(x[1]))
+    if cut_length == 0:
+        return (label, freqv)
+    else:
+        del zip_array[-cut_length:]
+        return zip(*zip_array)
+
+
+def tf_count(t, val):
+    """Count how many values in a tensor a equal to a value val."""
+    cnt_equal_elem = tf.equal(t, val)
+    cnt_equal_elem = tf.cast(cnt_equal_elem, tf.int32)
+    return tf.reduce_sum(cnt_equal_elem, 1)
+
+
+def stdr(dataseq):
+    """Make data zero mean and with unit standard deviation."""
+    flat_dataseq = np.array([y for x in dataseq for y in x])
+    dataseq = np.array(dataseq)
+    mean = np.mean(flat_dataseq)
+    std = np.std(flat_dataseq)
+    return (dataseq - mean) / std, mean, std
+
+
+def stdr_val(val_freqv, mean, std):
+    """Make data zero mean and with unit variance with given mean and standard deviation."""
+    return (val_freqv - mean) / std
+
+
+def separate_val(freqv, label):
+    """Separate the training and the validation dataset"""
+    val_index = np.random.choice(len(freqv), len(freqv) // 10, replace=False)
+    val_freqv = freqv[val_index]
+    val_label = label[val_index]
+    freqv = np.delete(freqv, val_index, 0)
+    label = np.delete(label, val_index, 0)
+    return freqv, val_freqv, label, val_label, val_index

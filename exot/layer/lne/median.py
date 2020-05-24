@@ -41,6 +41,7 @@ from exot.util.scinum import is_fitted
 
 from .simple import SimpleN
 
+
 class MedianLineCoding(SimpleN):
     def _encode(self, upper):
         return upper
@@ -58,7 +59,7 @@ class MedianLineCoding(SimpleN):
 
         _symbol_space = np.median(data, axis=1)
 
-        return _symbol_space.reshape((-1,1))
+        return _symbol_space.reshape((-1, 1))
 
     @property
     def symbol_space(self) -> t.Optional[np.ndarray]:
@@ -92,4 +93,3 @@ class MedianLineCoding(SimpleN):
         )
 
         return predictions
-

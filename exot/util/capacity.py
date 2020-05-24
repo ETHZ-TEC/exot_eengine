@@ -26,7 +26,13 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # 
-"""Helpers to calculate channel capacities."""
+"""Helpers to calculate channel capacities. These are based on following publications:
+  * Davide B. Bartolini, Philipp Miedl, and Lothar Thiele. 2016. On the capacity of thermal covert channels in multicores. In Proceedings of the Eleventh European Conference on Computer Systems (EuroSys ’16). Association for Computing Machinery, New York, NY, USA, Article 24, 1–16. DOI:https://doi.org/10.1145/2901318.2901322
+
+  * Philipp Miedl and Lothar Thiele. 2018. The security risks of power measurements in multicores. In Proceedings of the 33rd Annual ACM Symposium on Applied Computing (SAC ’18). Association for Computing Machinery, New York, NY, USA, 1585–1592. DOI:https://doi.org/10.1145/3167132.3167301
+
+  * Miedl, Philipp, Bruno Klopott, and Lothar Thiele. "Increased reproducibility and comparability of data leak evaluations using ExOT." Proceedings of the 2020 Design, Automation & Test in Europe Conference & Exhibition (DATE). IEEE, 2020.
+  """
 
 import numpy as np
 
@@ -43,8 +49,6 @@ capacity_from_connection_matrix :: (A, T_min)     -> Capacity float
 
 def classic_waterfilling(p0, Sqq, Shh):
     """Returns the capacity bound of a given channel determined using classic waterfiling
-
-    See Thermal-CC paper TODO{REF}.
 
     Args:
         p0: Power cap for the waterfilling algorithm as float
@@ -79,8 +83,6 @@ def classic_waterfilling(p0, Sqq, Shh):
 
 def constrained_waterfilling(p0, Sqq, Shh):
     """Returns the capacity bound of a given channel determined using constrained waterfiling
-
-    See Thermal-CC paper TODO{REF}.
 
     Parameters:
         p0: Power cap for the waterfilling algorithm as float
@@ -127,7 +129,7 @@ def constrained_waterfilling(p0, Sqq, Shh):
 
 def capacity_from_connection_matrix(A, T_min):
     """Returns the capacity bound of a given channel determined for noise free channel based on
-    the connection matrix, see Power-CC paper TODO{REF}.
+    the connection matrix.
 
     Parameters:
         A: Transition matrix of the channel model

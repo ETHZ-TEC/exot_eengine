@@ -163,7 +163,7 @@ class StateMethods(metaclass=abc.ABCMeta):
         for i, v in enumerate(value):
             if v:
                 _ = self.command(
-                        "sudo su -c 'echo {!r} | tee {}'".format(
+                    "sudo su -c 'echo {!r} | tee {}'".format(
                         v, _cpuinfo[i]["path"] / "cpufreq/scaling_governor"
                     ),
                     sudo=True,

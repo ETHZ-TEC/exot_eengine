@@ -86,12 +86,13 @@ from exot.util.mixins import (
 from exot.util.prompts import prompt
 from exot.util.timeout import Timeout
 from exot.util.wrangle import (
-    app_log_formatter,
-    log_path_unformatter,
-    generic_log_formatter,
-    run_path_unformatter,
     app_configfile_formatter,
+    app_log_formatter,
+    generic_log_formatter,
+    log_path_unformatter,
     repetition_formatter,
+    run_path_formatter,
+    run_path_unformatter,
 )
 
 __all__ = ("Experiment", "Run")
@@ -150,10 +151,10 @@ class Experiment(
         """Experiment types"""
 
         FrequencySweep = enum.auto()
-        Exploratory    = enum.auto()
-        Performance    = enum.auto()
-        RealWorld      = enum.auto()
-        AppExec        = enum.auto()
+        Exploratory = enum.auto()
+        Performance = enum.auto()
+        RealWorld = enum.auto()
+        AppExec = enum.auto()
 
     def __init_subclass__(cls, *args, **kwargs) -> None:
         super().__init_subclass__(*args, **kwargs)
@@ -164,16 +165,18 @@ class Experiment(
 
     @property
     def config(self):
-        if hasattr(self, '_config'):
+        if hasattr(self, "_config"):
             setting_key = self._config_general_standard
-            if hasattr(self.layers, 'io'):
-                if self.layers['io'].configured:
-                    if 'env' in self.layers['io'].config:
-                        setting_key = self.layers['io'].config['env']
+            if hasattr(self.layers, "io"):
+                if self.layers["io"].configured:
+                    if "env" in self.layers["io"].config:
+                        setting_key = self.layers["io"].config["env"]
             if setting_key in self._config.EXPERIMENT.GENERAL:
                 elem_keys = list(self._config.EXPERIMENT.GENERAL[setting_key])
                 for elem_key in elem_keys:
-                    self._config.EXPERIMENT.GENERAL[elem_key] = cp.deepcopy(self._config.EXPERIMENT.GENERAL[setting_key][elem_key])
+                    self._config.EXPERIMENT.GENERAL[elem_key] = cp.deepcopy(
+                        self._config.EXPERIMENT.GENERAL[setting_key][elem_key]
+                    )
             return self._config
         else:
             return None
@@ -185,13 +188,17 @@ class Experiment(
         if self._config_general_standard not in self._config.EXPERIMENT.GENERAL:
             self._config.EXPERIMENT.GENERAL[self._config_general_standard] = AttributeDict()
         for key in elem_keys:
-            if key != self._config_general_standard and key not in list(self.environments.keys()):
-                self._config.EXPERIMENT.GENERAL[self._config_general_standard][key] = cp.deepcopy(self._config.EXPERIMENT.GENERAL[key])
+            if key != self._config_general_standard and key not in list(
+                self.environments.keys()
+            ):
+                self._config.EXPERIMENT.GENERAL[self._config_general_standard][
+                    key
+                ] = cp.deepcopy(self._config.EXPERIMENT.GENERAL[key])
 
     @config.deleter
     def config(self):
-        if hasattr(self, '_config'):
-            delattr(self, '_config')
+        if hasattr(self, "_config"):
+            delattr(self, "_config")
 
     @property
     def run_type(self):
@@ -328,7 +335,7 @@ class Experiment(
     @property
     def layers(self) -> AttributeDict:
         """Get experiment layers"""
-        return getattr(self, '_layers', None)
+        return getattr(self, "_layers", None)
 
     @property
     def layers_with_runtime_encoding(self) -> AttributeDict:
@@ -544,9 +551,6 @@ class Experiment(
     @property
     def environments_apps_zones(self) -> t.Mapping:
         """Get a mapping with environments, apps, zones and zone configs
-
-        TODO (REFACTOR): There might be too many methods to parse the different
-        configuration dimensions (experiment config, environment files, zones, apps).
 
         Returns:
             t.Mapping: A mapping with the following structure:
@@ -775,13 +779,6 @@ class Experiment(
                 "value set to 'phases' must be a dict-like object", value
             )
 
-        # for key in value:
-        #     valid_keys = ["train", "eval", "run"]
-        #     if key not in valid_keys:
-        #         raise ExperimentValueError(
-        #             f"values in 'phases' should be one of: {valid_keys!r}", value
-        #         )
-
         self._phases = value
 
     @property
@@ -827,7 +824,7 @@ class Experiment(
 
         self.path.mkdir(parents=True, exist_ok=self._update_mode)
 
-        # TODO [ACCESS_PATHS]: saving these might not be eventually required
+        # NOTE [ACCESS_PATHS]: saving these might not be eventually required
         # NOTE: generator objects cannot be pickled/serialised
         self._phases_access_paths = list(get_valid_access_paths(self.phases, _leaf_only=True))
 
@@ -857,7 +854,11 @@ class Experiment(
 
     @classmethod
     def read(
-        cls, path: Path, new_root_path: t.Optional[Path] = None, *, diff_and_replace: bool = False,
+        cls,
+        path: Path,
+        new_root_path: t.Optional[Path] = None,
+        *,
+        diff_and_replace: bool = False,
     ) -> Experiment:
         """Read a serialised Experiment and produce an Experiment instance
 
@@ -951,20 +952,35 @@ class Experiment(
         if _need_bootstrap:
             instance.bootstrap()
 
+        # Populate the experiment phases and read existing Run's
+        instance.phases = {tag: {} for tag in instance.config.EXPERIMENT.PHASES}
+        instance.estimated_duration = {
+            tag: instance.config.EXPERIMENT.GENERAL.delay_after_bootstrap
+            if "delay_after_bootstrap" in instance.config.EXPERIMENT.GENERAL
+            else 10.0
+            for tag in instance.config.EXPERIMENT.PHASES
+        }
+
         # Deserialise all contained Runs
         for pickled_run in instance.path.rglob("*/_run.pickle"):
-            run_directory = pickled_run.parent.name
-            run_query = run_path_unformatter(run_directory)
-            # TODO [ACCESS_PATHS]: setitem will only allow setting existing keys, but
+            run_query = run_path_unformatter(pickled_run)
+            # NOTE [ACCESS_PATHS]: setitem will only allow setting existing keys, but
             # these can be checked explicitly, as long as access paths are available.
-            assert (
-                run_query in instance._phases_access_paths
-            ), f"{run_query!r} must be a valid query"
+            if not (run_query in instance._phases_access_paths):
+                get_root_logger().warning(f"{run_query!r} must be a valid query")
             setitem(
-                instance.phases, run_query, instance.run_type.read(pickled_run, parent=instance)
+                instance.phases,
+                run_query,
+                instance.run_type.read(pickled_run, parent=instance),
+                force=True,
             )
+        instance._phases_access_paths = list(
+            get_valid_access_paths(instance.phases, _leaf_only=True)
+        )
 
         return instance
+
+        instance = integrate(instance)
 
     def backup(self, _with_logs: bool = False, _with_results: bool = False) -> None:
         """Archive an Experiment and, if possible, upload to a backup server
@@ -1030,37 +1046,6 @@ class Experiment(
             - The experiment should be configured and bootstrapped.
         """
         pass
-
-    def integrate(self) -> None:
-        """Populate the experiment phases and read existing Run's
-
-        Preconditions:
-            - The experiment should be configured and bootstrapped.
-        """
-        assert self.configured, "Experiment must be configured before generating"
-        assert self.bootstrapped, "Experiment must be bootstrapped before generating"
-
-        self.phases = {tag: {} for tag in self.config.EXPERIMENT.PHASES}
-        self.estimated_duration = {
-            tag: self.config.EXPERIMENT.GENERAL.delay_after_bootstrap
-            if "delay_after_bootstrap" in self.config.EXPERIMENT.GENERAL
-            else 10.0
-            for tag in self.config.EXPERIMENT.PHASES
-        }
-
-
-        # Deserialise all contained Runs
-        for pickled_run in instance.path.rglob("*/_run.pickle"):
-            run_directory = pickled_run.parent.name
-            run_query = run_path_unformatter(run_directory)
-            # TODO [ACCESS_PATHS]: setitem will only allow setting existing keys, but
-            # these can be checked explicitly, as long as access paths are available.
-            assert (
-                run_query in instance._phases_access_paths
-            ), f"{run_query!r} must be a valid query"
-            setitem(
-                instance.phases, run_query, instance.run_type.read(pickled_run, parent=instance)
-            )
 
     """
     The following methods are used to estimate the duration of the experiment.
@@ -1226,160 +1211,29 @@ class Experiment(
             dict: A dict with a structure like `phases`, with lists as leaves, containing
                 tuples (env, [executed runs]).
         """
-        if not hasattr(self, "_execution_status"):
-            # get from runs if not yet available
-            self._update_execution_status()
-
-        return self._execution_status
-
-    def infer_execution_status(
-        self, *, update_self: bool = False, update_runs: bool = False
-    ) -> dict:
-        """Infers the execution status from contained Runs, optionally update self and Runs
-
-        Args:
-            update_self (bool, optional): Update this experiment's execution status
-            update_runs (bool, optional): Update the child run's execution status
-
-        Returns:
-            dict: The inferred execution status of same structure as `execution_status`
-
-        Raises:
-            TypeError: Wrong types provided to keyword arguments
-        """
-        if not isinstance(update_self, bool):
-            raise TypeError(f"'update_self' must be a {bool}, got: {type(update_self)}")
-        if not isinstance(update_runs, bool):
-            raise TypeError(f"'update_runs' must be a {bool}, got: {type(update_runs)}")
-
-        _ = map_to_leaves(
+        return map_to_leaves(
             lambda run: [
                 (env, list(v.values()))
-                for env, v in run.infer_execution_status(update=update_runs).items()
+                # for env, v in run.infer_execution_status(update=update_runs).items()
+                for env, v in run.execution_status.items()
             ],
             self.phases,
             _seq=False,
         )
 
-        if update_self:
-            self.execution_status = _
-
-        return _
-
-    @execution_status.setter
-    def execution_status(self, value: dict) -> None:
-        """Sets the experiment execution status
+    def infer_execution_status(self) -> dict:
+        """Infers the execution status from contained Runs, optionally update self and Runs
 
         Args:
-            value (dict): The execution status value
-
-        Raises:
-            TypeError: Some type in the provided value is wrong
-            ValueError: Some value in the provided value is wrong
-        """
-        if not isinstance(value, dict):
-            raise TypeError("execution_status", dict, type(value))
-        if dict_depth(value) != 2:
-            raise ValueError("execution_status got dict value with wrong structure")
-
-        if not all([key in self.phases for key in value]):
-            raise ValueError("value passed to execution_status contained wrong keys")
-        if not all([phase in value for phase in self.phases]):
-            raise ValueError("value passed to execution_status did not contain all phases")
-
-        for phase, phase_leaves in value.items():
-            required_runs = sorted(self.phases[phase].keys())
-            provided_runs = sorted(phase_leaves.keys())
-
-            if provided_runs != required_runs:
-                raise ValueError(
-                    f"execution_status, phase: {phase}, did not get all required runs: "
-                    f"{required_runs}, provided: {provided_runs}"
-                )
-
-            for run, leaf in phase_leaves.items():
-                if not isinstance(leaf, list):
-                    raise TypeError(
-                        f"execution_status, phase: {phase}, run: {run}, "
-                        f"got wrong leaf type: {type(leaf)}"
-                    )
-
-                if not leaf:
-                    raise ValueError(
-                        f"execution_status, phase: {phase}, run: {run}, got empty leaf value"
-                    )
-
-                for _ in leaf:
-                    env, reps = _
-
-                    if not isinstance(env, str):
-                        raise TypeError(
-                            f"execution_status, leaf: {leaf}, wrong type for 'env', "
-                            f"required: {str}, got: {type(env)}"
-                        )
-                    if not isinstance(reps, list):
-                        raise TypeError(
-                            f"execution_status, leaf: {leaf}, wrong type for 'reps', "
-                            f"required: {list}, got: {type(reps)}"
-                        )
-                    if not reps:
-                        raise ValueError(
-                            f"execution_status, leaf: {leaf}, got empty value for 'reps'"
-                        )
-                    if not all([isinstance(v, bool) for v in reps]):
-                        raise TypeError(
-                            f"execution_status, leaf: {leaf}, wrong type(s) in 'reps'"
-                        )
-
-                    if env not in self.config.ENVIRONMENTS:
-                        raise ValueError(
-                            f"execution_status, leaf: {leaf}, got env not in config: "
-                            f"{env}, available: {list(self.config.ENVIRONMENTS.keys())}"
-                        )
-
-                    required_reps = self.config.EXPERIMENT.PHASES[phase]["repetitions"]
-                    if len(reps) != required_reps:
-                        raise ValueError(
-                            f"execution_status, leaf: {leaf}, got wrong number of reps: "
-                            f"{len(reps)}, required: {required_reps}"
-                        )
-
-        self._execution_status = value
-
-    def _get_execution_status(
-        self, env: t.Optional[str] = None, query: t.Optional[t.Union[str, tuple]] = None
-    ) -> dict:
-        """Queries the execution status with optional filtering with env and query parameters
-
-        Args:
-            env (t.Optional[str], optional): The environment
-            query (t.Optional[t.Union[str, tuple]], optional): The query to `getitem`
 
         Returns:
-            dict: The exection status, possibly filtered
-        """
-        if not env:
-            return self.execution_status
-        else:
-            if query:
-                query_result = getitem(self.execution_status, query)
-                index_of_env = query_result.index(next(_ for _ in query_result if _[0] == env))
-                return getitem(self.execution_status, query + (index_of_env,))[1]
-            else:
-                return map_to_leaves(
-                    lambda x: list(filter(lambda v: v[0] == env, x))[0][1],
-                    self.execution_status,
-                    _seq=False,
-                )
 
-    def _update_execution_status(self) -> None:
-        """Updates the execution status with values from experiment's runs
+        Raises:
+            TypeError: Wrong types provided to keyword arguments
         """
-        self.execution_status = map_to_leaves(
-            lambda run: [(env, list(v.values())) for env, v in run.execution_status.items()],
-            self.phases,
-            _seq=False,
-        )
+        for phase in self.phases.values():
+            for run in phase.values():
+                run.infer_execution_status().items()
 
     def _modify_execution_status(
         self, env: str, query: t.Union[str, tuple], value: bool, *, push: bool = False
@@ -1446,7 +1300,6 @@ class Experiment(
             raise ValueError(f"some/all of provided phases not available: {invalid_phases}")
 
         self._validate_execute(env)
-        self._update_execution_status()
 
         phases_to_execute = {
             phase: values for phase, values in self.phases.items() if phase in phases
@@ -1476,7 +1329,7 @@ class Experiment(
                 self.logger.info(f"executing phases: {phases!r} in env {env!r}")
 
                 if True:
-                #try:
+                    # try:
                     run.send(env)
                     run.env_path(env).mkdir(parents=True, exist_ok=True)
                     run.drivers_proxy = self.drivers[env]
@@ -1492,11 +1345,10 @@ class Experiment(
                             self.logger.debug(f"{env}->{zone}: current state: {_}")
 
                     run.execute(env, resume=resume)
-                    self._update_execution_status()
                     run.fetch_and_cleanup(env)
-                #except (KeyboardInterrupt, SystemExit) as e:
+                # except (KeyboardInterrupt, SystemExit) as e:
                 #    raise
-                #except Exception as e:
+                # except Exception as e:
                 #    self.logger.critical(f"{env}: exception: {e} in run {run}")
         except (KeyboardInterrupt, SystemExit) as e:
             self.logger.critical(f"{env}: execution interrupted: {type(e)}")
@@ -1650,7 +1502,7 @@ class Run(
         """
         return getattr(self, "_execution_status", self.infer_execution_status())
 
-    def infer_execution_status(self, *, update: bool = False) -> dict:
+    def infer_execution_status(self, *, update: bool = True) -> dict:
         """Infers the execution status from the contained files
 
         Returns:
@@ -1759,9 +1611,14 @@ class Run(
 
     @property
     @abc.abstractmethod
-    def path(self) -> Path:
+    def identifier(self) -> str:
         """Get the save path"""
         pass
+
+    @property
+    def path(self) -> Path:
+        formatted_directory = run_path_formatter(self.config.phase, self.identifier)
+        return Path.joinpath(self.parent.path, formatted_directory)
 
     def env_path(self, env: str, *, relative: bool = False) -> Path:
         """Get a specific environment's path"""
@@ -1776,7 +1633,9 @@ class Run(
 
     def rep_path(self, env: str, rep: int, *, relative: bool = False) -> Path:
         assert isinstance(rep, int), f"Wrong type for rep, should be int but is {type(rep)}"
-        assert rep < self.config.repetitions, f"rep out of range, has to be small than {self.config.repetitions}"
+        assert (
+            rep < self.config.repetitions
+        ), f"rep out of range, has to be small than {self.config.repetitions}"
         return self.env_path(env, relative=relative).joinpath(repetition_formatter(rep))
 
     def remote_path(self, env: str, zone: str) -> Path:
@@ -1796,7 +1655,7 @@ class Run(
         """Get a remote environment path given an environment and an zone"""
         return self.remote_path(env, zone) / env
 
-    def remote_rep_path(self, env: str, zone: str, rep : int) -> Path:
+    def remote_rep_path(self, env: str, zone: str, rep: int) -> Path:
         return self.remote_env_path(env, zone) / repetition_formatter(rep)
 
     @property
@@ -1829,7 +1688,7 @@ class Run(
     def clear_ingest(self) -> None:
         """Has the run performed all decoding steps?"""
         for stream in self.i_streams:
-            setattr(self, 'i_' + stream, None)
+            setattr(self, "i_" + stream, None)
 
     @property
     def path_ingestion_data(self) -> Path:
@@ -1838,44 +1697,67 @@ class Run(
             _filepath = _filepath / elem
         return _filepath
 
-    def load_ingestion_data(self, prefix: t.Optional[str] = '', bundled: bool = False, **kwargs) -> None:
+    def load_ingestion_data(
+        self, prefix: t.Optional[str] = "", bundled: bool = False, **kwargs
+    ) -> None:
         self.clear_ingest()
         self._configure_layers_proxy("decode", **kwargs)
         self.update_ingestion_tag()
         self.intermediates = AttributeDict()
         if bundled:
-            i_streams = self.load_mapping_bundled(path=self.path_ingestion_data, prefix=prefix+"stream.i_")
+            i_streams = self.load_mapping_bundled(
+                path=self.path_ingestion_data, prefix=prefix + "stream.i_"
+            )
         else:
-            i_streams = self.load_mapping(path=self.path_ingestion_data, prefix=prefix+"stream.i_")
+            i_streams = self.load_mapping(
+                path=self.path_ingestion_data, prefix=prefix + "stream.i_"
+            )
         for stream in i_streams:
             setattr(self, "i_" + stream, i_streams[stream])
-        self.intermediates = self.load_mapping(path=self.path_ingestion_data, prefix=prefix+"im_")
+        self.intermediates = self.load_mapping(
+            path=self.path_ingestion_data, prefix=prefix + "im_"
+        )
         if not self.ingested:
             raise Exception("Loading ingestion data failed due to missing data!")
 
-    def save_ingestion_data(self, prefix: t.Optional[str] = '', bundled: bool = False) -> None:
+    def save_ingestion_data(self, prefix: t.Optional[str] = "", bundled: bool = False) -> None:
         if self.ingested:
             if bundled:
-                self.save_mapping_bundled("i_streams",     path=self.path_ingestion_data, prefix=prefix+"stream.i_")
-                self.save_mapping_bundled("intermediates", path=self.path_ingestion_data, prefix=prefix+"im_")
+                self.save_mapping_bundled(
+                    "i_streams", path=self.path_ingestion_data, prefix=prefix + "stream.i_"
+                )
+                self.save_mapping_bundled(
+                    "intermediates", path=self.path_ingestion_data, prefix=prefix + "im_"
+                )
             else:
-                self.save_mapping("i_streams",     path=self.path_ingestion_data, prefix=prefix+"stream.i_")
-                self.save_mapping("intermediates", path=self.path_ingestion_data, prefix=prefix+"im_")
+                self.save_mapping(
+                    "i_streams", path=self.path_ingestion_data, prefix=prefix + "stream.i_"
+                )
+                self.save_mapping(
+                    "intermediates", path=self.path_ingestion_data, prefix=prefix + "im_"
+                )
         else:
             get_root_logger().warning("Run not ingested, nothing to be saved!")
 
-    def remove_ingestion_data(self, prefix: t.Optional[str] = '') -> None:
+    def remove_ingestion_data(self, prefix: t.Optional[str] = "") -> None:
         self.clear_ingest()
         self.intermediates = AttributeDict()
-        self.remove_mapping("i_streams",     path=self.path_ingestion_data, prefix=prefix+"stream.i_")
-        self.remove_mapping("intermediates", path=self.path_ingestion_data, prefix=prefix+"im_")
+        self.remove_mapping(
+            "i_streams", path=self.path_ingestion_data, prefix=prefix + "stream.i_"
+        )
+        self.remove_mapping(
+            "intermediates", path=self.path_ingestion_data, prefix=prefix + "im_"
+        )
 
     def update_ingestion_tag(self) -> None:
-        self.ingestion_tag = (self.parent.layers.io.config.env, repetition_formatter(self.parent.layers.io.config.rep))
+        self.ingestion_tag = (
+            self.parent.layers.io.config.env,
+            repetition_formatter(self.parent.layers.io.config.rep),
+        )
 
     @property
     def ingestion_tag(self) -> bool:
-        return getattr(self, '_ingestion_tag', ('', ''))
+        return getattr(self, "_ingestion_tag", ("", ""))
 
     @ingestion_tag.setter
     def ingestion_tag(self, value: tuple) -> None:
@@ -2027,7 +1909,13 @@ class Run(
                     )
 
                     apps[app].intent = Intent(**apps[app].app_config.as_dict())
-                    apps[app].intent.es.update({'filename':str(self.remote_path(env, apps[app].zone) / apps[app].sched)})
+                    apps[app].intent.es.update(
+                        {
+                            "filename": str(
+                                self.remote_path(env, apps[app].zone) / apps[app].sched
+                            )
+                        }
+                    )
 
                 cfg = apps[app].app_config.as_dict()
                 filename = app_configfile_formatter(app)
@@ -2157,7 +2045,7 @@ class Run(
                         apps[app].executable, apps[app].args, details=apps[app]
                     )
                     slave_processes[apps[app].zone].append(apps[app].process)
-                    # TODO specific to persistent
+                    # NOTE specific to persistent
                     if apps[app].process.exited is not None:
                         self.logger.error(
                             f"{app!r} executable exited prematurely ({apps[app].process.exited}), stderr: {_.stderr}"
@@ -2176,7 +2064,7 @@ class Run(
                     details=apps["src"],
                 )
                 master_processes[apps["src"].zone].append(apps["src"].process)
-                if apps[app].process.exited is not None:
+                if apps["src"].process.exited is not None:
                     self.logger.error(
                         f"'src' executable exited prematurely ({apps[app].process.exited}), stderr: {_.stderr}"
                     )
@@ -2234,11 +2122,6 @@ class Run(
                     start_before_pgroup[zone] = [
                         _ for _ in slave_processes[zone] if _ not in standalone_processes[zone]
                     ]
-
-                    # There can be apps that do not have src/snk apps
-                    #if not start_pgroup[zone]:
-                    #    self.logger.critical(f"no processes to start in zone {zone!r}")
-                    #    raise ExperimentRuntimeError(f"no processes to start in zone {zone!r}")
 
                 stagger = (
                     self.parent.environment_config_general(env)
@@ -2426,9 +2309,15 @@ class Run(
             current_wd = driver.working_directory
 
             self.parent.logger.info(f"{env}->{zone}: connected: {driver.__class__.__name__}")
-            self.parent.logger.debug(f"{env}->{zone}: original state: {driver.original_state!r}")
-            self.parent.logger.debug(f"{env}->{zone}: curr_id: {current_id}, prev_id: {previous_id}")
-            self.parent.logger.debug(f"{env}->{zone}: curr_wd: {current_wd}, prev_wd: {previous_wd}")
+            self.parent.logger.debug(
+                f"{env}->{zone}: original state: {driver.original_state!r}"
+            )
+            self.parent.logger.debug(
+                f"{env}->{zone}: curr_id: {current_id}, prev_id: {previous_id}"
+            )
+            self.parent.logger.debug(
+                f"{env}->{zone}: curr_wd: {current_wd}, prev_wd: {previous_wd}"
+            )
 
             if current_id == previous_id and current_wd == previous_wd:
                 self.parent.logger.debug(
@@ -2452,7 +2341,13 @@ class Run(
                         )
 
                 with Timeout(60, throwing=False) as timeout:
-                    _ = driver.send(path_from=self.path, path_to=Path.joinpath(self.parent.remote_path(env, zone), self.path.name))
+                    _ = driver.send(
+                        path_from=self.path,
+                        path_to=Path.joinpath(
+                            self.parent.remote_path(env, zone),
+                            self.path.relative_to(self.parent.path),
+                        ),
+                    )
                     if not _.ok:
                         _msg = f"{env}->{zone}: failed to send: {_.stderr}"
                         self.parent.logger.critical(_msg)
@@ -2485,7 +2380,11 @@ class Run(
                 )
             else:
                 fetch_result = driver.fetch(
-                    path_from=Path.joinpath(self.parent.remote_path(env, zone), self.path.name), path_to=self.path
+                    path_from=Path.joinpath(
+                        self.parent.remote_path(env, zone),
+                        self.path.relative_to(self.parent.path),
+                    ),
+                    path_to=self.path,
                 )
                 if not fetch_result.ok:
                     _msg = f"{env}->{zone}: failed to fetch logs: {fetch_result.stderr}"
@@ -2493,7 +2392,15 @@ class Run(
                 else:
                     self.parent.logger.info(f"{env}->{zone}: experiment logs fetched!")
 
-                driver.delete(path=str(Path.joinpath(self.parent.remote_path(env, zone), self.path.name)), recursive=True)
+                driver.delete(
+                    path=str(
+                        Path.joinpath(
+                            self.parent.remote_path(env, zone),
+                            self.path.relative_to(self.parent.path),
+                        )
+                    ),
+                    recursive=True,
+                )
 
             previous_id = cp.copy(current_id)
             previous_wd = cp.copy(current_wd)
@@ -2505,4 +2412,3 @@ class Run(
             t.Optional[float]: the duration in seconds, or None if not digested
         """
         raise Exception(NotImplemented)
-

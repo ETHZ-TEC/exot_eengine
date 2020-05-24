@@ -26,29 +26,22 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # 
-"""TODO
-"""
-from .covertchannel import (
-    CapacityContinuous,
-    CapacityDiscrete,
-    PerformanceSweep,
-)
-
+from .covertchannel import CapacityContinuous, PerformanceSweep
 from .mldataset import (
-        DatasetType,
-        GenericDataSetHandler,
-        TrainX,
-        TrainY,
-        TrainSampleLen,
-        TrainWeights,
-        TestX,
-        TestY,
-        TestSampleLen,
-        TestWeights,
-        VerifX,
-        VerifY,
-        VerifSampleLen,
-    )
+    DatasetType,
+    GenericDataSetHandler,
+    TestSampleLen,
+    TestWeights,
+    TestX,
+    TestY,
+    TrainSampleLen,
+    TrainWeights,
+    TrainX,
+    TrainY,
+    VerifSampleLen,
+    VerifX,
+    VerifY,
+)
 
 __all__ = (
     "CapacityContinuous",
@@ -68,4 +61,3 @@ __all__ = (
     "VerifY",
     "VerifSampleLen",
 )
-

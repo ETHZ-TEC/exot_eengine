@@ -426,12 +426,9 @@ class DirectActivation(Layer, layer=Layer.Type.PrePost):
                         resampled_timestamps > actual_start + 3 * self.sync_pulse_duration
                     )
 
-            # values.iloc[0:2, 0] = np.median(values.iloc[1:20, 0])
-
             # look for edges in the interval [search_start, search_end]
             idx_start = pd.Series.idxmax(resampled_timestamps >= search_start)
             idx_end = pd.Series.idxmax(resampled_timestamps >= search_end)
-            # print(idx_start, idx_end)
             falling, rising, fc, rc, convolved, *other = find_ramp_edges(
                 resampled_values[idx_start : idx_end + 1, 0],
                 roll=self.config.roll if "roll" in self.config else 5,

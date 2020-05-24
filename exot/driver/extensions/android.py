@@ -122,11 +122,11 @@ class AndroidMethods(metaclass=abc.ABCMeta):
 
         if with_stack:
             for stack_block in re.split(r"Stack #|mFocusedActivity", cmd_result)[1:-1]:
-                regex_match = re.match(r"^\d+", stack_block.replace('\r',''))
+                regex_match = re.match(r"^\d+", stack_block.replace("\r", ""))
                 if regex_match is None:
                     continue
                 else:
-                    stack = re.match(r"^\d+", stack_block.replace('\r','')).group()
+                    stack = re.match(r"^\d+", stack_block.replace("\r", "")).group()
                 kwargs["stackId"] = stack
                 accumulator += [
                     RecordParser.parse_record(
@@ -153,8 +153,8 @@ class AndroidMethods(metaclass=abc.ABCMeta):
         # Activities are often reported from top to bottom, it's desirable to preserve the order.
         value = [_ for _ in sorted(set(accumulator), key=accumulator.index) if _ is not None]
 
-        if(value is None):
-            value = [WindowRecord('', '', '')]
+        if value is None:
+            value = [WindowRecord("", "", "")]
 
         return value if with_filter is None else list(filter(with_filter, value))
 
@@ -267,9 +267,7 @@ class AndroidMethods(metaclass=abc.ABCMeta):
         for inputlist in [start, end]:
             types = set(type(x) for x in inputlist)
             if not all(issubclass(_, (int, np.integer)) for _ in types):
-                raise ValueError(
-                    f"coordinates should only be int's, but were: {types}"
-                )
+                raise ValueError(f"coordinates should only be int's, but were: {types}")
         cmd = f"input swipe {start[0]} {start[1]} {end[0]} {end[1]} {duration}"
         return self.backend.run(cmd).ok
 
@@ -486,8 +484,7 @@ class AndroidMethods(metaclass=abc.ABCMeta):
             sleep(1)
 
         if self.is_screen_locked:
-            # TODO might be good to get the screen size and derive the values for the swipe
-            self.send_swipe(start=[300,1500], end=[900,900], duration=250)
+            self.send_swipe(start=[300, 1500], end=[900, 900], duration=250)
             sleep(1)
 
         self.open_home_screen()
@@ -698,7 +695,7 @@ class AndroidMethods(metaclass=abc.ABCMeta):
             raise TypeError("till", (datetime, str), type(till))
 
         if isinstance(since, datetime):
-            logs = ''
+            logs = ""
             count = 500
             since_search_str = since.strftime("%m-%d %H:%M:%S")
             while since_search_str not in logs and count <= 8500:
@@ -708,14 +705,18 @@ class AndroidMethods(metaclass=abc.ABCMeta):
                 ).stdout
                 count += 500
             if since_search_str not in logs:
-                logs = logs.split(since_search_str[:-3], 1)[1] # Split only on a minute granularity
+                logs = logs.split(since_search_str[:-3], 1)[
+                    1
+                ]  # Split only on a minute granularity
             else:
                 logs = logs.split(since_search_str, 1)[1]
         else:
             since_time = (
                 [
                     "-t",
-                    since.strftime("%m-%d %H:%M:%S.%f") if isinstance(since, datetime) else str(since),
+                    since.strftime("%m-%d %H:%M:%S.%f")
+                    if isinstance(since, datetime)
+                    else str(since),
                 ]
                 if since
                 else []
@@ -733,4 +734,3 @@ class AndroidMethods(metaclass=abc.ABCMeta):
         return (
             re.findall(r".*" + grep + r".*", logs, re.MULTILINE) if grep else logs.splitlines()
         )
-

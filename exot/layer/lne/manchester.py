@@ -35,8 +35,6 @@ from .generic import GenericLineCoding
 
 class ManchesterLineCoding(GenericLineCoding):
     def __init__(self, *args, **kwargs):
-
-        # TODO use carrier from channel
         # Two valid conventions are accepted:
         # 1. IEEE 802.3 (0 = falling edge); 2. G. E. Thomas (0 = rising edge).
         if "style" in kwargs:

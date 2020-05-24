@@ -217,8 +217,8 @@ class PerformanceExperimentPlotter(ExperimentPlotter):
             axis.legend(loc="upper left", frameon=False)
 
         sns.despine(f)
-        if 'title' in kwargs:
-            f.suptitle(kwargs['title'])
+        if "title" in kwargs:
+            f.suptitle(kwargs["title"])
         else:
             f.suptitle("Performance metrics")
         f.tight_layout()

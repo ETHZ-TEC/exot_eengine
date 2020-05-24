@@ -28,10 +28,6 @@
 # 
 """Cache-activation RDP layer"""
 
-# TODO: There's clearly room for deduplication and extraction of common functionality
-#       between the core/cache activation layers and the prospective resampling
-#       layers.
-
 import typing as t
 
 import numpy

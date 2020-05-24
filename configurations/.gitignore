@@ -1,2 +1,2 @@
 *.local.toml
-!template.toml
+!template*.toml

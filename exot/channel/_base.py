@@ -26,8 +26,8 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # 
-"""TODO
-"""
+"""Base class for experiment analyses."""
+
 import abc
 import logging
 import typing as t
@@ -36,17 +36,13 @@ import numpy as np
 from numpy import inf
 
 from exot.util.attributedict import AttributeDict
-from exot.util.logging import get_root_logger, Loggable, long_log_formatter
 from exot.util.factory import GenericFactory
-from exot.util.file import (
-    move_action,
-)
-from exot.util.mixins import (
-    SubclassTracker,
-)
+from exot.util.file import move_action
+from exot.util.logging import Loggable, get_root_logger, long_log_formatter
+from exot.util.mixins import SubclassTracker
+
 
 class Channel(SubclassTracker, metaclass=abc.ABCMeta):
-    # Due to cyclic imports the HasParent class cannot be used here. This might need to be fixed in a general revision of ExOT.
     @property
     def parent(self) -> object:
         return getattr(self, "_parent", None)
@@ -61,7 +57,7 @@ class Channel(SubclassTracker, metaclass=abc.ABCMeta):
 
     @property
     def analyses(self):
-        if not hasattr(self, '_analyses'):
+        if not hasattr(self, "_analyses"):
             self._analyses = dict()
         return self._analyses
 
@@ -80,22 +76,31 @@ class Channel(SubclassTracker, metaclass=abc.ABCMeta):
     def bootstrap_analysis(self, analysis_name: str):
         if "ANALYSES" in self.parent.config:
             if analysis_name in self.parent.config.ANALYSES:
-                kwargs        = self.parent.config.ANALYSES[analysis_name].copy()
+                kwargs = self.parent.config.ANALYSES[analysis_name].copy()
                 kwargs.update(name=analysis_name)
-                args          = [self.parent]
+                args = [self.parent]
                 if "type" in kwargs:
                     if kwargs["type"] in self.analyses_classes:
                         new_analysis = self.analyses_classes[kwargs["type"]](*args, **kwargs)
                         self.analyses[new_analysis.name] = new_analysis
                     else:
-                        get_root_logger().critical(f"Analysis of type %s not available for channel {type(self)}" % (kwargs["type"]))
+                        get_root_logger().critical(
+                            f"Analysis of type %s not available for channel {type(self)}"
+                            % (kwargs["type"])
+                        )
                 else:
-                    get_root_logger().critical(f"type not specified in config for analysis {analysis_name}")
+                    get_root_logger().critical(
+                        f"type not specified in config for analysis {analysis_name}"
+                    )
         else:
-            get_root_logger().critical(f"Analysis {analysis_name} not specified in configuration!")
+            get_root_logger().critical(
+                f"Analysis {analysis_name} not specified in configuration!"
+            )
+
 
 class ChannelFactory(GenericFactory, klass=Channel):
     pass
+
 
 class Analysis(SubclassTracker, metaclass=abc.ABCMeta):
     def __init__(self, *args, **kwargs):
@@ -124,11 +129,9 @@ class Analysis(SubclassTracker, metaclass=abc.ABCMeta):
         return self.config.name
 
     @property
-    @abc.abstractmethod
     def path(self):
-        pass
+        return self.experiment.path.joinpath(self.name)
 
     @property
     def log_path(self):
         return self.path.joinpath("debug.log")
-

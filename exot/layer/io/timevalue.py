@@ -114,16 +114,32 @@ class TimeValue(Layer, LabelConversions, layer=Layer.Type.InputOutput):
             if "app" in self.config:
                 assert isinstance(self.config.app, str), ("app", str, type(self.config.app))
             if "rep" in self.config:
-                assert isinstance(self.config.rep, (int, np.int64)), ("rep", int, type(self.config.rep))
+                assert isinstance(self.config.rep, (int, np.int64)), (
+                    "rep",
+                    int,
+                    type(self.config.rep),
+                )
             if "matcher" in self.config:
-                assert isinstance(self.config.matcher, list), ("Matcher", list, type(self.config.matcher))
+                assert isinstance(self.config.matcher, list), (
+                    "Matcher",
+                    list,
+                    type(self.config.matcher),
+                )
                 for elem in self.config.matcher:
                     assert isinstance(elem, tuple), ("Matcher", tuple, type(elem))
                 for matcher, operation in self.config.matcher:
                     assert isinstance(matcher, Matcher), ("Matcher", Matcher, type(matcher))
-                    assert isinstance(operation, (str,type(None))), ("Operation", (str,None), type(operation))
+                    assert isinstance(operation, (str, type(None))), (
+                        "Operation",
+                        (str, None),
+                        type(operation),
+                    )
             if "path" in self.config:
-                assert isinstance(self.config.path, Path), ("path", Path, type(self.config.path))
+                assert isinstance(self.config.path, Path), (
+                    "path",
+                    Path,
+                    type(self.config.path),
+                )
         except AssertionError as e:
             raise MisconfiguredError("timevalue: {} expected {}, got: {}".format(*e.args[0]))
 
@@ -347,17 +363,32 @@ class TimeValue(Layer, LabelConversions, layer=Layer.Type.InputOutput):
         rdpstream = pd.DataFrame()
         for matcher, operation in self.config.matcher:
             if len(rdpstream.columns) == 0:
-                rdpstream.insert(loc=len(rdpstream.columns), column=rawstream[matcher].columns[0], value=rawstream[matcher].iloc[:,0].copy(deep=True))
+                rdpstream.insert(
+                    loc=len(rdpstream.columns),
+                    column=rawstream[matcher].columns[0],
+                    value=rawstream[matcher].iloc[:, 0].copy(deep=True),
+                )
+            _col_name = rawstream[matcher].columns[1].split(":")
+            _col_name[2] = str(operation)
+            _col_name = ":".join(_col_name)
             if operation == "max":
-                tmp_data = rawstream[matcher].iloc[:, 1:].max(axis=1).copy()
+                tmp_data = pd.DataFrame(
+                    {_col_name: rawstream[matcher].iloc[:, 1:].max(axis=1).copy()}
+                )
             elif operation == "min":
-                tmp_data = rawstream[matcher].iloc[:, 1:].min(axis=1).copy()
+                tmp_data = pd.DataFrame(
+                    {_col_name: rawstream[matcher].iloc[:, 1:].min(axis=1).copy()}
+                )
             elif operation == "sum":
-                tmp_data = rawstream[matcher].iloc[:, 1:].sum(axis=1).copy()
+                tmp_data = pd.DataFrame(
+                    {_col_name: rawstream[matcher].iloc[:, 1:].sum(axis=1).copy()}
+                )
             else:
                 tmp_data = rawstream[matcher].iloc[:, 1:].copy()
             for columnname in tmp_data.columns:
-                rdpstream.insert(loc=len(rdpstream.columns), column=columnname, value=rawstream[columnname].copy())
+                rdpstream.insert(
+                    loc=len(rdpstream.columns), column=columnname, value=tmp_data[columnname]
+                )
         try:
             _ = self.get_logs(self.config.env, "src", self.config.rep)
             self.add_intermediate("raw_src_log", _)
@@ -410,6 +441,11 @@ class TimeValue(Layer, LabelConversions, layer=Layer.Type.InputOutput):
         )
 
         # Crop rdpstream to the actual length
-        actual_length_samples = np.where(rdpstream.iloc[:,0] <= self.config.rdpstream.iloc[:,0].sum())[0][-1]+1
-        return rdpstream.iloc[:actual_length_samples,:]
-
+        if 'rdpstream' in self.config:
+            actual_length_samples = (
+                np.where(rdpstream.iloc[:, 0]
+                  <= self.config.rdpstream.iloc[:, 0].sum())[0][-1] + 1
+            )
+            return rdpstream.iloc[:actual_length_samples, :]
+        else:
+            return rdpstream.iloc[:, :]

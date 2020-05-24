@@ -105,7 +105,7 @@ def prompt(
     **kwargs,
 ) -> t.Any:
     """Prompt user for input, with timeouts and type handling
-
+    
     Args:
         msg (str): The message to print
         expect (t.Optional[t.Type], optional): The expected response type. Defaults to bool.
@@ -114,12 +114,12 @@ def prompt(
         _ask (str, optional): The asking postfix. Defaults to "? ".
         _handler (t.Optional[t.Callable[[str], t.Any]], optional): The response handler.
         _fail (bool, optional): Should raise if prompting failed?. Defaults to False.
-
+    
     Raises:
         TypeError: Wrong type supplied to 'expect'
         TypeError: Wrong type supplied to '_handler'
         TimeoutError: Timed out
-
+    
     Returns:
         t.Any: The response
     """

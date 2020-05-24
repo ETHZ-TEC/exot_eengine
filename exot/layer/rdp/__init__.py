@@ -35,7 +35,7 @@ by sink and source apps.
 from .cacheactivation import CacheActivation
 from .coreactivation import CoreActivation
 from .directactivation import DirectActivation
-from .quantisation import QuantCoreActivation
+from .quantisation import FrequencyLevelQuantistion, QuantCoreActivation
 from .resampling import Normalise
 
 __all__ = (
@@ -43,5 +43,6 @@ __all__ = (
     "CoreActivation",
     "DirectActivation",
     "QuantCoreActivation",
+    "FrequencyLevelQuantistion",
     "Normalise",
 )

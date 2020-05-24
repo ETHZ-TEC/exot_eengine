@@ -35,7 +35,7 @@ from keyword import kwlist
 from typing import Any, Callable, Dict, Hashable, Iterable, List, Type, Union
 from warnings import warn as _warn
 
-__all__ = ("AttributeDict","LabelMapping")
+__all__ = ("AttributeDict", "LabelMapping")
 
 ENABLE_WARNINGS = False
 
@@ -325,12 +325,15 @@ class AttributeDict(MutableMapping):
         else:
             raise TypeError(f"'to' is {type(to)}, should be either AttributeDict or Dict")
 
+
 class LabelMapping(AttributeDict):
     def __init__(self, *args: Dict, **kwargs: Any):
         super().__init__(*args, **kwargs)
-        if 'UNKNOWN' not in self._data.keys():
-            self.UNKNOWN = {'int':max([self._data[x]['int'] for x in self._data])+1, 'str':'-'}
+        if "UNKNOWN" not in self._data.keys():
+            self.UNKNOWN = {
+                "int": max([self._data[x]["int"] for x in self._data]) + 1,
+                "str": "-",
+            }
 
     def __missing__(self, key: Hashable):
         return self.UNKNOWN
-

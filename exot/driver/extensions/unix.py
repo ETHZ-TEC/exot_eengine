@@ -131,7 +131,14 @@ class PersistenceMethods(PersistenceMethodsMixin):
         def _cleanup():
             self.command(["rm", *nohup["files"]])
 
-        nohup["nohup_pid"] = int(invocation.stdout.strip())
+        try:
+            nohup["nohup_pid"] = int(invocation.stdout.strip())
+        except ValueError:
+            raise DriverErrorFactory.common[RuntimeError](
+                "Getting the PID of a persistently spawned command ({}) ".format(cmd) +
+                "likely failed, the returned nohup PID was: {!r}".format(invocation.stdout)
+            )
+
         nohup["pre_pid"] = int(self.command(f"pgrep -P {nohup['nohup_pid']}").stdout.strip())
 
         nohup["pid"] = nohup["pre_pid"]
@@ -403,9 +410,7 @@ class FanMethods:
             for k, v in FanMethods.KNOWN_FAN_ENDPOINTS.items()
         ]
 
-        return [
-            _ for _ in availability_mapping if _["path_exists"] and _["endpoints_exist"]
-        ]
+        return [_ for _ in availability_mapping if _["path_exists"] and _["endpoints_exist"]]
 
     @property
     def fan_path(self) -> t.Optional[t.Dict]:
@@ -645,6 +650,8 @@ class ProcessMethods(ProcessMethodsMixin):
         assert len(pids) >= 1, "no pids found!"
         assert isinstance(refresh_period, (int, float)), "refresh_period must be a number"
 
+        _sleep_duration = "{:.1f}".format(refresh_period)
+
         if all(isinstance(pid, ReturnT) for pid in pids):
             assert all(
                 hasattr(pid, "persistent") for pid in pids
@@ -656,9 +663,9 @@ class ProcessMethods(ProcessMethodsMixin):
 
             self.command(_command)
             return True
+
         elif all(isinstance(_, (str, int)) for _ in pids):
             pids = [str(_) for _ in pids]
-            _sleep_duration = "{:.1f}".format(refresh_period)
 
             # chech if 'ps -p' fails correctly
             ps_p_expect_ok = self.command("ps -p 1").ok is True

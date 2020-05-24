@@ -30,10 +30,10 @@
 
 from ._base import Experiment, Run
 from ._factory import ExperimentFactory
+from .app_exec import AppExecExperiment
 from .exploratory import ExploratoryExperiment
 from .frequency_sweep import FrequencySweepExperiment
 from .performance import PerformanceExperiment
-from .app_exec import AppExecExperiment
 
 __all__ = (
     "Experiment",
@@ -42,5 +42,5 @@ __all__ = (
     "FrequencySweepExperiment",
     "ExploratoryExperiment",
     "PerformanceExperiment",
-    "AppExecExperiment"
+    "AppExecExperiment",
 )

@@ -27,7 +27,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # 
 # Configuration name
-name = "Thermal-SC_Tcoefficients_test"
+name = "demo_app_exec_experiment"
 # Save path
 save_path = "./data"
 # Optional: Local backup path
@@ -35,110 +35,73 @@ backup_path = "./data/_backup"
 # Optional: Action to perform if experiment directory exists
 experiment_exists_action = "overwrite" # overwrite, move, halt
 
-# Optional: Backup configuration
-# [BACKUP]
-# user = ""
-# host = ""
-# ssh_key = ""
-# port = ""
-# path = ""
-
 # Experiment settings
 [EXPERIMENT]
 type = "AppExecExperiment"
-channel = "Thermal"
+channel = "ThermalSC"
 
 [EXPERIMENT.PHASES]
 
-[EXPERIMENT.PHASES.tcoeff]
-repetitions=1
+[EXPERIMENT.PHASES.test]
+repetitions=4
 
-[EXPERIMENT.PHASES.tcoeff."05-35"] # t_init + t_run + t_cool
-schedules=['../RepetiTouchFiles/Z5/Benchmark/CPU_Throttling_Test/short.rpt',
-           '../RepetiTouchFiles/S5/Benchmark/CPU_Throttling_Test/short.rpt']
-#Deserialised ../RepetiTouchFiles/S5/Benchmark/CPU_Throttling_Test/short.rpt with duration of 14.937s
-#Deserialised ../RepetiTouchFiles/Z5/Benchmark/CPU_Throttling_Test/short.rpt with duration of 11.652s
-durations=[24.937,21.652]  # t_run + t_cool
+[EXPERIMENT.PHASES.test.dropbox2]
+schedules=[
+           'configurations/examples/RepetiTouch/Sony_Xperia_Z5_Dropbox.rpt',
+           'configurations/examples/RepetiTouch/Samsung_Galaxy_S5_SM-900H_Dropbox.rpt'
+          ]
+durations=[44.7,30.3]
 environments=['Z5', 'S5']
 
-[EXPERIMENT.PHASES.tcoeff."10-35"] # t_init + t_run + t_cool 
-schedules=['../RepetiTouchFiles/Z5/Benchmark/CPU_Throttling_Test/short.rpt',
-           '../RepetiTouchFiles/S5/Benchmark/CPU_Throttling_Test/short.rpt']
-durations=[24.937,21.652]  # t_run + t_cool
+[EXPERIMENT.PHASES.test.antutu3]
+schedules=['configurations/examples/RepetiTouch/Sony_Xperia_Z5_AnTuTu.rpt',
+           'configurations/examples/RepetiTouch/Samsung_Galaxy_S5_SM-900H_AnTuTu.rpt'
+           ]
+durations=[28.8,31.2]
 environments=['Z5', 'S5']
-
-#[EXPERIMENT.PHASES.tcoeff."05-424"] # t_init + t_run + t_cool
-#schedules=['../RepetiTouchFiles/Z5/Benchmark/CPU_Throttling_Test/1_minutes.rpt',
-#           '../RepetiTouchFiles/S5/Benchmark/CPU_Throttling_Test/1_minutes.rpt']
-#durations=[244.0,244.0]  # t_run + t_cool
-#environments=['Z5', 'S5']
-#
-#[EXPERIMENT.PHASES.tcoeff."05-484"] # t_init + t_run + t_cool
-#schedules=['../RepetiTouchFiles/Z5/Benchmark/CPU_Throttling_Test/2_minutes.rpt',
-#           '../RepetiTouchFiles/S5/Benchmark/CPU_Throttling_Test/2_minutes.rpt']
-#durations=[304.0,304.0] # t_run + t_cool
-#environments=['Z5', 'S5']
-#
-#[EXPERIMENT.PHASES.tcoeff."50-424"] # t_init + t_run + t_cool
-#schedules=['../RepetiTouchFiles/Z5/Benchmark/CPU_Throttling_Test/1_minutes.rpt',
-#           '../RepetiTouchFiles/S5/Benchmark/CPU_Throttling_Test/1_minutes.rpt']
-#durations=[244.0,244.0]  # t_run + t_cool
-#environments=['Z5', 'S5']
-#
-#[EXPERIMENT.PHASES.tcoeff."50-484"] # t_init + t_run + t_cool
-#schedules=['../RepetiTouchFiles/Z5/Benchmark/CPU_Throttling_Test/2_minutes.rpt',
-#           '../RepetiTouchFiles/S5/Benchmark/CPU_Throttling_Test/2_minutes.rpt']
-#durations=[304.0,304.0] # t_run + t_cool
-#environments=['Z5', 'S5']
 
 # Experiment layers
 [EXPERIMENT.LAYERS]
-io = {name = "TimeValue", params = {timebase='ns'}} 
+io = {name = "TimeValue", params = {timebase='ns'}, synchronise = false} 
 
 # Experiment general settings
 [EXPERIMENT.GENERAL]
 sampling_period = 1e-3
-delay_after_spawn = 0 # 180.0     # settling period
-delay_after_auxiliary = 10.0 # 180.0 # t_init
+delay_after_spawn = 0 #60.0
+delay_after_auxiliary = 0 # 30.0
 active_wait = true
 
 # --------------------------------------------------------------------------
 # Apps and zones
-[ENVIRONMENTS.Aman_Manwe_Bilbo.APPS]
+[ENVIRONMENTS.Z5.APPS]
 src = {executable = "com.cygery.repetitouch.pro/com.cygery.repetitouch.pro.FireReceiver", zone = "bigLITTLE", type="standalone"}
 snk = {executable = "ch.ethz.exot.thermalsc/.MeterService", zone = "bigLITTLE"}
 
-[ENVIRONMENTS.Aman_Manwe_Bilbo.APPS."ttb"]
-executable = "/home/rocketlogger/exot/bin/ttb_phase_temp_time.sh"
-type = "standalone"
-start_individually = true
-zone = "ttb"
-
 # Platform settings -> source
-[ENVIRONMENTS.Aman_Manwe_Bilbo.src]
+[ENVIRONMENTS.Z5.src]
 COMPONENT_NAME="ch.ethz.exot.intentproxy/.IntentProxyService"
 ACTION="ch.ethz.exot.intents.IntentProxy.action.BUNDLE_EXTRAS"
 
-[ENVIRONMENTS.Aman_Manwe_Bilbo.src.ei]
+[ENVIRONMENTS.Z5.src.ei]
 "intent.flags"= 20
 "looptimes"= 1
 "replayspeed"= 1
 
-[ENVIRONMENTS.Aman_Manwe_Bilbo.src.es]
+[ENVIRONMENTS.Z5.src.es]
 "intent.component"= "com.cygery.repetitouch.pro/com.cygery.repetitouch.pro.FireReceiver"
 "intent.action"= "com.twofortyfouram.locale.intent.action.FIRE_SETTING"
 "intent.extra.key"= "com.twofortyfouram.locale.intent.extra.BUNDLE"
 "condition"= "None"
 "action"= "Start Replay"
 
-[ENVIRONMENTS.Aman_Manwe_Bilbo.src.ez]
+[ENVIRONMENTS.Z5.src.ez]
 "appendingrecord"= false
 "hidepanel"= true
 "closeafteraction"= false
 "silent"= false        
 
 # Platform settings -> sink
-[ENVIRONMENTS.Aman_Manwe_Bilbo.snk]
+[ENVIRONMENTS.Z5.snk]
 # logging
 logging.log_level = "info"
 
@@ -148,41 +111,35 @@ host.start_immediately = false
 
 # --------------------------------------------------------------------------
 # Apps and zones
-[ENVIRONMENTS.Aman_Manwe_Frodo.APPS]
+[ENVIRONMENTS.S5.APPS]
 src = {executable = "com.cygery.repetitouch.pro/com.cygery.repetitouch.pro.FireReceiver", zone = "bigLITTLE", type="standalone"}
 snk = {executable = "ch.ethz.exot.thermalsc/.MeterService", zone = "bigLITTLE"}
 
-[ENVIRONMENTS.Aman_Manwe_Frodo.APPS."ttb"]
-executable = "/home/rocketlogger/exot/bin/ttb_phase_temp_time.sh"
-type = "standalone"
-start_individually = true
-zone = "ttb"
-
 # Platform settings -> source
-[ENVIRONMENTS.Aman_Manwe_Frodo.src]
+[ENVIRONMENTS.S5.src]
 COMPONENT_NAME="ch.ethz.exot.intentproxy/.IntentProxyService"
 ACTION="ch.ethz.exot.intents.IntentProxy.action.BUNDLE_EXTRAS"
 
-[ENVIRONMENTS.Aman_Manwe_Frodo.src.ei]
+[ENVIRONMENTS.S5.src.ei]
 "intent.flags"= 20
 "looptimes"= 1
 "replayspeed"= 1
 
-[ENVIRONMENTS.Aman_Manwe_Frodo.src.es]
+[ENVIRONMENTS.S5.src.es]
 "intent.component"= "com.cygery.repetitouch.pro/com.cygery.repetitouch.pro.FireReceiver"
 "intent.action"= "com.twofortyfouram.locale.intent.action.FIRE_SETTING"
 "intent.extra.key"= "com.twofortyfouram.locale.intent.extra.BUNDLE"
 "condition"= "None"
 "action"= "Start Replay"
 
-[ENVIRONMENTS.Aman_Manwe_Frodo.src.ez]
+[ENVIRONMENTS.S5.src.ez]
 "appendingrecord"= false
 "hidepanel"= true
 "closeafteraction"= false
 "silent"= false        
 
 # Platform settings -> sink
-[ENVIRONMENTS.Aman_Manwe_Frodo.snk]
+[ENVIRONMENTS.S5.snk]
 # logging
 logging.log_level = "info"
 

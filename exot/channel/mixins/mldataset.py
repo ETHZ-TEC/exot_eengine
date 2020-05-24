@@ -26,54 +26,55 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # 
-"""TODO
+"""Classes for generic machine learning data sets, for easier handling of data.
 """
 
 import abc
 import enum
 import inspect
 import math
-import numpy as np
 import os
-import toml
-
 from pathlib import Path
 
+import numpy as np
+import toml
+
 from exot.util.logging import get_root_logger
-from exot.util.mixins import (
-    Pickleable,
-    )
+from exot.util.mixins import Pickleable
 
 __all__ = (
-        "DatasetType",
-        "GenericDatasetHandler",
-        "TrainX",
-        "TrainY",
-        "TrainSampleLen",
-        "TrainWeights",
-        "TestX",
-        "TestY",
-        "TestSampleLen",
-        "TestWeights",
-        "VerifX",
-        "VerifY",
-        "VerifSampleLen",
-    )
+    "DatasetType",
+    "GenericDatasetHandler",
+    "TrainX",
+    "TrainY",
+    "TrainSampleLen",
+    "TrainWeights",
+    "TestX",
+    "TestY",
+    "TestSampleLen",
+    "TestWeights",
+    "VerifX",
+    "VerifY",
+    "VerifSampleLen",
+)
+
 
 @enum.unique
 class DatasetType(enum.IntEnum):
     """Stream types"""
-    Training     = enum.auto()
-    Test         = enum.auto()
+
+    Training = enum.auto()
+    Test = enum.auto()
     Verification = enum.auto()
+
 
 class GenericDataSetHandler(Pickleable, metaclass=abc.ABCMeta):
     @property
     def train_set(self):
         datasets = {}
         for cls in inspect.getmro(type(self)):
-            if hasattr(cls, 'is_dataset'):
-                if(cls.is_dataset()[0] == DatasetType.Training):
+            if hasattr(cls, "is_dataset"):
+                if cls.is_dataset()[0] == DatasetType.Training:
                     datasets[cls.is_dataset()[1]] = getattr(self, cls.is_dataset()[2])
         return datasets
 
@@ -81,8 +82,8 @@ class GenericDataSetHandler(Pickleable, metaclass=abc.ABCMeta):
     def test_set(self):
         datasets = {}
         for cls in inspect.getmro(type(self)):
-            if hasattr(cls, 'is_dataset'):
-                if(cls.is_dataset()[0] == DatasetType.Test):
+            if hasattr(cls, "is_dataset"):
+                if cls.is_dataset()[0] == DatasetType.Test:
                     datasets[cls.is_dataset()[1]] = getattr(self, cls.is_dataset()[2])
         return datasets
 
@@ -90,15 +91,15 @@ class GenericDataSetHandler(Pickleable, metaclass=abc.ABCMeta):
     def verification_set(self):
         datasets = {}
         for cls in inspect.getmro(type(self)):
-            if hasattr(cls, 'is_dataset'):
-                if(cls.is_dataset()[0] == DatasetType.Verification):
+            if hasattr(cls, "is_dataset"):
+                if cls.is_dataset()[0] == DatasetType.Verification:
                     datasets[cls.is_dataset()[1]] = getattr(self, cls.is_dataset()[2])
         return datasets
 
     def remove_dataset(self) -> None:
         """Serialise a Dataset"""
         self.remove_mapping("train_set", path=self.path_dataset, prefix="train_")
-        self.remove_mapping("test_set",  path=self.path_dataset, prefix="test_")
+        self.remove_mapping("test_set", path=self.path_dataset, prefix="test_")
         self.remove_mapping("verification_set", path=self.path_dataset, prefix="verif_")
         if self.path_dataset.joinpath("_parameters.toml").exists():
             os.remove(self.path_dataset.joinpath("_parameters.toml"))
@@ -107,7 +108,7 @@ class GenericDataSetHandler(Pickleable, metaclass=abc.ABCMeta):
     def write_dataset(self) -> None:
         """Serialise a Dataset"""
         self.save_mapping("train_set", path=self.path_dataset, prefix="train_")
-        self.save_mapping("test_set",  path=self.path_dataset, prefix="test_")
+        self.save_mapping("test_set", path=self.path_dataset, prefix="test_")
         self.save_mapping("verification_set", path=self.path_dataset, prefix="verif_")
         with self.path_dataset.joinpath("_parameters.toml").open("w") as parameterfile:
             toml.dump(self.dataset_parameters_to_dict(), parameterfile)
@@ -118,7 +119,7 @@ class GenericDataSetHandler(Pickleable, metaclass=abc.ABCMeta):
         train_set = self.load_mapping(path=self.path_dataset, prefix="train_")
         for key in train_set:
             setattr(self, "train_" + key, train_set[key])
-        test_set  = self.load_mapping(path=self.path_dataset, prefix="test_")
+        test_set = self.load_mapping(path=self.path_dataset, prefix="test_")
         for key in test_set:
             setattr(self, "test_" + key, test_set[key])
         verif_set = self.load_mapping(path=self.path_dataset, prefix="verif_")
@@ -155,7 +156,7 @@ class GenericDataSetHandler(Pickleable, metaclass=abc.ABCMeta):
 
     @property
     def num_train_batches(self):
-        if not hasattr(self, '_num_train_batches'):
+        if not hasattr(self, "_num_train_batches"):
             self._num_train_batches = None
         return self._num_train_batches
 
@@ -165,7 +166,7 @@ class GenericDataSetHandler(Pickleable, metaclass=abc.ABCMeta):
 
     @property
     def num_test_batches(self):
-        if not hasattr(self, '_num_test_batches'):
+        if not hasattr(self, "_num_test_batches"):
             self._num_test_batches = None
         return self._num_test_batches
 
@@ -175,7 +176,7 @@ class GenericDataSetHandler(Pickleable, metaclass=abc.ABCMeta):
 
     @property
     def num_verif_batches(self):
-        if not hasattr(self, '_num_verif_batches'):
+        if not hasattr(self, "_num_verif_batches"):
             self._num_verif_batches = None
         return self._num_verif_batches
 
@@ -185,11 +186,11 @@ class GenericDataSetHandler(Pickleable, metaclass=abc.ABCMeta):
 
     def dataset_parameters_to_dict(self) -> dict:
         return dict(
-            batch_size        = self.batch_size,
-            num_feature_dims  = self.num_feature_dims,
-            num_train_batches = self.num_train_batches,
-            num_test_batches  = self.num_test_batches,
-            num_verif_batches = self.num_verif_batches,
+            batch_size=self.batch_size,
+            num_feature_dims=self.num_feature_dims,
+            num_train_batches=self.num_train_batches,
+            num_test_batches=self.num_test_batches,
+            num_verif_batches=self.num_verif_batches,
         )
 
     def dataset_parameters_from_dict(self, param_dict: dict) -> None:
@@ -203,6 +204,7 @@ class GenericDataSetHandler(Pickleable, metaclass=abc.ABCMeta):
         if len(not_set) > 0:
             get_root_logger().warning(f"Following attributes could not be set: {not_set}")
 
+
 class TrainX(metaclass=abc.ABCMeta):
     @staticmethod
     def is_dataset():
@@ -210,21 +212,22 @@ class TrainX(metaclass=abc.ABCMeta):
 
     @property
     def train_X_shape(self):
-        if hasattr(self, '_train_X'):
+        if hasattr(self, "_train_X"):
             return self._train_X.shape
         else:
             return None
 
     @property
     def train_X(self):
-        return getattr(self, '_train_X', None)
+        return getattr(self, "_train_X", None)
 
     @train_X.setter
     def train_X(self, value):
         if isinstance(value, np.ndarray):
-            self._train_X = value.astype('float32')
+            self._train_X = value.astype("float32")
         else:
             raise ValueError(f"Wrong type for X, is {type(value)} but should be numpy.ndarray.")
+
 
 class TrainY(metaclass=abc.ABCMeta):
     @staticmethod
@@ -233,21 +236,22 @@ class TrainY(metaclass=abc.ABCMeta):
 
     @property
     def train_Y_shape(self):
-        if hasattr(self, '_train_Y'):
+        if hasattr(self, "_train_Y"):
             return self._train_Y.shape
         else:
             return None
 
     @property
     def train_Y(self):
-        return getattr(self, '_train_Y', None)
+        return getattr(self, "_train_Y", None)
 
     @train_Y.setter
     def train_Y(self, value):
         if isinstance(value, np.ndarray):
-            self._train_Y = value.astype('int32')
+            self._train_Y = value.astype("int32")
         else:
             raise ValueError(f"Wrong type for Y, is {type(value)} but should be numpy.ndarray.")
+
 
 class TrainSampleLen(metaclass=abc.ABCMeta):
     @staticmethod
@@ -256,7 +260,7 @@ class TrainSampleLen(metaclass=abc.ABCMeta):
 
     @property
     def train_actual_batch_len_shape(self):
-        if hasattr(self, '_train_actual_batch_len'):
+        if hasattr(self, "_train_actual_batch_len"):
             return self._train_actual_batch_len.shape
         else:
             return None
@@ -264,14 +268,17 @@ class TrainSampleLen(metaclass=abc.ABCMeta):
 
     @property
     def train_actual_batch_len(self):
-        return getattr(self, '_train_actual_batch_len', None)
+        return getattr(self, "_train_actual_batch_len", None)
 
     @train_actual_batch_len.setter
     def train_actual_batch_len(self, value):
         if isinstance(value, np.ndarray):
-            self._train_actual_batch_len = value.astype('int32')
+            self._train_actual_batch_len = value.astype("int32")
         else:
-            raise ValueError(f"Wrong type for train_actual_batch_len, is {type(value)} but should be numpy.ndarray.")
+            raise ValueError(
+                f"Wrong type for train_actual_batch_len, is {type(value)} but should be numpy.ndarray."
+            )
+
 
 class TrainWeights(metaclass=abc.ABCMeta):
     @staticmethod
@@ -280,7 +287,7 @@ class TrainWeights(metaclass=abc.ABCMeta):
 
     @property
     def train_weights_shape(self):
-        if hasattr(self, '_train_weights'):
+        if hasattr(self, "_train_weights"):
             return self._train_weights.shape
         else:
             return None
@@ -288,14 +295,17 @@ class TrainWeights(metaclass=abc.ABCMeta):
 
     @property
     def train_weights(self):
-        return getattr(self, '_train_weights', None)
+        return getattr(self, "_train_weights", None)
 
     @train_weights.setter
     def train_weights(self, value):
         if isinstance(value, np.ndarray):
-            self._train_weights = value.astype('float32')
+            self._train_weights = value.astype("float32")
         else:
-            raise ValueError(f"Wrong type for weights, is {type(value)} but should be numpy.ndarray.")
+            raise ValueError(
+                f"Wrong type for weights, is {type(value)} but should be numpy.ndarray."
+            )
+
 
 class TestX(metaclass=abc.ABCMeta):
     @staticmethod
@@ -304,7 +314,7 @@ class TestX(metaclass=abc.ABCMeta):
 
     @property
     def test_X_shape(self):
-        if hasattr(self, '_test_X'):
+        if hasattr(self, "_test_X"):
             return self._test_X.shape
         else:
             return None
@@ -312,14 +322,15 @@ class TestX(metaclass=abc.ABCMeta):
 
     @property
     def test_X(self):
-        return getattr(self, '_test_X', None)
+        return getattr(self, "_test_X", None)
 
     @test_X.setter
     def test_X(self, value):
         if isinstance(value, np.ndarray):
-            self._test_X = value.astype('float32')
+            self._test_X = value.astype("float32")
         else:
             raise ValueError(f"Wrong type for X, is {type(value)} but should be numpy.ndarray.")
+
 
 class TestY(metaclass=abc.ABCMeta):
     @staticmethod
@@ -328,7 +339,7 @@ class TestY(metaclass=abc.ABCMeta):
 
     @property
     def test_Y_shape(self):
-        if hasattr(self, '_test_Y'):
+        if hasattr(self, "_test_Y"):
             return self._test_Y.shape
         else:
             return None
@@ -336,14 +347,15 @@ class TestY(metaclass=abc.ABCMeta):
 
     @property
     def test_Y(self):
-        return getattr(self, '_test_Y', None)
+        return getattr(self, "_test_Y", None)
 
     @test_Y.setter
     def test_Y(self, value):
         if isinstance(value, np.ndarray):
-            self._test_Y = value.astype('int32')
+            self._test_Y = value.astype("int32")
         else:
             raise ValueError(f"Wrong type for Y, is {type(value)} but should be numpy.ndarray.")
+
 
 class TestSampleLen(metaclass=abc.ABCMeta):
     @staticmethod
@@ -352,7 +364,7 @@ class TestSampleLen(metaclass=abc.ABCMeta):
 
     @property
     def test_actual_batch_len_shape(self):
-        if hasattr(self, '_test_actual_batch_len'):
+        if hasattr(self, "_test_actual_batch_len"):
             return self._test_actual_batch_len.shape
         else:
             return None
@@ -360,14 +372,17 @@ class TestSampleLen(metaclass=abc.ABCMeta):
 
     @property
     def test_actual_batch_len(self):
-        return getattr(self, '_test_actual_batch_len', None)
+        return getattr(self, "_test_actual_batch_len", None)
 
     @test_actual_batch_len.setter
     def test_actual_batch_len(self, value):
         if isinstance(value, np.ndarray):
-            self._test_actual_batch_len = value.astype('int32')
+            self._test_actual_batch_len = value.astype("int32")
         else:
-            raise ValueError(f"Wrong type for actual_batch_len, is {type(value)} but should be numpy.ndarray.")
+            raise ValueError(
+                f"Wrong type for actual_batch_len, is {type(value)} but should be numpy.ndarray."
+            )
+
 
 class TestWeights(metaclass=abc.ABCMeta):
     @staticmethod
@@ -376,7 +391,7 @@ class TestWeights(metaclass=abc.ABCMeta):
 
     @property
     def test_weights_shape(self):
-        if hasattr(self, '_test_weights'):
+        if hasattr(self, "_test_weights"):
             return self._test_weights.shape
         else:
             return None
@@ -384,14 +399,17 @@ class TestWeights(metaclass=abc.ABCMeta):
 
     @property
     def test_weights(self):
-        return getattr(self, '_test_weights', None)
+        return getattr(self, "_test_weights", None)
 
     @test_weights.setter
     def test_weights(self, value):
         if isinstance(value, np.ndarray):
-            self._test_weights = value.astype('float32')
+            self._test_weights = value.astype("float32")
         else:
-            raise ValueError(f"Wrong type for weights, is {type(value)} but should be numpy.ndarray.")
+            raise ValueError(
+                f"Wrong type for weights, is {type(value)} but should be numpy.ndarray."
+            )
+
 
 class VerifX(metaclass=abc.ABCMeta):
     @staticmethod
@@ -400,7 +418,7 @@ class VerifX(metaclass=abc.ABCMeta):
 
     @property
     def verif_X_shape(self):
-        if hasattr(self, '_verif_X'):
+        if hasattr(self, "_verif_X"):
             return self._verif_X.shape
         else:
             return None
@@ -408,14 +426,17 @@ class VerifX(metaclass=abc.ABCMeta):
 
     @property
     def verif_X(self):
-        return getattr(self, '_verif_X', None)
+        return getattr(self, "_verif_X", None)
 
     @verif_X.setter
     def verif_X(self, value):
         if isinstance(value, np.ndarray):
-            self._verif_X = value.astype('float32')
+            self._verif_X = value.astype("float32")
         else:
-            raise ValueError(f"Wrong type for verif_X, is {type(value)} but should be numpy.ndarray.")
+            raise ValueError(
+                f"Wrong type for verif_X, is {type(value)} but should be numpy.ndarray."
+            )
+
 
 class VerifY(metaclass=abc.ABCMeta):
     @staticmethod
@@ -424,7 +445,7 @@ class VerifY(metaclass=abc.ABCMeta):
 
     @property
     def verif_Y_shape(self):
-        if hasattr(self, '_verif_Y'):
+        if hasattr(self, "_verif_Y"):
             return self._verif_Y.shape
         else:
             return None
@@ -432,24 +453,26 @@ class VerifY(metaclass=abc.ABCMeta):
 
     @property
     def verif_Y(self):
-        return getattr(self, '_verif_Y', None)
+        return getattr(self, "_verif_Y", None)
 
     @verif_Y.setter
     def verif_Y(self, value):
         if isinstance(value, np.ndarray):
-            self._verif_Y = value.astype('int32')
+            self._verif_Y = value.astype("int32")
         else:
-            raise ValueError(f"Wrong type for verif_Y, is {type(value)} but should be numpy.ndarray.")
+            raise ValueError(
+                f"Wrong type for verif_Y, is {type(value)} but should be numpy.ndarray."
+            )
+
 
 class VerifSampleLen(metaclass=abc.ABCMeta):
     @staticmethod
     def is_dataset():
         return (DatasetType.Verification, "actual_batch_len", "verif_actual_batch_len")
 
-
     @property
     def verif_actual_batch_len_shape(self):
-        if hasattr(self, '_verif_actual_batch_len'):
+        if hasattr(self, "_verif_actual_batch_len"):
             return self._verif_actual_batch_len.shape
         else:
             return None
@@ -457,12 +480,13 @@ class VerifSampleLen(metaclass=abc.ABCMeta):
 
     @property
     def verif_actual_batch_len(self):
-        return getattr(self, '_verif_actual_batch_len', None)
+        return getattr(self, "_verif_actual_batch_len", None)
 
     @verif_actual_batch_len.setter
     def verif_actual_batch_len(self, value):
         if isinstance(value, np.ndarray):
-            self._verif_actual_batch_len = value.astype('int32')
+            self._verif_actual_batch_len = value.astype("int32")
         else:
-            raise ValueError(f"Wrong type for verif_actual_batch_len, is {type(value)} but should be numpy.ndarray.")
-
+            raise ValueError(
+                f"Wrong type for verif_actual_batch_len, is {type(value)} but should be numpy.ndarray."
+            )

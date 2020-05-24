@@ -26,13 +26,13 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # 
-""" TODO
-"""
+"""Side channels that can be analysed using ExOT out-of-the-box."""
+
 import importlib
+import typing as t
 
 import numpy as np
 from numpy import inf
-import typing as t
 
 from exot.util.logging import get_root_logger
 
@@ -42,6 +42,7 @@ from .thermalsc import DataAugmentation
 if importlib.util.find_spec("tensorflow") is not None:
     from .thermalsc import AppDetection
 
+
 class SideChannel(Channel):
     pass
 
@@ -49,14 +50,13 @@ class SideChannel(Channel):
 """
 Thermal Side Channels
 ----------
-
-TODO
 """
+
+
 class ThermalSC(SideChannel):
     @property
     def analyses_classes(self):
         if importlib.util.find_spec("tensorflow") is not None:
-            return {"DataAugmentation":DataAugmentation, "AppDetection":AppDetection}  # TODO this can be done more nicely
+            return {"DataAugmentation": DataAugmentation, "AppDetection": AppDetection}
         else:
-            return {"DataAugmentation":DataAugmentation}  # TODO this can be done more nicely
-
+            return {"DataAugmentation": DataAugmentation}

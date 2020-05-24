@@ -31,27 +31,24 @@ import abc
 from exot.channel.mixins.mldataset import GenericDataSetHandler
 from exot.util.logging import get_root_logger
 
-__all__ = ("ThermalAppDecectionDataSetHandler")
+__all__ = "ThermalAppDecectionDataSetHandler"
+
 
 class ThermalAppDecectionDataSetHandler(GenericDataSetHandler):
-    # -------------------------------------------------------------------------------------------- #
-    #                                           Overwrites                                         #
-    # -------------------------------------------------------------------------------------------- #
     def dataset_parameters_to_dict(self) -> dict:
         param_dict = GenericDataSetHandler.dataset_parameters_to_dict(self)
-        param_dict['unknown_label']        = self.unknown_label
-        param_dict['num_labels']           = self.num_labels
-        param_dict['batch_size_timesteps'] = self.batch_size_timesteps
+        param_dict["unknown_label"] = self.unknown_label
+        param_dict["num_labels"] = self.num_labels
+        param_dict["batch_size_timesteps"] = self.batch_size_timesteps
         return param_dict
 
     @property
     def unknown_label(self):
-        return getattr(self, '_unknown_label', False)
+        return getattr(self, "_unknown_label", False)
 
     @unknown_label.setter
     def unknown_label(self, value: bool) -> None:
-        setattr(self, '_unknown_label', value)
-
+        setattr(self, "_unknown_label", value)
 
     @property
     def num_feature_dims(self):
@@ -75,9 +72,8 @@ class ThermalAppDecectionDataSetHandler(GenericDataSetHandler):
 
     @property
     def num_labels(self):
-        return getattr(self, '_num_labels', 0)
+        return getattr(self, "_num_labels", 0)
 
     @num_labels.setter
     def num_labels(self, value: int) -> None:
         self._num_labels = value
-

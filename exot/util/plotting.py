@@ -50,15 +50,15 @@ __all__ = ("_save_path_helper", "remove_spine", "add_spine", "rugplot")
 
 def _save_path_helper(path: t.Union[pathlib.Path, str]) -> pathlib.Path:
     """A helper function for save paths
-
+    
     Args:
         path (t.Union[pathlib.Path, str]): The save path
-
+    
     Raises:
         TypeError: Wrong type supplied
         ValueError: Provided a file instead of a directory
         RuntimeError: Directory was not created
-
+    
     Returns:
         pathlib.Path: The save path
     """
@@ -83,7 +83,7 @@ def _save_path_helper(path: t.Union[pathlib.Path, str]) -> pathlib.Path:
 
 def remove_spine(axis, which: str, ticks_only: bool = False) -> None:
     """Removes the spine from an axis
-
+    
     Args:
         axis: The matplotlib axis
         which (str): Which spine to remove? (top, bottom)
@@ -99,7 +99,7 @@ def remove_spine(axis, which: str, ticks_only: bool = False) -> None:
 
 def add_spine(axis, which: str, ticks_only: bool = False):
     """Adds a spine to an axis
-
+    
     Args:
         axis: The matplotlib axis
         which (str): Which spine to add? (top, bottom)

@@ -37,43 +37,15 @@ import scipy.interpolate
 import scipy.signal
 
 from exot.exceptions import *
-from exot.util.misc import get_valid_access_paths, getitem, is_scalar_numeric
+from exot.util.misc import (
+    get_cores_and_schedules,
+    get_valid_access_paths,
+    getitem,
+    is_scalar_numeric,
+)
 
 from .._base import Layer
-
-
-def get_cores_and_schedules(environments_apps_zones: t.Mapping) -> set:
-    e_a_z = environments_apps_zones
-    _cores_and_schedules = set()
-
-    for env in e_a_z:
-        for app in e_a_z[env]:
-            if app != "src":
-                continue
-
-            _path_to_cores = ("app_config", "generator", "cores")
-            _path_to_schedule_tag = ("zone_config", "schedule_tag")
-
-            access_paths = list(get_valid_access_paths(e_a_z[env][app]))
-
-            if _path_to_cores not in access_paths:
-                raise LayerMisconfigured(
-                    f"{env!r}->{app!r} must have a 'generator.cores' config key"
-                )
-            if _path_to_schedule_tag not in access_paths:
-                _ = e_a_z[env][app]["zone"]
-                raise LayerMisconfigured(
-                    f"{env!r}.{_!r} of app {app!r} must have a schedule_tag"
-                )
-
-            _cores_and_schedules.add(
-                (
-                    len(getitem(e_a_z[env][app], _path_to_cores)),
-                    getitem(e_a_z[env][app], _path_to_schedule_tag),
-                )
-            )
-
-    return _cores_and_schedules
+from .._mixins import RDPmixins
 
 
 """
@@ -120,14 +92,10 @@ The CoreActivation performs the following:
     Postconditions:
     -   Output is a NumPy array
     -   Output is at least twice and less than 4 times the subsymbol count
-
-
-TODO: This layer could inherit from a generic output resampling layer, and apply own
-      encoding method. Refactoring might be beneficial.
 """
 
 
-class CoreActivation(Layer, layer=Layer.Type.PrePost):
+class CoreActivation(RDPmixins, Layer, layer=Layer.Type.PrePost):
     def __init__(
         self,
         *,
@@ -212,27 +180,6 @@ class CoreActivation(Layer, layer=Layer.Type.PrePost):
         if not is_scalar_numeric(value):
             raise LayerMisconfigured("sampling_period must be an integer of float")
         self._sampling_period = value
-
-    @property
-    def cores_and_schedules(self):
-        """Get the cores and schedules set of 2-tuples"""
-        return self._cores_and_schedules
-
-    @cores_and_schedules.setter
-    def cores_and_schedules(self, value):
-        """Set the cores and schedules set of 2-tuples"""
-        try:
-            assert isinstance(value, set), "must be a set"
-            all(
-                isinstance(_, tuple) and len(_) == 2 for _ in value
-            ), "must contain only 2-tuples"
-            all(
-                isinstance(_[0], int) and isinstance(_[1], str) for _ in value
-            ), "must contain 2-tuples of (int, str)"
-        except AssertionError as e:
-            raise LayerMisconfigured("cores_and_schedules {}, got {}".format(*e.args, value))
-
-        self._cores_and_schedules = value
 
     @property
     def saturating(self):
@@ -371,14 +318,12 @@ class CoreActivation(Layer, layer=Layer.Type.PrePost):
             0.15 * timestamps.diff().mean() + 0.85 * timestamps.diff().median()
         )
 
-        if abs(sampling_period_inferred - self.sampling_period)  / self.sampling_period > 0.1:
+        if abs(sampling_period_inferred - self.sampling_period) / self.sampling_period > 0.1:
             pass
-            # TODO here we need a logger output to tell the user somethings off with the timestamps
 
-        orig_samples_per_symbol      = 1 / (self.sampling_period * self.config.symbol_rate)
-        subsymbol_count              = self.config.subsymbol_rate / self.config.symbol_rate
+        orig_samples_per_symbol = 1 / (self.sampling_period * self.config.symbol_rate)
+        subsymbol_count = self.config.subsymbol_rate / self.config.symbol_rate
         self._new_samples_per_symbol = max([subsymbol_count * 100, orig_samples_per_symbol])
-        #self._new_samples_per_symbol = orig_samples_per_symbol
 
         # make sure that the _samples_per_symbol is a multiple of subsymbol_count
         if self._new_samples_per_symbol % subsymbol_count != 0:
@@ -434,8 +379,8 @@ class CoreActivation(Layer, layer=Layer.Type.PrePost):
             "length_limit": length_limit,
             "self._resampling_factor": self._resampling_factor,
             "self._new_samples_per_symbol": self._new_samples_per_symbol,
-            "self.interpolation":self.interpolation,
-#            "time_offset":time_offset,
+            "self.interpolation": self.interpolation,
+            #            "time_offset":time_offset,
         }
 
         self._decode_timestamps = resampled_timestamps[:length_limit].reshape(

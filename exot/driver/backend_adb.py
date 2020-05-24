@@ -83,31 +83,31 @@ class ADBBackend(Backend):
 
     @property
     def adb_port(self) -> str:
-        return self._adb_params['port']
+        return self._adb_params["port"]
 
     @adb_port.setter
     def adb_port(self, value: str) -> None:
-        self._adb_params['port'] = value
+        self._adb_params["port"] = value
 
     @property
     def adb_ip(self) -> str:
-        return self._adb_params['ip']
+        return self._adb_params["ip"]
 
     @adb_ip.setter
     def adb_ip(self, value: str) -> None:
-        self._adb_params['ip'] = new_ip
+        self._adb_params["ip"] = new_ip
 
     @property
     def adb_stdout(self) -> str:
-        return self._adb_params['stdout'] + str(self._adb_params['port'])
+        return self._adb_params["stdout"] + str(self._adb_params["port"])
 
     @property
     def adb_stderr(self) -> str:
-        return self._adb_params['stdout'] + str(self._adb_params['port'])
+        return self._adb_params["stdout"] + str(self._adb_params["port"])
 
     @property
     def adb_key(self) -> str:
-        return self._adb_params['key'] + str(self._adb_params['port'])
+        return self._adb_params["key"] + str(self._adb_params["port"])
 
     @property
     def adb_params(self) -> dict:
@@ -252,17 +252,15 @@ class ADBBackend(Backend):
                 if spawn_new_server:
                     get_root_logger().warning(
                         "ADB server already running pids: {pids!r}. Starting server on port {where}".format(
-                            pids=pids,
-                            where=self.adb_port,
+                            pids=pids, where=self.adb_port
                         )
                     )
                 else:
                     get_root_logger().warning(
                         "ADB server already running with pids: {pids!r}. Reusing server on port {where}".format(
-                            pids=pids,
-                            where=self.adb_port,
-                            )
+                            pids=pids, where=self.adb_port
                         )
+                    )
 
         if spawn_new_server:
             cmd = (
@@ -469,20 +467,22 @@ class ADBBackend(Backend):
 
                 # Try to reconnect using exponentiall back-off waiting time
                 max_retries = 5
-                for retries in range(1,max_retries):
-                    sleep(2**(retries)-1)
+                for retries in range(1, max_retries):
+                    sleep(2 ** (retries) - 1)
                     self._adb_wrapper(["connect", f"{ip}:{port}"], history=False)
                     if connection_is_ok():
                         break
                     else:
-                      # Try to restart the adb connection. Sometimes even if the connection seems not ok
-                      # we can still access the device as adb is simply messed up but not fully broken.
-                      self._adb_wrapper(["shell", "su", "-c", "setprop", "ctl.restart", "adbd"])
-                      if retries == (max_retries - 1):
-                          # As a last resort, try to reboot the phone
-                          sleep(2)
-                          self._adb_wrapper(["shell", "su", "-c", "reboot"])
-                          sleep(60 * 5)  # Wait for five minutes until the phone is back up
+                        # Try to restart the adb connection. Sometimes even if the connection seems not ok
+                        # we can still access the device as adb is simply messed up but not fully broken.
+                        self._adb_wrapper(
+                            ["shell", "su", "-c", "setprop", "ctl.restart", "adbd"]
+                        )
+                        if retries == (max_retries - 1):
+                            # As a last resort, try to reboot the phone
+                            sleep(2)
+                            self._adb_wrapper(["shell", "su", "-c", "reboot"])
+                            sleep(60 * 5)  # Wait for five minutes until the phone is back up
 
                 if not connection_is_ok():
                     raise BackendRuntimeError(
@@ -514,7 +514,7 @@ class ADBBackend(Backend):
             if isinstance(cmd, t.List):
                 cmd = [*cmd, *retval]
             else:
-                cmd = cmd.split(' ')
+                cmd = cmd.split(" ")
                 cmd = [*cmd, *retval]
 
             pre = ["shell"]
@@ -523,8 +523,8 @@ class ADBBackend(Backend):
             else:
                 cmd = " ".join([list2cmdline(pre), quote(cmd)])
 
-            return_cmd        = self._adb_device_wrapper(cmd, **kwargs)
-            if(len(return_cmd.stdout) > 0):
+            return_cmd = self._adb_device_wrapper(cmd, **kwargs)
+            if len(return_cmd.stdout) > 0:
                 if return_cmd.stdout[-1].isdigit():
                     return_cmd.exited = int(return_cmd.stdout[-1])
                     return_cmd.stdout = return_cmd.stdout.rstrip(str(return_cmd.exited))

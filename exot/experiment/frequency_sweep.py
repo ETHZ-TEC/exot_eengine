@@ -40,7 +40,7 @@ from exot.exceptions import *
 from exot.util.attributedict import AttributeDict
 from exot.util.misc import safe_eval, validate_helper
 from exot.util.scinum import get_nearest_index, get_welch
-from exot.util.wrangle import Matcher, run_path_formatter
+from exot.util.wrangle import Matcher
 
 from ._base import Experiment, Run
 from ._mixins import *
@@ -51,7 +51,7 @@ global COLUMN_FREQ
 global COLUMN_PSD
 
 COLUMN_FREQ = "frequency:fft::Hz"
-#COLUMN_PSD = "power_spectral_density:*/Hz"
+# COLUMN_PSD = "power_spectral_density:*/Hz"
 COLUMN_PSD = "power_spectral_density:K²/Hz"
 
 
@@ -321,7 +321,7 @@ class FrequencySweepExperiment(
                     {
                         "variable": str(Syy["variable"].iloc[-1]),
                         COLUMN_FREQ: Syy[COLUMN_FREQ].iloc[-1],
-                        COLUMN_PSD: Syy[COLUMN_PSD].iloc[-1]/Sxx[COLUMN_PSD].iloc[-1],
+                        COLUMN_PSD: Syy[COLUMN_PSD].iloc[-1] / Sxx[COLUMN_PSD].iloc[-1],
                     },
                     ignore_index=True,
                 )
@@ -429,30 +429,20 @@ class FrequencySweepExperiment(
 """
 FrequencySweepRun
 --------------
-
-FrequencySweep runs are considered to be immutable during the Experiment execution. Once
-the configuration is provided, the instance is 'frozen' and the config should not be
-updated.
-
-Values that are always provided to layers at runtime:
-- From a Run's config: phase, length_seconds, frequency, repetitions,
-- Obtained from a Run's config and the parent: bit_rate.
-
-Values in the parent Experiment can be easily accessed through the parent proxy:
-`self.parent`.
 """
 
 
 class FrequencySweepRun(
     Run,
     StreamHandler,
-    Ilnestream, Irdpstream, Irawstream,
-    Olnestream, Ordpstream, Orawstream, Oschedules,
-    serialise_save=[
-        "o_lnestream",
-        "o_rdpstream",
-        "o_rawstream",
-        "o_schedules",],
+    Ilnestream,
+    Irdpstream,
+    Irawstream,
+    Olnestream,
+    Ordpstream,
+    Orawstream,
+    Oschedules,
+    serialise_save=["o_lnestream", "o_rdpstream", "o_rawstream", "o_schedules"],
     serialise_ignore=[
         "o_fspectrum",
         "i_rawstream",
@@ -463,9 +453,8 @@ class FrequencySweepRun(
     parent=FrequencySweepExperiment,
 ):
     @property
-    def path(self):
-        formatted_directory = run_path_formatter(self.config.phase, self.config.frequency_id)
-        return Path.joinpath(self.parent.path, formatted_directory)
+    def identifier(self):
+        return self.config.frequency_id
 
     @classmethod
     def read(cls, path: Path, parent: t.Optional[object] = None) -> object:
@@ -632,20 +621,20 @@ class FrequencySweepRun(
             self.parent.config.ENVIRONMENTS[kwargs.get("io")["env"]].APPS.src.zone
         ]["schedule_tag"]
 
-
         def resample_o_lnestream():
             data = np.vstack(
-                [np.hstack([0, self.o_rdpstream["timestamp"].values.cumsum()]), np.hstack([self.o_lnestream[0], self.o_lnestream])]
+                [
+                    np.hstack([0, self.o_rdpstream["timestamp"].values.cumsum()]),
+                    np.hstack([self.o_lnestream[0], self.o_lnestream]),
+                ]
             ).transpose()
-            interpolation = interpolate.interp1d(
-                data[:, 0], data[:, 1], kind="next"
-            )
-            #x_new = np.arange(
+            interpolation = interpolate.interp1d(data[:, 0], data[:, 1], kind="next")
+            # x_new = np.arange(
             #    data[0, 0],
             #    data[:, 0].cumsum()[-1],
             #    self.parent.config.EXPERIMENT.GENERAL.sampling_period,
-            #)
-            x_new = self.i_rdpstream.iloc[:,0].to_numpy()
+            # )
+            x_new = self.i_rdpstream.iloc[:, 0].to_numpy()
 
             try:
                 data_new = interpolation(x_new)

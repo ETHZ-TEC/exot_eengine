@@ -121,7 +121,7 @@ def run_path_formatter(*param: t.Hashable) -> str:
         else:
             return "{}".format(x)
 
-    formatted = "_".join(visitor(x) for x in param)
+    formatted = "/".join(visitor(x) for x in param)
 
     if any(c in whitespace for c in formatted):
         raise ValueError(f"formatted path contained whitespace: {formatted!r}")
@@ -129,14 +129,15 @@ def run_path_formatter(*param: t.Hashable) -> str:
     return formatted
 
 
-def run_path_unformatter(path: str) -> t.Tuple:
+def run_path_unformatter(path: Path) -> t.Tuple:
     """Produce parameters from a formatted path"""
 
-    assert isinstance(path, str), "path must be a str"
-    assert not any(c in whitespace for c in path), "no whitespace in valid path"
-    split = path.split("_")
+    assert isinstance(path, Path), "path must be a str"
+    assert path.name == "_run.pickle", "path does not point to a _run.pickle file"
+    split = [path.parent.parent.name, path.parent.name]
 
     def visitor(x):
+        assert not any(c in whitespace for c in x), "no whitespace in valid path"
         if "-" in x:
             return tuple(visitor(_x) for _x in x.split("-"))
         elif x.isdigit():

@@ -28,13 +28,12 @@
 # 
 """Resampling RDP layers"""
 import copy
+import math
 import typing as t
 
-import math
 import numpy as np
 import pandas as pd
 import scipy.signal
-
 from scipy import interpolate
 
 from exot.exceptions import *
@@ -43,6 +42,7 @@ from exot.util.misc import get_valid_access_paths, getitem, is_scalar_numeric
 from exot.util.wrangle import *
 
 from .._base import Layer
+
 
 class Normalise(Layer, layer=Layer.Type.PrePost):
     def __init__(
@@ -60,8 +60,8 @@ class Normalise(Layer, layer=Layer.Type.PrePost):
             offset (float): the offset of the measured value which will be compensated
             environments_apps_zones (t.Mapping): the env->app->zone mapping
         """
-        self.resampling_period_s     = resampling_period_s
-        self.offset                  = offset
+        self.resampling_period_s = resampling_period_s
+        self.offset = offset
         self.environments_apps_zones = environments_apps_zones
 
     @property
@@ -117,10 +117,24 @@ class Normalise(Layer, layer=Layer.Type.PrePost):
             if "env" in self.config:
                 assert isinstance(self.config.env, str), ("env", str, type(self.config.env))
             if "mapping" in self.config:
-                assert isinstance(self.config.mapping, tuple), ("Mapping", tuple, type(self.config.mapping))
-                assert len(self.config.mapping) == 2, "Mapping needs to have two elements (Matcher, dict)"
-                assert isinstance(self.config.mapping[0], Matcher), ("Mapping[0]", Matcher, type(self.config.mapping[0]))
-                assert isinstance(self.config.mapping[1], (LabelMapping, dict)), ("Mapping[1]", (LabelMapping, dict), type(self.config.mapping[1]))
+                assert isinstance(self.config.mapping, tuple), (
+                    "Mapping",
+                    tuple,
+                    type(self.config.mapping),
+                )
+                assert (
+                    len(self.config.mapping) == 2
+                ), "Mapping needs to have two elements (Matcher, dict)"
+                assert isinstance(self.config.mapping[0], Matcher), (
+                    "Mapping[0]",
+                    Matcher,
+                    type(self.config.mapping[0]),
+                )
+                assert isinstance(self.config.mapping[1], (LabelMapping, dict)), (
+                    "Mapping[1]",
+                    (LabelMapping, dict),
+                    type(self.config.mapping[1]),
+                )
         except AssertionError as e:
             raise MisconfiguredError("timevalue: {} expected {}, got: {}".format(*e.args[0]))
 
@@ -160,26 +174,40 @@ class Normalise(Layer, layer=Layer.Type.PrePost):
             np.ndarray: a resampled and reshaped array, of width that is a multiple of
             the subsymbol_count, in the range [2 × subsymbol_count, 4 × subsymbol_count]
         """
-        n_steps        = math.floor((rdpstream[rdpstream.columns[0]].iloc[-2] - rdpstream[rdpstream.columns[0]].iloc[0] ) / self.resampling_period_s)
-        lnestream      = np.empty((n_steps+1, rdpstream.shape[1]))
-        lnestream[:,0] = np.linspace(0, n_steps * self.resampling_period_s, n_steps+1)
-        cols_to_map    = rdpstream[self.config.mapping[0]].columns
-        normalisation  = self.environments_apps_zones[self.config.env]['snk']['zone_config']['T_norm']
+        n_steps = math.floor(
+            (rdpstream[rdpstream.columns[0]].iloc[-2] - rdpstream[rdpstream.columns[0]].iloc[0])
+            / self.resampling_period_s
+        )
+        lnestream = np.empty((n_steps + 1, rdpstream.shape[1]))
+        lnestream[:, 0] = np.linspace(0, n_steps * self.resampling_period_s, n_steps + 1)
+        cols_to_map = rdpstream[self.config.mapping[0]].columns
+        normalisation = self.environments_apps_zones[self.config.env]["snk"]["zone_config"][
+            "T_norm"
+        ]
         for idx in range(1, len(rdpstream.columns)):
             key = rdpstream.columns[idx]
             if key in cols_to_map:
-                tmp = np.full(rdpstream[key].shape, self.config.mapping[1]['UNKNOWN']['int'])
+                tmp = np.full(rdpstream[key].shape, self.config.mapping[1]["UNKNOWN"]["int"])
                 for map_key in self.config.mapping[1]:
-                    tmp[rdpstream[key]==map_key] = self.config.mapping[1][map_key]['int']
-                non_numeric_interpolation = interpolate.interp1d(rdpstream[rdpstream.columns[0]], tmp, kind='nearest')
-                lnestream[:,idx] = non_numeric_interpolation(lnestream[:,0])
+                    tmp[rdpstream[key] == map_key] = self.config.mapping[1][map_key]["int"]
+                non_numeric_interpolation = interpolate.interp1d(
+                    rdpstream[rdpstream.columns[0]], tmp, kind="nearest"
+                )
+                lnestream[:, idx] = non_numeric_interpolation(lnestream[:, 0])
             elif np.issubdtype(rdpstream[key], np.number):
                 if key in normalisation.keys():
-                    lnestream[:,idx] = np.interp(lnestream[:,0], rdpstream[rdpstream.columns[0]], rdpstream[key] / normalisation[key] - self.offset)
+                    lnestream[:, idx] = np.interp(
+                        lnestream[:, 0],
+                        rdpstream[rdpstream.columns[0]],
+                        rdpstream[key] / normalisation[key] - self.offset,
+                    )
                 else:
-                    lnestream[:,idx] = np.interp(lnestream[:,0], rdpstream[rdpstream.columns[0]], rdpstream[key] - self.offset)
+                    lnestream[:, idx] = np.interp(
+                        lnestream[:, 0],
+                        rdpstream[rdpstream.columns[0]],
+                        rdpstream[key] - self.offset,
+                    )
             else:
                 raise Exception(f"No mapping found for column {key}")
 
         return lnestream
-

@@ -340,10 +340,7 @@ Base class for serialisation mixins.
 class Serialisable(metaclass=abc.ABCMeta):
     """Abstract base class for serialisers"""
 
-    def __init_subclass__(
-        cls,
-        **kwargs,
-    ):
+    def __init_subclass__(cls, **kwargs):
         """Initialise a subclass
 
         -   Attributes in `serialise_ignore` will be deleted from the instance before
@@ -580,9 +577,8 @@ class Serialisable(metaclass=abc.ABCMeta):
                 _pd_store.put(name, values)
         return hdf_path
 
-
     def save_data(
-        self, *, prefix: t.Optional[str] = '', path: t.Optional[Path] = None
+        self, *, prefix: t.Optional[str] = "", path: t.Optional[Path] = None
     ) -> t.List[Path]:
         """Save input and output data in NumPy archives and/or HDF5 stores.
 
@@ -606,11 +602,23 @@ class Serialisable(metaclass=abc.ABCMeta):
                 continue
 
             if isinstance(getattr(self, attribute), np.ndarray):
-                _saved_paths.append(self._save_npz(_filepath / (prefix + attribute + ".npz"), {attribute: getattr(self, attribute)}))
+                _saved_paths.append(
+                    self._save_npz(
+                        _filepath / (prefix + attribute + ".npz"),
+                        {attribute: getattr(self, attribute)},
+                    )
+                )
             elif isinstance(getattr(self, attribute), (pd.DataFrame, pd.Series, pd.Panel)):
-                _saved_paths.append(self._save_hdf(_filepath / (prefix + attribute + ".h5"), {attribute: getattr(self, attribute)}))
+                _saved_paths.append(
+                    self._save_hdf(
+                        _filepath / (prefix + attribute + ".h5"),
+                        {attribute: getattr(self, attribute)},
+                    )
+                )
             elif isinstance(getattr(self, attribute), t.Mapping):
-                _saved_paths.append(self.save_mapping(attribute, prefix, path, save_bundled=True))
+                _saved_paths.append(
+                    self.save_mapping(attribute, prefix, path, save_bundled=True)
+                )
             else:
                 raise SerialisableDataSaveError(
                     f"Failed saving {attribute} from 'serialise_to_save', "
@@ -620,7 +628,11 @@ class Serialisable(metaclass=abc.ABCMeta):
         return _saved_paths
 
     def save_mapping(
-        self, attribute, prefix: t.Optional[str] = '', path: t.Optional[Path] = None, save_bundled: t.Optional[bool] = False
+        self,
+        attribute,
+        prefix: t.Optional[str] = "",
+        path: t.Optional[Path] = None,
+        save_bundled: t.Optional[bool] = False,
     ) -> t.List[Path]:
         _saved_paths = list()
         _flattened_holder = flatten_dict(getattr(self, attribute), self._serialise_sep)
@@ -662,20 +674,28 @@ class Serialisable(metaclass=abc.ABCMeta):
                 _saved_paths.append(_pd_path)
         else:
             for name, value in _flattened_holder.items():
-                 if isinstance(value, np.ndarray):
-                     _saved_paths.append(self._save_npz(_filepath / (prefix + name + ".npz"), {name: value}))
-                 elif isinstance(value, (pd.DataFrame, pd.Series, pd.Panel)):
-                     _saved_paths.append(self._save_hdf(_filepath / (prefix + name + ".h5"), {name: value}))
-                 else:
-                     #raise SerialisableDataSaveError(
-                     get_root_logger().info(
-                         f"type {type(value)!r} in {name!r} cannot be serialised"
-                     )
+                if isinstance(value, np.ndarray):
+                    _saved_paths.append(
+                        self._save_npz(_filepath / (prefix + name + ".npz"), {name: value})
+                    )
+                elif isinstance(value, (pd.DataFrame, pd.Series, pd.Panel)):
+                    _saved_paths.append(
+                        self._save_hdf(_filepath / (prefix + name + ".h5"), {name: value})
+                    )
+                else:
+                    # raise SerialisableDataSaveError(
+                    get_root_logger().info(
+                        f"type {type(value)!r} in {name!r} cannot be serialised"
+                    )
 
         return _saved_paths
 
     def remove_mapping(
-        self, attribute, prefix: t.Optional[str] = '', path: t.Optional[Path] = None, saved_bundled: t.Optional[bool] = False
+        self,
+        attribute,
+        prefix: t.Optional[str] = "",
+        path: t.Optional[Path] = None,
+        saved_bundled: t.Optional[bool] = False,
     ) -> t.List[Path]:
         _removed_paths = list()
         _flattened_holder = flatten_dict(getattr(self, attribute), self._serialise_sep)
@@ -695,15 +715,15 @@ class Serialisable(metaclass=abc.ABCMeta):
                 _removed_paths.append(_pd_path)
         else:
             for name, value in _flattened_holder.items():
-                 _np_path = _filepath / (prefix + name + ".npz")
-                 if _np_path.exists():
-                     os.remove(_np_path)
-                     _removed_paths.append(_np_path)
+                _np_path = _filepath / (prefix + name + ".npz")
+                if _np_path.exists():
+                    os.remove(_np_path)
+                    _removed_paths.append(_np_path)
 
-                 _pd_path = _filepath / (prefix + name + ".h5")
-                 if _pd_path.exists():
-                     os.remove(_pd_path)
-                     _removed_paths.append(_pd_path)
+                _pd_path = _filepath / (prefix + name + ".h5")
+                if _pd_path.exists():
+                    os.remove(_pd_path)
+                    _removed_paths.append(_pd_path)
         return _removed_paths
 
     def save_data_bundled(
@@ -783,9 +803,7 @@ class Serialisable(metaclass=abc.ABCMeta):
 
         return _saved_paths
 
-    def load_data(
-        self, *, prefix: t.Optional[str] = '', path: t.Optional[Path] = None
-    ) -> None:
+    def load_data(self, *, prefix: t.Optional[str] = "", path: t.Optional[Path] = None) -> None:
         """Loads input and output stream data from NumPy archives and/or HDF5 stores.
 
         Args:
@@ -822,54 +840,28 @@ class Serialisable(metaclass=abc.ABCMeta):
                 with np.load(_np_path) as _np_store:
                     for _data in _np_store.files:
                         sub_attribute, delimiter, rest = _data.partition(self._serialise_sep)
-                        # TODO - this does not work correctly, the mapping gets overwritten by the data - BUG
-                        #if delimiter and sub_attribute in stubbed:
-                        #    # Split the 'rest' and form an access query tuple, check if it's valid
-                        #    query = tuple(rest.split(self._serialise_sep))
-                        #    if query not in stubbed[sub_attribute]:
-                        #        raise SerialisableDataLoadError(
-                        #            f"Access query {query!r} not valid for sub_attribute {sub_attribute!r}"
-                        #        )
-
-                        #    setitem(getattr(self, attribute), query, _np_store[_data])
-                        #else:
-                        #    setattr(self, _data, _np_store[_data])
+                        setattr(self, _data, _np_store[_data])
 
             elif _pd_path.exists():
                 with pd.HDFStore(_pd_path, "r") as _pd_store:
                     for _data in _pd_store:
-                        sub_attribute, delimiter, rest = _data.strip("/").partition(self._serialise_sep)
-                        # TODO - this does not work correctly, the mapping gets overwritten by the data - BUG
-                        #if delimiter and sub_attribute in stubbed:
-                        #    # Split the 'rest' and form an access query tuple, check if it's valid
-                        #    query = tuple(rest.split(self._serialise_sep))
-                        #    if query not in stubbed[sub_attribute]:
-                        #        raise SerialisableDataLoadError(
-                        #            f"Access query {query!r} not valid for sub_attribute {sub_attribute!r}"
-                        #        )
-
-                        #    setitem(getattr(self, attribute), query, _pd_store.get(_data))
-                        #elif attribute in self._serialise_to_save:
-                        #    setattr(self, attribute, _pd_store.get(_data))
+                        sub_attribute, delimiter, rest = _data.strip("/").partition(
+                            self._serialise_sep
+                        )
                         setattr(self, attribute, _pd_store.get(_data))
             else:
                 get_root_logger().warning(f"No file found to load attribute{attribute!r}!")
 
-
-    def load_mapping(
-        self, path: Path, prefix: t.Optional[str] = None
-    ) -> AttributeDict:
+    def load_mapping(self, path: Path, prefix: t.Optional[str] = None) -> AttributeDict:
         """
         Loads data from files specified using path and regex. Different to load_data, the data is not saved
         in the parent object (self) but in a AttributeDict, which is then returned.
         """
         if not path:
-            raise ValueError(
-                "Path has to be provided to the 'load_mapping' function."
-            )
+            raise ValueError("Path has to be provided to the 'load_mapping' function.")
 
         def _load_data_file(_data_file_path, _fileextension):
-            if _fileextension == 'npz':
+            if _fileextension == "npz":
                 with np.load(_data_file_path) as _np_store:
                     if len(_np_store) == 1:
                         _data = _np_store[_np_store.files[0]]
@@ -877,7 +869,7 @@ class Serialisable(metaclass=abc.ABCMeta):
                         _data = AttributeDict()
                         for data_key in _np_store:
                             _data[data_key] = _np_store[data_key]
-            elif _fileextension == 'h5':
+            elif _fileextension == "h5":
                 with pd.HDFStore(_data_file_path, "r") as _pd_store:
                     if len(_pd_store) == 1:
                         _data = _pd_store.get(_pd_store.keys()[0])
@@ -888,10 +880,11 @@ class Serialisable(metaclass=abc.ABCMeta):
             else:
                 raise Exception(f"Unknown file extension for file {_data_file_path}")
             return _data
+
         data = AttributeDict()
         for filepath in path.glob(prefix + "*"):
-            filename = filepath.name.replace(prefix, '')
-            filename_split = filename.split('.')
+            filename = filepath.name.replace(prefix, "")
+            filename_split = filename.split(".")
             if len(filename_split) == 2:
                 attribute = filename_split[0]
                 data[attribute] = _load_data_file(filepath, filename_split[-1])
@@ -900,9 +893,13 @@ class Serialisable(metaclass=abc.ABCMeta):
                 attribute_inner = filename_split[1]
                 if attribute_outer not in data.keys():
                     data[attribute_outer] = AttributeDict()
-                data[attribute_outer][attribute_inner] = _load_data_file(filepath, filename_split[-1])
+                data[attribute_outer][attribute_inner] = _load_data_file(
+                    filepath, filename_split[-1]
+                )
             else:
-                raise Exception(f"Filename {filename} is not fitting. Has to consist of two or three comma separated substrings")
+                raise Exception(
+                    f"Filename {filename} is not fitting. Has to consist of two or three comma separated substrings"
+                )
         return data
 
     def load_data_bundled(

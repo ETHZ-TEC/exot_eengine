@@ -41,7 +41,7 @@ from exot.exceptions import *
 from exot.util.attributedict import AttributeDict
 from exot.util.misc import safe_eval, validate_helper
 from exot.util.scinum import count_errors_robust
-from exot.util.wrangle import Matcher, run_path_formatter
+from exot.util.wrangle import Matcher
 
 from ._base import Experiment, Run
 from ._mixins import *
@@ -71,7 +71,7 @@ class PerformanceExperiment(
         # ...verify experiment phases configuration
         for k in self.config.EXPERIMENT.PHASES:
             _(("EXPERIMENT", "PHASES", k), AttributeDict)
-            _(("EXPERIMENT", "PHASES", k, "bit_count"), int)
+            _(("EXPERIMENT", "PHASES", k, "bit_count"), int, list)
             _(("EXPERIMENT", "PHASES", k, "symbol_rates"), str, list)
             _(("EXPERIMENT", "PHASES", k, "repetitions"), int)
 
@@ -113,10 +113,12 @@ class PerformanceExperiment(
                 )
 
             symbol_rate_id = 0
+
             for symbol_rate in symbol_rates:
                 self.logger.debug(
                     f"generating run for phase: {phase}, symbol rate: {symbol_rate}"
                 )
+
                 self.phases[phase][symbol_rate_id] = PerformanceRun(
                     config=AttributeDict(
                         phase=phase,
@@ -167,7 +169,9 @@ class PerformanceExperiment(
 
         matcher = kwargs.pop("matcher", ingest_args.get("io", {}).get("matcher", None))
         if not isinstance(matcher[0][0], Matcher):
-            raise TypeError(f"'matcher' should be of type {Matcher}, got: {type(matcher[0][0])[0][0]}")
+            raise TypeError(
+                f"'matcher' should be of type {Matcher}, got: {type(matcher[0][0])[0][0]}"
+            )
 
         description = "{}_{}".format(matcher[0][0]._quantity, matcher[0][0]._method)
         ingest_args["io"] = ingest_args.get("io", {})
@@ -314,7 +318,9 @@ class PerformanceExperiment(
 
         matcher = kwargs.pop("matcher", kwargs.get("io", {}).get("matcher", None))
         if not isinstance(matcher[0][0], Matcher):
-            raise TypeError(f"'matcher' should be of type {Matcher}, got: {type(matcher[0][0])}")
+            raise TypeError(
+                f"'matcher' should be of type {Matcher}, got: {type(matcher[0][0])}"
+            )
 
         description = "{}_{}".format(matcher[0][0]._quantity, matcher[0][0]._method)
         ingest_args = kwargs.copy()
@@ -324,7 +330,9 @@ class PerformanceExperiment(
         analysis_data_holder = []
 
         for train_phase, eval_phase in phase_mapping.items():
-            self.logger.info(f"analysing performance for phases: {train_phase} -> {eval_phase}, environments {envs}")
+            self.logger.info(
+                f"analysing performance for phases: {train_phase} -> {eval_phase}, environments {envs}"
+            )
 
             for idx in self.phases[train_phase]:
                 train_run = self.phases[train_phase][idx]
@@ -457,15 +465,25 @@ Values in the parent Experiment can be easily accessed through the parent proxy:
 class PerformanceRun(
     Run,
     StreamHandler,
-    Ibitstream, Isymstream, Ilnestream, Irdpstream, Irawstream,
-    Obitstream, Osymstream, Olnestream, Ordpstream, Orawstream, Oschedules,
+    Ibitstream,
+    Isymstream,
+    Ilnestream,
+    Irdpstream,
+    Irawstream,
+    Obitstream,
+    Osymstream,
+    Olnestream,
+    Ordpstream,
+    Orawstream,
+    Oschedules,
     serialise_save=[
         "o_bitstream",
         "o_symstream",
         "o_lnestream",
         "o_rdpstream",
         "o_rawstream",
-        "o_schedules",],
+        "o_schedules",
+    ],
     serialise_ignore=[
         "i_rawstream",
         "i_rdpstream",
@@ -476,9 +494,8 @@ class PerformanceRun(
     parent=PerformanceExperiment,
 ):
     @property
-    def path(self):
-        formatted_directory = run_path_formatter(self.config.phase, self.config.symbol_rate_id)
-        return Path.joinpath(self.parent.path, formatted_directory)
+    def identifier(self):
+        return self.config.symbol_rate_id
 
     @classmethod
     def read(cls, path: Path, parent: t.Optional[object] = None) -> object:
@@ -543,12 +560,11 @@ class PerformanceRun(
         if not layers:
             return
 
-        config = {layer: {'env':''} for layer in layers}
+        config = {layer: {"env": ""} for layer in layers}
         for layer in config:
-            # TODO Put env in the root of the ingest_configuration
-            if 'io' in kwargs:
-                if 'env' in kwargs['io']:
-                    config[layer]['env'] = kwargs['io']['env']
+            if "io" in kwargs:
+                if "env" in kwargs["io"]:
+                    config[layer]["env"] = kwargs["io"]["env"]
 
             config[layer].update(self.config)
             config[layer].update(
@@ -560,7 +576,6 @@ class PerformanceRun(
                 path=self.path,
             )
 
-            #if which == "decode" and self.digested:
             config[layer].update(**self.o_streams)
 
             if layer in kwargs:
@@ -583,6 +598,15 @@ class PerformanceRun(
         """
         assert self.parent, "must have a parent experiment"
         self._configure_layers_proxy("encode", **kwargs)
+
+        if isinstance(self.config.bit_count, list):
+            if len(self.config.bit_count) != 2:
+                raise ValueError(
+                    "if bit_count is a list, it has to have only two values [min, max] for the random range"
+                )
+            self.config.bit_count = np.random.randint(
+                self.config.bit_count[0], self.config.bit_count[1] + 1, 1, dtype=np.dtype("int")
+            )
 
         self.logger.debug("<--- digesting begun! --->")
         self.logger.debug("producing bitstream")

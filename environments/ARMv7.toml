@@ -26,13 +26,13 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # 
-[host]
-
+# zone mapping big Cluster
+[big]
 # zone/platform details
-model        = "Lenovo T440p"
-cores        = [0, 1, 2, 3, 4, 5, 6, 7]
-frequencies  = [800000,  900000, 1000000, 1100000, 1300000, 1400000, 1500000, 1600000, 1700000, 1800000, 1900000, 2100000, 2200000, 2300000, 2400000]
-schedule_tag = "t440p"
+model        = "Odroid-XU3"
+cores        = [4, 5, 6, 7]
+frequencies  = [200000, 300000, 400000, 500000, 600000,  700000,  800000,  900000, 1000000, 1100000, 1200000, 1300000, 1400000, 1500000, 1600000, 1700000, 1800000, 1900000, 2000000]
+schedule_tag = "odroid"
 
 # experiment details
 path_apps    = "bin"
@@ -41,10 +41,58 @@ path_data    = "data"
 # connection details
 driver_type  = "SSHUnixDriver"
 
-[host.driver_params]
-ip           = "172.31.43.138"
+[big.driver_params]
+ip           = "172.31.43.133"
 port         = 51808
 user         = "exot"
 group        = "exot"
 key          = "$EXOT_ACCESS_DIR/id_ed25519"
 # gateway      = "exot-gateway"
+
+# zone mapping LITTLE cluster
+[LITTLE]
+# zone/platform details
+model        = "Odroid-XU3"
+cores        = [0, 1, 2, 3]
+frequencies  = [200000, 300000, 400000, 500000, 600000, 700000, 800000, 900000, 1000000, 1100000, 1200000, 1300000, 1400000, 1500000]
+schedule_tag = "odroid"
+
+# experiment details
+path_apps    = "bin"
+path_data    = "data"
+
+# connection details
+driver_type  = "SSHUnixDriver"
+
+[LITTLE.driver_params]
+ip           = "172.31.43.133"
+port         = 51808
+user         = "exot"
+group        = "exot"
+key          = "$EXOT_ACCESS_DIR/id_ed25519"
+# gateway      = "exot-gateway"
+
+# zone mapping both cluster
+[bigLITTLE]
+# zone/platform details
+model        = "Odroid-XU3"
+cores        = [0, 1, 2, 3, 4, 5, 6, 7]
+frequencies  = []
+schedule_tag = "odroid"
+
+# experiment details
+path_apps    = "bin"
+path_data    = "data"
+
+# connection details
+driver_type  = "SSHUnixDriver"
+
+[bigLITTLE.driver_params]
+ip           = "172.31.43.133"
+port         = 51808
+user         = "exot"
+group        = "exot"
+key          = "$EXOT_ACCESS_DIR/id_ed25519"
+# gateway      = "exot-gateway"
+
+bigLITTLE.frequency_thresholds = [-100.00,24.50,75.00,125.50,176.50,226.50,277.50,329.50,379.00,429.00,478.00,528.50,583.00,635.00,681.00,725.50,776.00,833.00,885.50,9990.00]

@@ -30,12 +30,8 @@
 
 Channel-derived classes define channel-specific properties.
 """
-from ._base import (
-    Channel,
-    ChannelFactory,
-    Analysis
-  )
-from .covertchannels import CovertChannel, FrequencyCC, PowerCC, ThermalCC, CacheCC
+from ._base import Analysis, Channel, ChannelFactory
+from .covertchannels import CacheCC, CovertChannel, FrequencyCC, PowerCC, ThermalCC
 from .sidechannels import SideChannel, ThermalSC
 
 __all__ = (
@@ -49,4 +45,3 @@ __all__ = (
     "ThermalSC",
     "CacheCC",
 )
-

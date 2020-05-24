@@ -26,25 +26,42 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # 
-[host]
+"""Symobls are encoded in the median value of the symbol duration"""
+import copy as cp
+import typing as t
 
-# zone/platform details
-model        = "Lenovo T440p"
-cores        = [0,1,2,3,4,5,6,7]
-frequencies  = [800000,  900000, 1000000, 1100000, 1300000, 1400000, 1500000, 1600000, 1700000, 1800000, 1900000, 2100000, 2200000, 2300000, 2400000]
-schedule_tag = "t440p"
+import numpy as np
+import pandas as pd
+import scipy.interpolate
+import sklearn.base
+import sklearn.naive_bayes
 
-# experiment details
-path_apps    = "bin"
-path_data    = "data"
+from exot.exceptions import LayerMisconfigured
+from exot.util.scinum import is_fitted
 
-# connection details
-driver_type  = "SSHUnixDriver"
+from .simple import SimpleN
 
-[host.driver_params]
-ip           = "172.31.43.137"
-port         = 51808
-user         = "exot"
-group        = "exot"
-key          = "$EXOT_ACCESS_DIR/id_ed25519"
-# gateway      = "exot-gateway"
+
+class EdgeLineCoding(SimpleN):
+    def _encode(self, upper):
+        return upper
+
+    def __init__(self, *args, threshold: int = 2, **kwargs):
+        self.threshold = threshold
+        super().__init__(*args, **kwargs)
+
+    def _decode(self, lnestream: np.ndarray) -> np.ndarray:
+        assert lnestream.ndim == 2, "only 2-d arrays of symbols can be decoded!"
+
+        ideal = self.config.symstream
+
+        _symbol_space = np.hstack([0, np.diff(np.median(lnestream, axis=1))])
+        predictions = np.full(_symbol_space.shape, np.nan)
+        predictions[_symbol_space < -self.threshold] = 0
+        predictions[_symbol_space > self.threshold] = 1
+        predictions[0] = ideal[0]
+
+        for idx in np.argwhere(np.isnan(predictions)):
+            predictions[idx] = predictions[idx - 1]
+
+        return predictions

@@ -37,7 +37,6 @@ import pandas as pd
 from exot.exceptions import *
 from exot.util.attributedict import AttributeDict
 from exot.util.misc import safe_eval, validate_helper
-from exot.util.wrangle import run_path_formatter
 
 from ._base import Experiment, Run
 from ._mixins import *
@@ -143,32 +142,23 @@ class ExploratoryExperiment(Experiment, type=Experiment.Type.Exploratory):
 """
 ExploratoryRun
 --------------
-
-Exploratory runs are considered to be immutable during the Experiment execution. Once
-the configuration is provided, the instance is 'frozen' and the config should not be
-updated.
-
-Values that are always provided to layers at runtime:
-- From a Run's config: phase, bit_count, trace, repetitions,
-- Obtained from a Run's config and the parent: bit_rate.
-
-Values in the parent Experiment can be easily accessed through the parent proxy:
-`self.parent`.
 """
 
 
 class ExploratoryRun(
     Run,
     StreamHandler,
-    Irdpstream, Irawstream,
-    Ordpstream, Orawstream, Oschedules,
+    Irdpstream,
+    Irawstream,
+    Ordpstream,
+    Orawstream,
+    Oschedules,
     serialise_save=["o_rdpstream", "o_rawstream", "o_schedules", "i_rawstream", "i_rdpstream"],
     parent=ExploratoryExperiment,
 ):
     @property
-    def path(self):
-        formatted_directory = run_path_formatter(self.config.phase, self.config.rdpstream_id)
-        return Path.joinpath(self.parent.path, formatted_directory)
+    def identifier(self):
+        return self.config.rdpstream_id
 
     @classmethod
     def read(cls, path: Path, parent: t.Optional[object] = None) -> object:
@@ -239,7 +229,9 @@ class ExploratoryRun(
 
         configurator(**_)
 
-    def digest(self, *, skip_checks: bool = False, write_intermediates: bool = False, **kwargs) -> None:
+    def digest(
+        self, *, skip_checks: bool = False, write_intermediates: bool = False, **kwargs
+    ) -> None:
         """Perform all encoding operations, propagating the streams to subsequent layers
 
         Caveats:
@@ -256,7 +248,7 @@ class ExploratoryRun(
         self.logger.debug("<--- digesting begun! --->")
         self.logger.debug("producing rawstream <- rdpstream")
         self.o_rdpstream = self.config.rdpstream
-        del self.config.rdpstream  # TODO not sure if that is a good idea...
+        del self.config.rdpstream
         self.o_rawstream = self.parent.layers.io.encode(self.o_rdpstream, skip_checks)
         self.logger.debug("setting schedules   <- individual schedules from the i/o layer")
         self.o_schedules = self.parent.layers.io.schedules
@@ -301,4 +293,3 @@ class ExploratoryRun(
 
     def estimated_duration(self, env=None) -> t.Optional[float]:
         return self.o_rdpstream.timestamp.sum()
-

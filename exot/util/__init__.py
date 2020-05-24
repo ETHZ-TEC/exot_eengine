@@ -29,6 +29,7 @@
 """General purpose utilities"""
 
 from . import (
+    analysers,
     attributedict,
     capacity,
     decorators,
@@ -42,7 +43,6 @@ from . import (
     scinum,
     timeout,
     wrangle,
-    analysers,
 )
 
 __all__ = (

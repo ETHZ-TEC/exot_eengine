@@ -129,7 +129,7 @@ class ADBAndroidDriver(
     @latency.setter
     def latency(self, value: t.Any):
         """
-        TODO: no way of running a persistent background process so far, setter is disabled
+        No way of running a persistent background process so far, setter is disabled
         """
         pass
 
@@ -181,7 +181,11 @@ class ADBAndroidDriver(
         )
         # Create the process wrapper
         process = Process(
-            driver=self, invocation=invocation, identity=path, slaves=slaves, duration=details.duration
+            driver=self,
+            invocation=invocation,
+            identity=path,
+            slaves=slaves,
+            duration=details.duration,
         )
 
         return process, intent_cmd
@@ -248,8 +252,6 @@ class ADBAndroidDriver(
         return self.send_intent(process.invocation.details.intent, "service").ok
 
     def start(self, *processes: Process, **kwargs) -> bool:
-        # TODO: maybe refactor with IntentProxy's START_APPS
-
         status = True
         for process in processes:
             status &= (
@@ -268,8 +270,6 @@ class ADBAndroidDriver(
         return self.force_stop_package(process.identity.split("/")[0])
 
     def stop(self, *processes: Process, **kwargs) -> bool:
-        # TODO: maybe refactor with IntentProxy's STOP_APPS
-
         status = True
         for process in processes:
             status &= (
@@ -313,7 +313,7 @@ class ADBAndroidDriver(
         return self._reboot_count
 
     @reboot_count.setter
-    def reboot_count(self, value : int):
+    def reboot_count(self, value: int):
         if isinstance(value, int):
             self._reboot_count = value
         else:
@@ -322,7 +322,7 @@ class ADBAndroidDriver(
     def reboot_device(self):
         get_root_logger().info("Rebooting device, this will take roughly 2 minutes...")
         self.backend.sudo("reboot")
-        sleep(90) # 1.5 minutes security wait time until the device is back online
+        sleep(90)  # 1.5 minutes security wait time until the device is back online
 
     def initstate(self) -> None:
         # Check reboot count, if it is bigger than or equal 5, reboot the device
@@ -369,7 +369,7 @@ class ADBAndroidDriver(
         path_from: t.Union[Path, str],
         path_to: t.Union[Path, str],
         exclude: t.List[str] = Driver.DEFAULT_FETCH_EXCLUDE_LIST,
-    ) -> ADBBackend.ReturnT :
+    ) -> ADBBackend.ReturnT:
         """Fetches data from the device
 
         Due to how ADB file transfer with 'push' and 'pull' works, if the source path is a
@@ -400,7 +400,7 @@ class ADBAndroidDriver(
             self.backend._adb_device_wrapper(["pull", path_from, str(intermediate_path)])
 
             rsync_args = {
-                "from": str(intermediate_path) + "/" + path_from.split('/')[-2] + '/',
+                "from": str(intermediate_path) + "/" + path_from.split("/")[-2] + "/",
                 "to": path_to,
                 "exclude": " ".join([f"--exclude {quote(_)}" for _ in exclude])
                 if exclude
@@ -419,7 +419,7 @@ class ADBAndroidDriver(
         path_from: t.Union[Path, str],
         path_to: t.Union[Path, str],
         exclude: t.List[str] = Driver.DEFAULT_SEND_EXCLUDE_LIST,
-    ) -> ADBBackend.ReturnT :
+    ) -> ADBBackend.ReturnT:
         """Sends data to the device
 
         Due to how ADB file transfer with 'push' and 'pull' works, if the local path is a
@@ -453,8 +453,12 @@ class ADBAndroidDriver(
                 else "",
             }
 
-            rsync_result = self.backend.connection.run("rsync -a {exclude} {from}/ {to}/".format(**rsync_args))
-            invoke_command_result = self.backend._adb_device_wrapper(["push", str(intermediate_path), "/sdcard/"])
+            rsync_result = self.backend.connection.run(
+                "rsync -a {exclude} {from}/ {to}/".format(**rsync_args)
+            )
+            invoke_command_result = self.backend._adb_device_wrapper(
+                ["push", str(intermediate_path), "/sdcard/"]
+            )
             delete(intermediate_path)
 
             intermediate_remote_path = str(Path("/sdcard/") / intermediate_path.name)
@@ -465,9 +469,7 @@ class ADBAndroidDriver(
                 )
 
             self.mkdir(path_to)
-            self.copy(
-                intermediate_remote_path + "/*", path_to, recursive=True
-            )
+            self.copy(intermediate_remote_path + "/*", path_to, recursive=True)
 
             self.delete(intermediate_remote_path, recursive=True)
 
@@ -632,10 +634,7 @@ class Invocation:
         intent_time = self.driver.get_time()
         self.driver.send_intent(query_intent)
 
-        # TODO the since option does not seem to work properly on all platforms. Therefore we're guessing the number of lines we need to read
-        logs = self.driver.get_logs(
-            grep=r"handleActionQuery\(\): (\S+)", since=intent_time
-        )
+        logs = self.driver.get_logs(grep=r"handleActionQuery\(\): (\S+)", since=intent_time)
 
         if len(set(logs)) > 1:
             get_root_logger().warning(

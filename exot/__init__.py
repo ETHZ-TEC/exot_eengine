@@ -26,6 +26,11 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # 
+import importlib
+
 from .__version__ import __version__
+
+if importlib.util.find_spec("tensorflow") is None:
+    print("Tensorflow not available - excluding packets using it!")
 
 __all__ = ("__version__",)

@@ -35,18 +35,18 @@ import numpy as np
 from bitarray import bitarray
 
 __all__ = (
-"StreamHandler",
-"Ibitstream",
-"Isymstream",
-"Ilnestream",
-"Irdpstream",
-"Irawstream",
-"Obitstream",
-"Osymstream",
-"Olnestream",
-"Ordpstream",
-"Orawstream",
-"Oschedules"
+    "StreamHandler",
+    "Ibitstream",
+    "Isymstream",
+    "Ilnestream",
+    "Irdpstream",
+    "Irawstream",
+    "Obitstream",
+    "Osymstream",
+    "Olnestream",
+    "Ordpstream",
+    "Orawstream",
+    "Oschedules",
 )
 
 
@@ -71,19 +71,23 @@ Input:     i_bitstream <- i_symstream  <- i_lnestream  <- i_rdpstream  <- i_raws
                        |               |               |               |
 Layer:                 |-SRC           |-LNE           |-RDP           |-IO
 """
+
+
 @enum.unique
 class StreamType(enum.IntEnum):
     """Stream types"""
-    Input  = enum.auto()
+
+    Input = enum.auto()
     Output = enum.auto()
+
 
 class StreamHandler(metaclass=abc.ABCMeta):
     @property
     def i_streams(self):
         streams = {}
         for cls in type(self).__bases__:
-            if hasattr(cls, 'is_stream'):
-                if(cls.is_stream()[0] == StreamType.Input):
+            if hasattr(cls, "is_stream"):
+                if cls.is_stream()[0] == StreamType.Input:
                     streams[cls.is_stream()[1]] = getattr(self, cls.is_stream()[2])
         return streams
 
@@ -91,10 +95,11 @@ class StreamHandler(metaclass=abc.ABCMeta):
     def o_streams(self):
         streams = {}
         for cls in type(self).__bases__:
-            if hasattr(cls, 'is_stream'):
-                if(cls.is_stream()[0] == StreamType.Output):
+            if hasattr(cls, "is_stream"):
+                if cls.is_stream()[0] == StreamType.Output:
                     streams[cls.is_stream()[1]] = getattr(self, cls.is_stream()[2])
         return streams
+
 
 class Obitstream(metaclass=abc.ABCMeta):
     # 1. bitstream -- raw bits, a bitarray
@@ -116,6 +121,7 @@ class Obitstream(metaclass=abc.ABCMeta):
         if hasattr(self, "_o_bitstream"):
             delattr(self, "_o_bitstream")
 
+
 class Osymstream(metaclass=abc.ABCMeta):
     # 2. symstream -- symbols, produced by the src layer
     @staticmethod
@@ -134,6 +140,7 @@ class Osymstream(metaclass=abc.ABCMeta):
     def o_symstream(self):
         if hasattr(self, "_o_symstream"):
             delattr(self, "_o_symstream")
+
 
 class Olnestream(metaclass=abc.ABCMeta):
     # 3. lnestream -- line-encoded symbols, produced by the lne layer
@@ -154,6 +161,7 @@ class Olnestream(metaclass=abc.ABCMeta):
         if hasattr(self, "_o_lnestream"):
             delattr(self, "_o_lnestream")
 
+
 class Ordpstream(metaclass=abc.ABCMeta):
     # 4. rdpstream -- post-processed symbols, produced by the rdp layer
     @staticmethod
@@ -173,6 +181,7 @@ class Ordpstream(metaclass=abc.ABCMeta):
         if hasattr(self, "_o_rdpstream"):
             delattr(self, "_o_rdpstream")
 
+
 class Orawstream(metaclass=abc.ABCMeta):
     # 5. rawstream -- outstream adjusted for the source app, produced by the io layer
     @staticmethod
@@ -191,6 +200,7 @@ class Orawstream(metaclass=abc.ABCMeta):
     def o_rawstream(self):
         if hasattr(self, "_o_rawstream"):
             delattr(self, "_o_rawstream")
+
 
 class Oschedules(metaclass=abc.ABCMeta):
     # 5. schedules -- individual schedules for the source app, produced by the io layer
@@ -227,6 +237,7 @@ class Irawstream(metaclass=abc.ABCMeta):
         if hasattr(self, "_i_rawstream"):
             delattr(self, "_i_rawstream")
 
+
 class Irdpstream(metaclass=abc.ABCMeta):
     # 2. rdpstream -- input to the rdp module, produced by the io layer
     @staticmethod
@@ -245,6 +256,7 @@ class Irdpstream(metaclass=abc.ABCMeta):
     def i_rdpstream(self):
         if hasattr(self, "_i_rdpstream"):
             delattr(self, "_i_rdpstream")
+
 
 class Ilnestream(metaclass=abc.ABCMeta):
     # 2. lnestream -- input to the lne module, produced by the rdp layer
@@ -265,6 +277,7 @@ class Ilnestream(metaclass=abc.ABCMeta):
         if hasattr(self, "_i_lnestream"):
             delattr(self, "_i_lnestream")
 
+
 class Isymstream(metaclass=abc.ABCMeta):
     # 2. symstream -- input to the src module, produced by the lne layer
     @staticmethod
@@ -283,6 +296,7 @@ class Isymstream(metaclass=abc.ABCMeta):
     def i_symstream(self):
         if hasattr(self, "_i_symstream"):
             delattr(self, "_i_symstream")
+
 
 class Ibitstream(metaclass=abc.ABCMeta):
     # 2. bitstream -- final output bits, produced by the src layer
@@ -305,4 +319,3 @@ class Ibitstream(metaclass=abc.ABCMeta):
     def i_bitstream(self):
         if hasattr(self, "_i_bitstream"):
             delattr(self, "_i_bitstream")
-

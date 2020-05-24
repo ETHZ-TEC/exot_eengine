@@ -184,12 +184,14 @@ def move(path: t.Union[Path, str], to: t.Union[Path, str]) -> Path:
 
     return shutil.move(path, to)
 
+
 def move_action(path: Path) -> str:
     m_path = add_timestamp(path, "modified")
     if m_path.exists():
         m_path = add_random(m_path)
     move(path, m_path)
     return f"path '{path}' already exists, will be moved to '{m_path}'"
+
 
 def copy(path: t.Union[Path, str], to: t.Union[Path, str], replace: bool = False) -> Path:
     """Copy a file or a directory

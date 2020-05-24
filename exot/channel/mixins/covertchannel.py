@@ -26,24 +26,41 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # 
+"""Covert channel analysis mixin classes."""
+
 import abc
 
-__all__ = (
-    "CapacityContinuous",
-    "CapacityDiscrete",
-    "PerformanceSweep",
-)
+__all__ = ("CapacityContinuous", "PerformanceSweep")
+
 
 class CapacityContinuous(metaclass=abc.ABCMeta):
-    # Move stuff from DATE Frequency analysis here
-    pass
+    """Handler to perform the capacity calculation for a continuous (covert) channel."""
 
-class CapacityDiscrete(metaclass=abc.ABCMeta):
-    # Move stuff from DATE Frequency analysis here
-    pass
+    def _execute_handler(self, *args, **kwargs):
+        """Calcualate the capacity for a specified environment."""
+        for keyword in ["phase", "env", "rep", "window_size", "matcher"]:
+            if keyword not in kwargs:
+                raise ValueError("kwargs keyword %s missing!" % (keyword,))
+        self.experiment.generate_spectra(
+            phases=[kwargs["phase"]],
+            envs=[kwargs["env"]],
+            reps=[kwargs["rep"]],
+            window_size=kwargs["window_size"],
+            io={"matcher": kwargs["matcher"]},
+        )
+        Sqq = self.experiment.spectrum_as_matrix("Sqq", phase, env, 0)
+        Shh = self.experiment.spectrum_as_matrix("Shh", phase, env, 0)
+        Sxx = self.experiment.spectrum_as_matrix("Sxx", phase, env, 0)
+        Syy = self.experiment.spectrum_as_matrix("Syy", phase, env, 0)
+        p0 = wrangle.filter_data(
+            self.experiment.p0, phase=phase, environment=env, repetition=0
+        )["p0"].values[0]
+        return dict(
+            C_wf=capacity.classic_waterfilling(p0, Sqq, Shh),
+            C_cwf=capacity.constrained_waterfilling(p0, Sqq, Shh),
+        )
+
 
 class PerformanceSweep(metaclass=abc.ABCMeta):
-    # Move stuff from DATE performance analysis here
+    # At the moment, this functionality is in the performance.py experiment class in the calculate_performance_metrics method.
     pass
-
-

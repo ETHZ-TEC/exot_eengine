@@ -45,7 +45,6 @@ import numpy as np
 
 from exot.exceptions import *
 
-# TODO: separate functions by concern instead of maintaining a monolithic 'misc' module.
 __all__ = (
     "call_with_leaves",
     "dict_depth",
@@ -75,6 +74,7 @@ __all__ = (
     "stub_recursively",
     "unpack__all__",
     "validate_helper",
+    "get_cores_and_schedules",
 )
 
 
@@ -121,6 +121,7 @@ def call_with_leaves(function: t.Callable[[t.Any], t.Any], obj: t.T, _seq: bool 
         obj (t.T): The tree-like or sequence-like object
         _seq (bool, optional): Should sequences be considered?. Defaults to True.
     """
+
     def inner(obj: t.T) -> t.Any:
         if isinstance(obj, Map):
             for v in obj.values():
@@ -386,7 +387,7 @@ def get_valid_access_paths(
     _leaf_only: bool = False,
     _use_lists: bool = True,
     _fallthrough_empty: bool = True,
-) -> t.Generator[t.Tuple,None,None]:
+) -> t.Generator[t.Tuple, None, None]:
     """Generate valid key sequences in a dict, optionally including lists
 
     Args:
@@ -925,7 +926,7 @@ def setgetattr(klass: t.Union[type, object], attr: str, default: t.Any) -> None:
     setattr(klass, attr, getattr(klass, attr, default))
 
 
-def setitem(obj: t.MutableMapping, query: t.Tuple, value: t.Any) -> None:
+def setitem(obj: t.MutableMapping, query: t.Tuple, value: t.Any, force: bool = False) -> None:
     """Set a value in a dict-like object using a tuple-path query
 
     Args:
@@ -934,7 +935,6 @@ def setitem(obj: t.MutableMapping, query: t.Tuple, value: t.Any) -> None:
         value (t.Any): value to set
 
     Raises:
-        KeyError: if query-path was not valid
         TypeError: if obj is not a mutable mapping
     """
 
@@ -945,11 +945,16 @@ def setitem(obj: t.MutableMapping, query: t.Tuple, value: t.Any) -> None:
     _valid = get_valid_access_paths(obj)
 
     if query not in _valid:
-        raise KeyError(f"query-path {query!r} not found")
-
-    #
-    for node in query[:-1]:
-        _obj = _obj[node]
+        if not force:
+            raise KeyError(f"query-path {query!r} not found")
+        else:
+            for node in query[:-1]:
+                if node not in _obj:
+                    _obj = dict()
+                _obj = _obj[node]
+    else:
+        for node in query[:-1]:
+            _obj = _obj[node]
 
     _obj[query[-1]] = value
 
@@ -1031,3 +1036,37 @@ def validate_helper(what: t.Mapping, key: t.Any, *types: type, msg: str = "") ->
                 f"{msg} " if msg else "", key, types, type(getitem(what, key, None))
             )
         )
+
+
+def get_cores_and_schedules(environments_apps_zones: t.Mapping) -> set:
+    e_a_z = environments_apps_zones
+    _cores_and_schedules = set()
+
+    for env in e_a_z:
+        for app in e_a_z[env]:
+            if app != "src":
+                continue
+
+            _path_to_cores = ("app_config", "generator", "cores")
+            _path_to_schedule_tag = ("zone_config", "schedule_tag")
+
+            access_paths = list(get_valid_access_paths(e_a_z[env][app]))
+
+            if _path_to_cores not in access_paths:
+                raise LayerMisconfigured(
+                    f"{env!r}->{app!r} must have a 'generator.cores' config key"
+                )
+            if _path_to_schedule_tag not in access_paths:
+                _ = e_a_z[env][app]["zone"]
+                raise LayerMisconfigured(
+                    f"{env!r}.{_!r} of app {app!r} must have a schedule_tag"
+                )
+
+            _cores_and_schedules.add(
+                (
+                    len(getitem(e_a_z[env][app], _path_to_cores)),
+                    getitem(e_a_z[env][app], _path_to_schedule_tag),
+                )
+            )
+
+    return _cores_and_schedules

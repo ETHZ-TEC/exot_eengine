@@ -26,15 +26,26 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # 
-""" TODO
-"""
+"""Definition of all covert channels that can be analysed with ExOT out-of-the-box."""
+
 import abc
-import numpy as np
-from numpy import inf
+import importlib
 import typing as t
 
+import numpy as np
+from numpy import inf
+
 from ._base import Channel
-from .mixins.covertchannel import CapacityDiscrete, CapacityContinuous, PerformanceSweep
+from .mixins.covertchannel import CapacityContinuous, PerformanceSweep
+
+if importlib.util.find_spec("tensorflow") is not None:
+    import tensorflow as tf
+
+    tfversion = tf.__version__.split(".")
+    if tfversion[0] == 1 and tfversion[1] == 2:
+        from .evaluate import RNNdecoderEval
+        from .train import RNNdecoderTrain
+
 
 class CovertChannel(Channel):
     @property
@@ -61,14 +72,14 @@ class CovertChannel(Channel):
             f"signal={self.signal}, fixed={self.fixed_length_symbols}>"
         )
 
+
 """
 Cache Covert Channels
 ----------
-
-TODO
 """
 
-class CacheCC(CovertChannel, CapacityDiscrete, PerformanceSweep):
+
+class CacheCC(CovertChannel, PerformanceSweep):
     @property
     def signal(self) -> t.Mapping:
         """
@@ -81,35 +92,37 @@ class CacheCC(CovertChannel, CapacityDiscrete, PerformanceSweep):
     def fixed_length_symbols(self) -> bool:
         return True
 
+    @property
+    def fixed_length_symbols(self) -> bool:
+        return True
 
-# class CacheDirect(Channel):
-#    @property
-#    def signal(self) -> t.Mapping:
-#        return {}
-#
-#    @property
-#    def fixed_length_symbols(self) -> bool:
-#        return True
-#
+    @property
+    def analyses_classes(self):
+        return {}  # At this point, no analyses are implemented
 
+
+# The classes below allow the user to differentiate more between different chache channel types.
 class FlushFlushCC(CacheCC):
     pass
+
 
 class FlushReloadCC(CacheCC):
     pass
 
+
 class FlushPrefetchCC(CacheCC):
     pass
+
 
 """
 Frequency Covert Channels
 ----------
-
-TODO
 """
 
-class FrequencyCC(CovertChannel, CapacityDiscrete):
+
+class FrequencyCC(CovertChannel):
     pass
+
 
 class ConservativeGovernorCC(FrequencyCC):
     @property
@@ -130,12 +143,21 @@ class ConservativeGovernorCC(FrequencyCC):
     def fixed_length_symbols(self) -> bool:
         return False
 
+    @property
+    def analyses_classes(self):
+        if importlib.util.find_spec("tensorflow") is not None:
+            return {"RNNdecoderTrain": RNNdecoderTrain, "RNNdecoderEval": RNNdecoderEval}
+        else:
+            return {}
+
+
 """
 Power Cache Covert Channels
 ----------
 
 TODO
 """
+
 
 class PowerCC(CovertChannel, CapacityContinuous, PerformanceSweep):
     @property
@@ -160,7 +182,8 @@ class PowerCC(CovertChannel, CapacityContinuous, PerformanceSweep):
 
     @property
     def analyses_classes(self):
-        return {}  # TODO
+        return {}
+
 
 """
 Thermal Covert Channels
@@ -169,7 +192,8 @@ Thermal Covert Channels
 TODO
 """
 
-class ThermalCC(CovertChannel, CapacityDiscrete, PerformanceSweep):
+
+class ThermalCC(CovertChannel, PerformanceSweep):
     @property
     def inputs(self) -> np.array:
         """
@@ -188,5 +212,4 @@ class ThermalCC(CovertChannel, CapacityDiscrete, PerformanceSweep):
 
     @property
     def analyses_classes(self):
-        return {}  # TODO
-
+        return {}

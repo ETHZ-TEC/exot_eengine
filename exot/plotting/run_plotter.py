@@ -119,7 +119,7 @@ class RunPlotter(Plotter):
             axis.set_ylabel("{}\n{}\n{} ({})".format(*data.columns[i].split(":")), color="gray")
 
         annotations = None
-        if 'io' in self.run.intermediates:
+        if "io" in self.run.intermediates:
             if np.isclose(timestamps.iloc[0], 0.0) and "src_log" in self.run.intermediates.io:
                 annotations = self.run.intermediates.io.src_log.iloc[[0, -1], 0]
             elif (

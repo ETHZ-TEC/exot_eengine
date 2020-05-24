@@ -1,0 +1,271 @@
+# Copyright (c) 2015-2020, Swiss Federal Institute of Technology (ETH Zurich)
+# All rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+# 
+# * Redistributions of source code must retain the above copyright notice, this
+#   list of conditions and the following disclaimer.
+# 
+# * Redistributions in binary form must reproduce the above copyright notice,
+#   this list of conditions and the following disclaimer in the documentation
+#   and/or other materials provided with the distribution.
+# 
+# * Neither the name of the copyright holder nor the names of its
+#   contributors may be used to endorse or promote products derived from
+#   this software without specific prior written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+# 
+# Configuration name
+name = "demo_exploratory_experiment"
+# Save path
+save_path = "./data"
+# Optional: Local backup path
+backup_path = "./data/_backup"
+# Optional: Action to perform if experiment directory exists
+experiment_exists_action = "update" # overwrite, move, halt, update
+
+# Experiment settings
+[EXPERIMENT]
+type = "ExploratoryExperiment"
+channel = "ThermalCC"
+
+[EXPERIMENT.PHASES]
+
+# Experiment layers
+[EXPERIMENT.LAYERS]
+io  = {name = "TimeValue", params = {timebase='ns'}}
+
+# Experiment general settings
+[EXPERIMENT.GENERAL]
+latency               = 10
+fan                   = true
+governors             = "userspace"
+frequencies           = "max"
+sampling_period       = 1e-3
+delay_after_spawn     = 150.0
+delay_after_auxiliary = 1.0
+active_wait           = false
+
+[EXPERIMENT.GENERAL.ARMv8]
+delay_after_spawn = 120.0
+sampling_period = 5e-3
+
+[EXPERIMENT.GENERAL.ARMv7]
+delay_after_spawn = 120.0
+sampling_period = 5e-3
+
+# --------------------------------------------------------------------------------------------------
+# ENVIRONMENT: Haswell
+# Apps and zones
+[ENVIRONMENTS.Haswell.APPS]
+snk = {executable = "meter_thermal_msr", zone = "host"}
+src = {executable = "generator_utilisation_mt", zone = "host"}
+
+# Platform settings -> source
+[ENVIRONMENTS.Haswell.src]
+
+# generator
+generator.host_pinning = 0
+generator.should_pin_host = true
+generator.cores = [5]
+generator.host_policy  = "round_robin"
+generator.host_priority = 99
+generator.worker_priority = 98
+generator.worker_policy  = "round_robin"
+generator.should_pin_workers = true
+generator.start_check_period = 25
+
+# logging
+logging.debug_log_filename = "" # set during execution
+logging.app_log_filename = "" # set during execution
+logging.log_level = "info"
+
+# schedule reader
+schedule_reader.input_file = "" # set during execution
+schedule_reader.reading_from_file = true
+
+# Platform settings -> sink
+[ENVIRONMENTS.Haswell.snk]
+
+# logging
+logging.debug_log_filename = "" # set during execution
+logging.app_log_filename = "" # set during execution
+logging.log_level = "info"
+
+thermal_msr.cores = [0, 2, 4, 6]
+thermal_msr.package = false
+
+# host
+meter.period = 1e-3
+meter.host_policy = "round_robin"
+meter.host_pinning = 0
+meter.should_pin_host = true
+meter.host_priority = 90
+meter.log_header = true
+meter.start_immediately = false
+meter.start_check_period = 25
+
+# --------------------------------------------------------------------------------------------------
+# ENVIRONMENT: Sandy
+# Apps and zones
+[ENVIRONMENTS.Sandy.APPS]
+snk = {executable = "meter_thermal_msr", zone = "host"}
+src = {executable = "generator_utilisation_mt", zone = "host"}
+
+# Platform settings -> source
+[ENVIRONMENTS.Sandy.src]
+
+# generator
+generator.host_pinning = 0
+generator.should_pin_host = true
+generator.cores = [2]
+generator.host_policy  = "round_robin"
+generator.host_priority = 99
+generator.worker_priority = 98
+generator.worker_policy  = "round_robin"
+generator.should_pin_workers = true
+generator.start_check_period = 25
+
+# logging
+logging.debug_log_filename = "" # set during execution
+logging.app_log_filename = "" # set during execution
+logging.log_level = "info"
+
+# schedule reader
+schedule_reader.input_file = "" # set during execution
+schedule_reader.reading_from_file = true
+
+# Platform settings -> sink
+[ENVIRONMENTS.Sandy.snk]
+
+# logging
+logging.debug_log_filename = "" # set during execution
+logging.app_log_filename = "" # set during execution
+logging.log_level = "info"
+
+thermal_msr.cores = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+thermal_msr.package = false
+
+# host
+meter.period = 1e-3
+meter.host_policy = "round_robin"
+meter.host_pinning = 0
+meter.should_pin_host = true
+meter.host_priority = 90
+meter.log_header = true
+meter.start_immediately = false
+meter.start_check_period = 25
+
+# --------------------------------------------------------------------------------------------------
+# ENVIRONMENT: ARMv7
+# Apps and zones
+[ENVIRONMENTS.ARMv7.APPS]
+snk = {executable = "meter_thermal_sysfs", zone = "bigLITTLE"}
+src = {executable = "generator_utilisation_mt", zone = "bigLITTLE"}
+
+# Platform settings -> source
+[ENVIRONMENTS.ARMv7.src]
+
+# generator
+generator.host_pinning = 0
+generator.should_pin_host = true
+generator.cores = [6]
+generator.host_policy  = "round_robin"
+generator.host_priority = 99
+generator.worker_priority = 98
+generator.worker_policy  = "round_robin"
+generator.should_pin_workers = true
+generator.start_check_period = 25
+
+# logging
+logging.debug_log_filename = "" # set during execution
+logging.app_log_filename = "" # set during execution
+logging.log_level = "info"
+
+# schedule reader
+schedule_reader.input_file = "" # set during execution
+schedule_reader.reading_from_file = true
+
+# Platform settings -> sink
+[ENVIRONMENTS.ARMv7.snk]
+
+# logging
+logging.debug_log_filename = "" # set during execution
+logging.app_log_filename = "" # set during execution
+logging.log_level = "info"
+
+thermal_sysfs.zones = [0, 1, 2, 3, 4]
+
+# host
+meter.period = 1e-3
+meter.host_policy = "round_robin"
+meter.host_pinning = 1
+meter.should_pin_host = true
+#meter.host_pinning = 0
+meter.host_priority = 90
+meter.log_header = true
+meter.start_immediately = false
+meter.start_check_period = 25
+
+# --------------------------------------------------------------------------------------------------
+# ENVIRONMENT: ARMv8
+# Apps and zones
+[ENVIRONMENTS.ARMv8.APPS]
+snk = {executable = "meter_thermal_sysfs", zone = "combined"}
+src = {executable = "generator_utilisation_mt", zone = "combined"}
+
+# Platform settings -> source
+[ENVIRONMENTS.ARMv8.src]
+
+# generator
+generator.host_pinning = 1
+generator.should_pin_host = true
+generator.cores = [4]
+generator.host_policy  = "round_robin"
+generator.host_priority = 99
+generator.worker_priority = 98
+generator.worker_policy  = "round_robin"
+generator.should_pin_workers = true
+generator.start_check_period = 25
+
+# logging
+logging.debug_log_filename = "" # set during execution
+logging.app_log_filename = "" # set during execution
+logging.log_level = "info"
+
+# schedule reader
+schedule_reader.input_file = "" # set during execution
+schedule_reader.reading_from_file = true
+
+# Platform settings -> sink
+[ENVIRONMENTS.ARMv8.snk]
+
+# logging
+logging.debug_log_filename = "" # set during execution
+logging.app_log_filename = "" # set during execution
+logging.log_level = "info"
+
+thermal_sysfs.zones = [0, 1, 2, 3, 4, 5]
+#thermal_sysfs.zones = [0]
+
+# host
+meter.period = 1e-3
+meter.host_policy = "round_robin"
+meter.host_pinning = 2
+meter.should_pin_host = true
+meter.host_priority = 90
+meter.log_header = true
+meter.start_immediately = false
+meter.start_check_period = 25
+
